@@ -182,6 +182,8 @@ export class SvgRenderer implements Renderer {
           svgIcon.setAttribute('viewBox', svgData.viewBox);
           svgIcon.setAttribute('width', '20');
           svgIcon.setAttribute('height', '20');
+          svgIcon.style.width = '20px';
+          svgIcon.style.height = '20px';
           svgIcon.style.marginRight = '8px'; // Increased margin for left alignment feel
           svgIcon.style.flexShrink = '0';
           svgIcon.innerHTML = svgData.path;
@@ -204,8 +206,9 @@ export class SvgRenderer implements Renderer {
         textSpan.style.whiteSpace = 'pre-wrap';
         textSpan.style.wordWrap = 'break-word';
         textSpan.style.overflowWrap = 'anywhere';
-        textSpan.style.maxWidth = `${this.maxWidth}px`;
-        // el width is auto (flex)
+        textSpan.style.minWidth = '0'; // Allow flex to shrink
+        el.style.maxWidth = `${this.maxWidth}px`;
+        el.style.width = 'max-content';
       } else {
         textSpan.style.whiteSpace = 'pre';
       }
@@ -566,7 +569,9 @@ export class SvgRenderer implements Renderer {
       textSpan.style.whiteSpace = 'pre-wrap';
       textSpan.style.wordWrap = 'break-word';
       textSpan.style.overflowWrap = 'anywhere';
-      textSpan.style.maxWidth = `${this.maxWidth}px`;
+      textSpan.style.minWidth = '0'; // Allow flex to shrink
+      el.style.maxWidth = `${this.maxWidth}px`;
+      el.style.width = 'max-content';
     } else {
       textSpan.style.whiteSpace = 'pre';
     }
