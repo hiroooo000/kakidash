@@ -5,6 +5,15 @@
 この形式は [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) に基づいており、
 このプロジェクトは [セマンティック バージョニング](https://semver.org/spec/v2.0.0.html) に準拠しています。
 
+## [0.1.2] - 2026-01-29
+
+### 修正
+- ノードのレイアウト崩れ（重なりや不正な折り返し）を解消するため、`SvgRenderer` のサイズ計算ロジックを v0.1.0 の仕様に戻しました。
+- コマンドパレットのラベル表記を修正: `🗑️ 削除 (Delete)` → `🗑️ Delete`。
+
+### その他
+- レイアウトの退行（リグレッション）を防ぐためのテスト `tests/presentation/LayoutConsistency.test.ts` を追加。
+
 ## [0.1.1] - 2026-01-28
 
 ### 追加
