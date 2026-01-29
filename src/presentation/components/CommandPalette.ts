@@ -42,7 +42,7 @@ export class CommandPalette {
     + 🗑️ (Delete)
   */
   private readonly ICON_LIST: Array<{ id: string; topic: string; type: 'icon' }> = [
-    { id: 'delete', topic: '🗑️ 削除 (Delete)', type: 'icon' },
+    { id: 'delete', topic: '🗑️ Delete', type: 'icon' },
     { id: 'blue_circle', topic: 'Good', type: 'icon' },
     { id: 'red_circle', topic: 'Bad', type: 'icon' },
     { id: 'question', topic: 'Question', type: 'icon' },

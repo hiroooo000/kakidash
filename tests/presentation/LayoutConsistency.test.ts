@@ -10,194 +10,195 @@
  * layout bugs (e.g., node collapse, overlap).
  */
 
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment */
 import { describe, it, expect, beforeEach } from 'vitest';
 import { SvgRenderer } from '../../src/presentation/components/SvgRenderer';
 import { Node as MindMapNode } from '../../src/domain/entities/Node';
 import { MindMap } from '../../src/domain/entities/MindMap';
-import { Window } from 'happy-dom';
+// import { Window } from 'happy-dom';
 
 // Setup happy-dom environment if not already globally set by vitest config
 // Assuming vitest environment is happy-dom or jsdom.
 
 describe('LayoutConsistency', () => {
-    let container: HTMLElement;
-    let renderer: SvgRenderer;
-    let mindMap: MindMap;
+  let container: HTMLElement;
+  let renderer: SvgRenderer;
+  let mindMap: MindMap;
 
-    beforeEach(() => {
-        container = document.createElement('div');
-        // Ensure container has dimensions for renderer init if needed
-        Object.defineProperty(container, 'clientWidth', { value: 1000 });
-        Object.defineProperty(container, 'clientHeight', { value: 800 });
+  beforeEach(() => {
+    container = document.createElement('div');
+    // Ensure container has dimensions for renderer init if needed
+    Object.defineProperty(container, 'clientWidth', { value: 1000 });
+    Object.defineProperty(container, 'clientHeight', { value: 800 });
 
-        // Minimal renderer initialization
-        renderer = new SvgRenderer(container);
+    // Minimal renderer initialization
+    renderer = new SvgRenderer(container);
 
-        const root = new MindMapNode('root', 'Root');
-        mindMap = new MindMap(root);
-    });
+    const root = new MindMapNode('root', 'Root');
+    mindMap = new MindMap(root);
+  });
 
-    /**
-     * Helper to expose private methods for testing.
-     */
-    const getRenderedElement = (node: MindMapNode, mm: MindMap): HTMLElement => {
-        // We mock the container.appendChild to capture the element created by renderNode
-        // renderNode -> calls this.nodeContainer.appendChild(el)
+  /**
+   * Helper to expose private methods for testing.
+   */
+  const getRenderedElement = (node: MindMapNode, mm: MindMap): HTMLElement => {
+    // We mock the container.appendChild to capture the element created by renderNode
+    // renderNode -> calls this.nodeContainer.appendChild(el)
 
-        // Spy/Intercept via the nodeContainer
-        const nodeContainer = (renderer as any).nodeContainer as HTMLElement;
-        nodeContainer.innerHTML = '';
+    // Spy/Intercept via the nodeContainer
+    const nodeContainer = (renderer as any).nodeContainer as HTMLElement;
+    nodeContainer.innerHTML = '';
 
-        // Call render using recursive public API or private if needed.
-        // Calling internal `renderNode` directly allows isolating one node.
-        // renderNode signature: (node, x, y, selectedId, layoutMode, isRoot, direction, mindMap)
-        (renderer as any).renderNode(node, 0, 0, null, 'Right', node.isRoot, 'right', mm);
+    // Call render using recursive public API or private if needed.
+    // Calling internal `renderNode` directly allows isolating one node.
+    // renderNode signature: (node, x, y, selectedId, layoutMode, isRoot, direction, mindMap)
+    (renderer as any).renderNode(node, 0, 0, null, 'Right', node.isRoot, 'right', mm);
 
-        // The element should now be in nodeContainer
-        const el = nodeContainer.firstElementChild as HTMLElement;
-        if (!el) throw new Error('renderNode did not produce an element');
-        return el;
+    // The element should now be in nodeContainer
+    const el = nodeContainer.firstElementChild as HTMLElement;
+    if (!el) throw new Error('renderNode did not produce an element');
+    return el;
+  };
+
+  const getMeasuredElement = (node: MindMapNode, mm: MindMap): HTMLElement => {
+    // measureNode creates an element and appends/removes it.
+    // We need to intercept it before removal OR rely on the fact that
+    // `measureNode` constructs styles similarly.
+    // Since measureNode removes the element immediately, we can't grab it from DOM *after* call.
+    // We must intercept `document.createElement` OR `nodeContainer.appendChild`.
+
+    let capturedEl: HTMLElement | null = null;
+    const nodeContainer = (renderer as any).nodeContainer as HTMLElement;
+    const originalAppend = nodeContainer.appendChild.bind(nodeContainer);
+
+    nodeContainer.appendChild = <T extends Node>(child: T): T => {
+      // We assume measureNode appends the wrapper div first
+      if (child instanceof HTMLElement && child.className.includes('mindmap-node')) {
+        // Clone it to capture state before removal/mutation?
+        // Or just capture reference.
+        capturedEl = child as unknown as HTMLElement;
+      }
+      return originalAppend(child);
     };
 
-    const getMeasuredElement = (node: MindMapNode, mm: MindMap): HTMLElement => {
-        // measureNode creates an element and appends/removes it.
-        // We need to intercept it before removal OR rely on the fact that
-        // `measureNode` constructs styles similarly.
-        // Since measureNode removes the element immediately, we can't grab it from DOM *after* call.
-        // We must intercept `document.createElement` OR `nodeContainer.appendChild`.
+    try {
+      (renderer as any).measureNode(node, mm);
+    } finally {
+      nodeContainer.appendChild = originalAppend; // Restore
+    }
 
-        let capturedEl: HTMLElement | null = null;
-        const nodeContainer = (renderer as any).nodeContainer as HTMLElement;
-        const originalAppend = nodeContainer.appendChild.bind(nodeContainer);
+    if (!capturedEl) throw new Error('measureNode did not append an element');
+    return capturedEl;
+  };
 
-        nodeContainer.appendChild = <T extends Node>(child: T): T => {
-            // We assume measureNode appends the wrapper div first
-            if (child instanceof HTMLElement && child.className.includes('mindmap-node')) {
-                // Clone it to capture state before removal/mutation?
-                // Or just capture reference.
-                capturedEl = child as unknown as HTMLElement;
-            }
-            return originalAppend(child);
-        };
+  it('should apply identical layout-critical styles to Text-only nodes', () => {
+    const node = new MindMapNode('1', 'Test Node');
+    // Set maxWidth to trigger wrapping logic
+    (renderer as any).maxWidth = 200;
+    console.log('Test Configured MaxWidth:', (renderer as any).maxWidth);
 
-        try {
-            (renderer as any).measureNode(node, mm);
-        } finally {
-            nodeContainer.appendChild = originalAppend; // Restore
-        }
+    const rendered = getRenderedElement(node, mindMap);
+    const measured = getMeasuredElement(node, mindMap);
 
-        if (!capturedEl) throw new Error('measureNode did not append an element');
-        return capturedEl;
+    // 1. Structure Check: div > span
+    expect(rendered.tagName).toBe('DIV');
+    expect(measured.tagName).toBe('DIV');
+
+    const renderedSpan = rendered.querySelector('span:not(.icon)');
+    const measuredSpan = measured.querySelector('span:not(.icon)');
+    expect(renderedSpan).toBeTruthy();
+    expect(measuredSpan).toBeTruthy();
+
+    // Debug logging
+    if (rendered.style.width !== measured.style.width) {
+      console.log('Width mismatch:', rendered.style.width, measured.style.width);
+    }
+    if (rendered.style.maxWidth !== measured.style.maxWidth) {
+      console.log('MaxWidth mismatch:', rendered.style.maxWidth, measured.style.maxWidth);
+    }
+
+    // 2. Container Styles (Critical for v0.1.0/v0.1.1 sizing fix)
+    expect(rendered.style.maxWidth).toBe('200px');
+    expect(measured.style.maxWidth).toBe('200px');
+
+    expect(rendered.style.width).toBe('max-content');
+    expect(measured.style.width).toBe('max-content');
+
+    // 3. Inner Span Styles (Flex behavior)
+    // happy-dom serializes '0' as '0' not '0px'
+    expect((renderedSpan as HTMLElement).style.minWidth).toBe('0');
+    expect((measuredSpan as HTMLElement).style.minWidth).toBe('0');
+
+    expect((renderedSpan as HTMLElement).style.whiteSpace).toBe('pre-wrap');
+    expect((measuredSpan as HTMLElement).style.whiteSpace).toBe('pre-wrap');
+  });
+
+  it('should apply identical border logic based on theme', () => {
+    const node = new MindMapNode('2', 'Child');
+    // Default theme
+    mindMap.theme = 'default';
+
+    const renderedDefault = getRenderedElement(node, mindMap);
+    const measuredDefault = getMeasuredElement(node, mindMap);
+
+    expect(renderedDefault.style.border).toBe(measuredDefault.style.border);
+    expect(renderedDefault.style.border).toContain('1px solid'); // Check for default border presence
+
+    // Simple theme
+    mindMap.theme = 'simple';
+    const renderedSimple = getRenderedElement(node, mindMap);
+    const measuredSimple = getMeasuredElement(node, mindMap);
+    expect(renderedSimple.style.border).toBe(measuredSimple.style.border);
+    // Relax checks for specific string format as happy-dom might use 'none none' etc.
+    expect(renderedSimple.style.border).toContain('none');
+  });
+
+  it('should have consistent structure when icon is present', () => {
+    const node = new MindMapNode('3', 'Icon Node');
+    node.icon = 'check'; // Use a valid icon key existing in Icons.ts
+
+    const rendered = getRenderedElement(node, mindMap);
+    const measured = getMeasuredElement(node, mindMap);
+
+    // Should have icon element
+    expect(rendered.children.length).toBeGreaterThan(1); // Icon + Text
+    expect(measured.children.length).toBeGreaterThan(1);
+
+    // Check if Icon container/svg is present in both
+    // note: measureNode uses a placeholder div or same svg logic? SvgRenderer uses similar logic.
+    // measureNode: iconPlaceholder (div) or fallback span
+    // renderNode: svgIcon (svg) or fallback span
+    // WAIT: SvgRenderer measureNode currently uses placeholder DIV for SVG data?
+    // Let's check SvgRenderer.ts logic.
+    // If logic differs, this test will fail, identifying a divergence.
+    // Ideally they should match or be effectively similar for layout.
+
+    // Currently measureNode uses placeholder if svgData exists.
+    // renderNode uses real SVG.
+    // The test validates "Layout Consistency".
+    // Does placeholder have same dimensions?
+    // measureNode: width 20px, height 20px, marginRight 8px.
+    // renderNode: width 20, height 20, marginRight 8px.
+    // Layout should be consistent.
+
+    // We verify the existence of *some* first child that represents icon
+    const rIcon = rendered.firstElementChild as HTMLElement;
+    const mIcon = measured.firstElementChild as HTMLElement;
+
+    expect(rIcon).toBeTruthy();
+    expect(mIcon).toBeTruthy();
+
+    // Verify styles affecting layout
+    // Helper to get width (style -> attribute fallback)
+    const getWidth = (el: HTMLElement) => {
+      return el.style.width || (el.getAttribute('width') ? el.getAttribute('width') + 'px' : '');
     };
 
-    it('should apply identical layout-critical styles to Text-only nodes', () => {
-        const node = new MindMapNode('1', 'Test Node');
-        // Set maxWidth to trigger wrapping logic
-        (renderer as any).maxWidth = 200;
-        console.log('Test Configured MaxWidth:', (renderer as any).maxWidth);
-
-        const rendered = getRenderedElement(node, mindMap);
-        const measured = getMeasuredElement(node, mindMap);
-
-        // 1. Structure Check: div > span
-        expect(rendered.tagName).toBe('DIV');
-        expect(measured.tagName).toBe('DIV');
-
-        const renderedSpan = rendered.querySelector('span:not(.icon)');
-        const measuredSpan = measured.querySelector('span:not(.icon)');
-        expect(renderedSpan).toBeTruthy();
-        expect(measuredSpan).toBeTruthy();
-
-        // Debug logging
-        if (rendered.style.width !== measured.style.width) {
-            console.log('Width mismatch:', rendered.style.width, measured.style.width);
-        }
-        if (rendered.style.maxWidth !== measured.style.maxWidth) {
-            console.log('MaxWidth mismatch:', rendered.style.maxWidth, measured.style.maxWidth);
-        }
-
-        // 2. Container Styles (Critical for v0.1.0/v0.1.1 sizing fix)
-        expect(rendered.style.maxWidth).toBe('200px');
-        expect(measured.style.maxWidth).toBe('200px');
-
-        expect(rendered.style.width).toBe('max-content');
-        expect(measured.style.width).toBe('max-content');
-
-        // 3. Inner Span Styles (Flex behavior)
-        // happy-dom serializes '0' as '0' not '0px'
-        expect((renderedSpan as HTMLElement).style.minWidth).toBe('0');
-        expect((measuredSpan as HTMLElement).style.minWidth).toBe('0');
-
-        expect((renderedSpan as HTMLElement).style.whiteSpace).toBe('pre-wrap');
-        expect((measuredSpan as HTMLElement).style.whiteSpace).toBe('pre-wrap');
-    });
-
-    it('should apply identical border logic based on theme', () => {
-        const node = new MindMapNode('2', 'Child');
-        // Default theme
-        mindMap.theme = 'default';
-
-        const renderedDefault = getRenderedElement(node, mindMap);
-        const measuredDefault = getMeasuredElement(node, mindMap);
-
-        expect(renderedDefault.style.border).toBe(measuredDefault.style.border);
-        expect(renderedDefault.style.border).toContain('1px solid'); // Check for default border presence
-
-        // Simple theme
-        mindMap.theme = 'simple';
-        const renderedSimple = getRenderedElement(node, mindMap);
-        const measuredSimple = getMeasuredElement(node, mindMap);
-        expect(renderedSimple.style.border).toBe(measuredSimple.style.border);
-        // Relax checks for specific string format as happy-dom might use 'none none' etc.
-        expect(renderedSimple.style.border).toContain('none');
-    });
-
-    it('should have consistent structure when icon is present', () => {
-        const node = new MindMapNode('3', 'Icon Node');
-        node.icon = 'check'; // Use a valid icon key existing in Icons.ts
-
-        const rendered = getRenderedElement(node, mindMap);
-        const measured = getMeasuredElement(node, mindMap);
-
-        // Should have icon element
-        expect(rendered.children.length).toBeGreaterThan(1); // Icon + Text
-        expect(measured.children.length).toBeGreaterThan(1);
-
-        // Check if Icon container/svg is present in both
-        // note: measureNode uses a placeholder div or same svg logic? SvgRenderer uses similar logic.
-        // measureNode: iconPlaceholder (div) or fallback span
-        // renderNode: svgIcon (svg) or fallback span
-        // WAIT: SvgRenderer measureNode currently uses placeholder DIV for SVG data?
-        // Let's check SvgRenderer.ts logic.
-        // If logic differs, this test will fail, identifying a divergence.
-        // Ideally they should match or be effectively similar for layout.
-
-        // Currently measureNode uses placeholder if svgData exists. 
-        // renderNode uses real SVG.
-        // The test validates "Layout Consistency".
-        // Does placeholder have same dimensions?
-        // measureNode: width 20px, height 20px, marginRight 8px.
-        // renderNode: width 20, height 20, marginRight 8px.
-        // Layout should be consistent.
-
-        // We verify the existence of *some* first child that represents icon
-        const rIcon = rendered.firstElementChild as HTMLElement;
-        const mIcon = measured.firstElementChild as HTMLElement;
-
-        expect(rIcon).toBeTruthy();
-        expect(mIcon).toBeTruthy();
-
-        // Verify styles affecting layout
-        // Helper to get width (style -> attribute fallback)
-        const getWidth = (el: HTMLElement) => {
-            return el.style.width || (el.getAttribute('width') ? el.getAttribute('width') + 'px' : '');
-        };
-
-        // Normalize '20' attr to '20px' for comparison if needed, or rely on style
-        // We expect style to be set now.
-        expect(getWidth(rIcon)).toBe('20px');
-        expect(getWidth(mIcon)).toBe('20px');
-        expect(rIcon.style.marginRight).toBe('8px');
-        expect(mIcon.style.marginRight).toBe('8px');
-    });
+    // Normalize '20' attr to '20px' for comparison if needed, or rely on style
+    // We expect style to be set now.
+    expect(getWidth(rIcon)).toBe('20px');
+    expect(getWidth(mIcon)).toBe('20px');
+    expect(rIcon.style.marginRight).toBe('8px');
+    expect(mIcon.style.marginRight).toBe('8px');
+  });
 });
