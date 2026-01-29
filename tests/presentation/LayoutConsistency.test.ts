@@ -10,7 +10,7 @@
  * layout bugs (e.g., node collapse, overlap).
  */
 
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call */
 import { describe, it, expect, beforeEach } from 'vitest';
 import { SvgRenderer } from '../../src/presentation/components/SvgRenderer';
 import { Node as MindMapNode } from '../../src/domain/entities/Node';
