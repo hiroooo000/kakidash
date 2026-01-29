@@ -447,7 +447,10 @@ export class SvgRenderer implements Renderer {
     mindMap?: MindMap,
   ): void {
     // Calculate total height
-    const totalHeight = children.reduce((acc, child) => acc + this.getNodeHeight(child), 0);
+    const totalHeight = children.reduce(
+      (acc, child) => acc + this.getNodeHeight(child, mindMap),
+      0,
+    );
     let startY = parentY - totalHeight / 2;
 
     const levelGap = 80;
@@ -479,7 +482,7 @@ export class SvgRenderer implements Renderer {
     }
 
     children.forEach((child) => {
-      const childHeight = this.getNodeHeight(child);
+      const childHeight = this.getNodeHeight(child, mindMap);
       const childY = startY + childHeight / 2;
 
       let childX = 0;
@@ -498,19 +501,19 @@ export class SvgRenderer implements Renderer {
     });
   }
 
-  private getChildrenHeight(node: Node): number {
-    return node.children.reduce((acc, child) => acc + this.getNodeHeight(child), 0);
+  private getChildrenHeight(node: Node, mindMap?: MindMap): number {
+    return node.children.reduce((acc, child) => acc + this.getNodeHeight(child, mindMap), 0);
   }
 
-  private getNodeHeight(node: Node): number {
-    const { height } = this.measureNode(node);
+  private getNodeHeight(node: Node, mindMap?: MindMap): number {
+    const { height } = this.measureNode(node, mindMap);
     const verticalGap = 20;
 
     if (node.children.length === 0) {
       return height + verticalGap;
     }
 
-    const childrenTotalHeight = this.getChildrenHeight(node);
+    const childrenTotalHeight = this.getChildrenHeight(node, mindMap);
     // Ensure the parent has at least enough space for itself plus gap,
     // though typically children total height is larger.
     // If children total height is smaller than parent node height, we might have overlap issues if we don't handle it.
@@ -519,7 +522,7 @@ export class SvgRenderer implements Renderer {
     return Math.max(height + verticalGap, childrenTotalHeight);
   }
 
-  private measureNode(node: Node): { width: number; height: number } {
+  private measureNode(node: Node, mindMap?: MindMap): { width: number; height: number } {
     if (node.image) {
       // Return fixed size for images + padding estimate
       // Max 150x150 + padding 10
@@ -564,12 +567,12 @@ export class SvgRenderer implements Renderer {
       textSpan.style.wordWrap = 'break-word';
       textSpan.style.overflowWrap = 'anywhere';
       textSpan.style.maxWidth = `${this.maxWidth}px`;
-      textSpan.style.width = 'max-content';
     } else {
       textSpan.style.whiteSpace = 'pre';
     }
     el.style.padding = '8px 12px';
-    el.style.border = '1px solid var(--vscode-editorGroup-border, #ccc)';
+    // Remove static border assignment here as we do it below based on theme
+    // el.style.border = '1px solid var(--vscode-editorGroup-border, #ccc)';
 
     // Ensure it has a width constraint if we want wrapping behavior similar to render?
     // Actually, in renderNode we don't constrain width (it expands).
@@ -577,10 +580,33 @@ export class SvgRenderer implements Renderer {
     // For now, let's assume it expands naturally or follows some CSS rule if 'mindmap-node' has it.
     // The reported issue is about height not being accounted for.
 
+    // Copy-pasted border logic to match renderNode
+    const theme = mindMap?.theme || 'default';
+    const themeColor = mindMap ? this.getThemeColor(node, mindMap) : '#ccc';
+
+    if (theme === 'simple' && !node.isRoot) {
+      el.style.border = 'none';
+    } else if (theme === 'custom') {
+      if (node.isRoot) {
+        const defaultRootBorder = '2px solid var(--vscode-editor-foreground, #333)';
+        el.style.border = `var(--mindmap-root-border, ${defaultRootBorder})`;
+      } else {
+        el.style.border = `var(--mindmap-child-border, 1px solid #ccc)`;
+      }
+    } else {
+      if (theme === 'colorful') {
+        el.style.border = `2px solid ${themeColor}`;
+      } else {
+        el.style.border = '1px solid var(--vscode-editorGroup-border, #ccc)';
+      }
+    }
+
     if (node.isRoot) {
       el.style.fontSize = '1.2em';
       el.style.fontWeight = 'bold';
-      el.style.border = '2px solid var(--vscode-editor-foreground, #333)';
+      if (theme !== 'custom') {
+        el.style.border = '2px solid var(--vscode-editor-foreground, #333)';
+      }
     }
 
     // Apply custom styles to measurement element
