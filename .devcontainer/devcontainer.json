@@ -35,5 +35,5 @@
     },
     "remoteUser": "node",
     "privileged": true,
-    "postCreateCommand": "pip install requests python-dotenv && if [ -f package.json ]; then pnpm install; fi"
+    "postCreateCommand": "pip install requests python-dotenv && if [ -f package.json ]; then pnpm install && npx playwright install --with-deps; fi"
 }

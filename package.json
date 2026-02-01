@@ -32,7 +32,8 @@
         "docs": "typedoc",
         "format": "prettier --write \"src/**/*.{ts,json}\"",
         "turbo": "turbo",
-        "turbo:ci": "turbo run typecheck build test lint docs"
+        "turbo:ci": "turbo run typecheck build test lint docs",
+        "test:e2e": "playwright test"
     },
     "keywords": [
         "mindmap",
@@ -47,6 +48,7 @@
     "sideEffects": false,
     "devDependencies": {
         "@eslint/js": "^9.39.2",
+        "@playwright/test": "^1.58.1",
         "@types/argparse": "^2.0.17",
         "@types/estree": "^1.0.8",
         "@types/node": "^24.10.9",
