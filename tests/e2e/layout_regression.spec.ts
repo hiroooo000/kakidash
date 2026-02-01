@@ -199,5 +199,66 @@ What the hand, dare seize the fire?`;
             // Snapshot: After Navigation
             await expect(page).toHaveScreenshot('07-after-style-nav.png');
         });
+
+        // 6. Phase 5: Layout Mode Verification
+        await test.step('Phase 5: Layout Mode Verification', async () => {
+            // Current state: Selection is at NewNode4-10
+
+            // --- Left Layout ---
+            await page.locator('button[title="Layout: Left"]').click();
+            await page.locator('button[title="Reset Zoom"]').click(); // Reset Zoom to ensure visibility
+            await page.waitForTimeout(500); // Wait for transition
+            await expect(page).toHaveScreenshot('08-layout-left.png');
+
+            // Explicitly select NewNode4-2 (avoid relative nav issues after focus change)
+            const node4_2 = page.locator('.mindmap-node').filter({ hasText: 'NewNode4-2' }).first();
+            await node4_2.click();
+            await expect(node4_2).toBeVisible();
+            await expect(node4_2).toHaveCSS('outline-style', 'solid');
+
+            // Return to 4-10 using Keyboard (auto-pan)
+            for (let k = 0; k < 8; k++) {
+                await page.keyboard.press('h');
+                await page.waitForTimeout(100);
+            }
+
+            const node4_10 = page.locator('.mindmap-node').filter({ hasText: 'NewNode4-10' }).first();
+            await expect(node4_10).toBeVisible(); // Ensures auto-pan worked
+            await expect(node4_10).toHaveCSS('outline-style', 'solid');
+
+            // Snapshot: Check for layout collapse at deep node in Left Layout
+            await expect(page).toHaveScreenshot('08-layout-left-node10.png');
+
+            // --- Both Layout ---
+            await page.locator('button[title="Layout: Both"]').click();
+            await page.locator('button[title="Reset Zoom"]').click(); // Reset Zoom to ensure visibility
+            await page.waitForTimeout(500); // Wait for transition
+            await expect(page).toHaveScreenshot('09-layout-both.png');
+
+            // Explicitly select Parent NewNode4 (Stable starting point)
+            const node4 = page.locator('.mindmap-node').filter({ hasText: /^NewNode4$/ }).first();
+            await node4.click({ force: true });
+            await expect(node4).toHaveCSS('outline-style', 'solid');
+
+            // Navigate to 4-2 (Child/Left x 2)
+            for (let k = 0; k < 2; k++) {
+                await page.keyboard.press('h');
+                await page.waitForTimeout(100);
+            }
+
+            const node4_2_both = page.locator('.mindmap-node').filter({ hasText: 'NewNode4-2' }).first();
+            await expect(node4_2_both).toBeVisible();
+            await expect(node4_2_both).toHaveCSS('outline-style', 'solid');
+
+            // Navigate to 4-10 (Child/Left x 8)
+            for (let k = 0; k < 8; k++) {
+                await page.keyboard.press('h');
+                await page.waitForTimeout(100);
+            }
+
+            const node4_10_both = page.locator('.mindmap-node').filter({ hasText: 'NewNode4-10' }).first();
+            await expect(node4_10_both).toBeVisible();
+            await expect(node4_10_both).toHaveCSS('outline-style', 'solid');
+        });
     });
 });
