@@ -30,6 +30,15 @@
                 "vite.config.ts"
             ]
         },
+        "test:e2e": {
+            "inputs": [
+                "src/**",
+                "tests/e2e/**",
+                "playwright.config.ts",
+                "package.json",
+                "tsconfig.json"
+            ]
+        },
         "lint": {
             "inputs": [
                 "src/**",

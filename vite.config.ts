@@ -1,5 +1,6 @@
 /// <reference types="vitest" />
 import { defineConfig } from 'vite';
+import { configDefaults } from 'vitest/config';
 import dts from 'vite-plugin-dts';
 import path from 'path';
 
@@ -38,6 +39,7 @@ export default defineConfig({
     test: {
         environment: 'happy-dom',
         globals: true,
-        setupFiles: ['./tests/setup.ts']
+        setupFiles: ['./tests/setup.ts'],
+        exclude: [...configDefaults.exclude, 'tests/e2e/**']
     }
 });

@@ -6,3 +6,5 @@ coverage
 vite.config.ts.timestamp*
 .pnpm-store
 .turbo
+test-results/
+playwright-report/
