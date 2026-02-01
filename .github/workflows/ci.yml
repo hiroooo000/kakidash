@@ -30,3 +30,17 @@ jobs:
     
     - name: Run All Checks (Turbo)
       run: pnpm turbo:ci
+
+    - name: Install Playwright Browsers
+      run: pnpm exec playwright install --with-deps
+
+    - name: Run E2E Tests
+      run: pnpm turbo run test:e2e
+
+    - name: Upload Playwright Report
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: playwright-report
+        path: playwright-report/
+        retention-days: 30
