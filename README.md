@@ -248,8 +248,14 @@ Here is the complete default configuration. You can partially override these key
     { "key": "ArrowRight" },
     { "key": "l" }
   ],
-  "addChild": [{ "key": "Tab" }],
-  "insertParent": [{ "key": "Tab", "shiftKey": true }],
+  "addChild": [
+    { "key": "Tab" },
+    { "key": "a" }
+  ],
+  "insertParent": [
+    { "key": "Tab", "shiftKey": true },
+    { "key": "a", "shiftKey": true }
+  ],
   "addSibling": [{ "key": "Enter" }],
   "addSiblingBefore": [{ "key": "Enter", "shiftKey": true }],
   "deleteNode": [
@@ -284,11 +290,17 @@ Here is the complete default configuration. You can partially override these key
   ],
   "bold": [{ "key": "b" }],
   "italic": [{ "key": "i" }],
-  "zoomIn": [
-    { "key": "+" },
-    { "key": "=" }
+  "increaseFontSize": [
+    { "key": ">", "shiftKey": true },
+    { "key": "." }
   ],
-  "zoomOut": [{ "key": "-" }],
+  "decreaseFontSize": [
+    { "key": "<", "shiftKey": true },
+    { "key": "," }
+  ],
+  "zoomIn": [{ "key": "[" }],
+  "zoomOut": [{ "key": "]" }],
+  "resetZoom": [{ "key": ":" }],
   "toggleFold": [{ "key": "f" }],
   "selectColor1": [{ "key": "1" }],
   "selectColor2": [{ "key": "2" }],
@@ -296,7 +308,8 @@ Here is the complete default configuration. You can partially override these key
   "selectColor4": [{ "key": "4" }],
   "selectColor5": [{ "key": "5" }],
   "selectColor6": [{ "key": "6" }],
-  "selectColor7": [{ "key": "7" }]
+  "selectColor7": [{ "key": "7" }],
+  "openCommandPalette": [{ "key": "m" }]
 }
 ```
 
@@ -311,8 +324,8 @@ Here is the complete default configuration. You can partially override these key
 | `F2` / `DblClick` / `Space` | Start editing node (Space triggers zoom if image) |
 | `Enter` | Add sibling node (below) |
 | `Shift + Enter` | Add sibling node (above) |
-| `Tab` | Add child node |
-| `Shift + Tab` | Insert parent node |
+| `Tab` / `a` | Add child node |
+| `Shift + Tab` / `Shift + a` | Insert parent node |
 | `Delete` / `Backspace` | Delete node |
 | `Ctrl/Cmd + z` | Undo |
 | `Ctrl/Cmd + Shift + z` / `Ctrl + y` | Redo |
@@ -323,6 +336,9 @@ Here is the complete default configuration. You can partially override these key
 | `Wheel` | Vertical scroll (Pan) |
 | `Shift + Wheel` | Horizontal scroll (Pan) |
 | `Ctrl/Cmd + Wheel` | Zoom in/out |
+| `[` | Canvas Zoom In |
+| `]` | Canvas Zoom Out |
+| `:` | Reset Zoom |
 | Click `+/-` / `f` | Toggle node folding |
 
 ### Editing (Text Input)
@@ -337,8 +353,8 @@ Here is the complete default configuration. You can partially override these key
 | --- | --- |
 | `b` | Toggle Bold |
 | `i` | Toggle Italic |
-| `+` | Increase font size |
-| `-` | Decrease font size |
+| `Shift + . (>)` / `.` | Increase font size |
+| `Shift + , (<)` / `,` | Decrease font size |
 | `1` - `7` | Change node color (Palette order) |
 
 ## Architecture
