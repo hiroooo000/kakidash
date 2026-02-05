@@ -8,8 +8,8 @@ describe('ShortcutManager', () => {
     navDown: [{ key: 'ArrowDown', ctrlKey: true }],
     deleteNode: [{ key: 'Delete' }, { key: 'Backspace', metaKey: true }],
     bold: [{ key: 'b', ctrlKey: true }],
-    zoomIn: [{ key: '>', shiftKey: true }, { key: '.' }],
-    scaleUp: [{ key: '[' }],
+    increaseFontSize: [{ key: '>', shiftKey: true }, { key: '.' }],
+    zoomIn: [{ key: '[' }],
     resetZoom: [{ key: ':' }],
     addChild: [{ key: 'Tab' }, { key: 'a' }],
   };
@@ -71,12 +71,12 @@ describe('ShortcutManager', () => {
 
     it('should match shifted keys', () => {
       const event = createEvent('>', { shift: true });
-      expect(manager.matches(event, 'zoomIn')).toBe(true);
+      expect(manager.matches(event, 'increaseFontSize')).toBe(true);
     });
 
     it('should match new scale shortcuts', () => {
       const event = createEvent('[');
-      expect(manager.matches(event, 'scaleUp')).toBe(true);
+      expect(manager.matches(event, 'zoomIn')).toBe(true);
     });
 
     it('should match alternative addChild shortcut', () => {

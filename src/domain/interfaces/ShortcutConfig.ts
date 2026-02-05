@@ -24,10 +24,10 @@ export type ShortcutAction =
   | 'redo'
   | 'bold'
   | 'italic'
+  | 'increaseFontSize'
+  | 'decreaseFontSize'
   | 'zoomIn'
   | 'zoomOut'
-  | 'scaleUp'
-  | 'scaleDown'
   | 'resetZoom'
   | 'toggleFold'
   | 'centerMap'
@@ -80,10 +80,10 @@ export const DEFAULT_SHORTCUTS: ShortcutConfig = {
   ],
   bold: [{ key: 'b' }], // Changed to just 'b' in previous task, keeping it? Or should it be Ctrl+b? Previous code was just 'b'
   italic: [{ key: 'i' }], // Previous code was just 'i'
-  zoomIn: [{ key: '>', shiftKey: true }, { key: '.' }], // > is Shift+.
-  zoomOut: [{ key: '<', shiftKey: true }, { key: ',' }], // < is Shift+,
-  scaleUp: [{ key: '[' }], // Canvas Zoom In
-  scaleDown: [{ key: ']' }], // Canvas Zoom Out
+  increaseFontSize: [{ key: '>', shiftKey: true }, { key: '.' }], // > is Shift+.
+  decreaseFontSize: [{ key: '<', shiftKey: true }, { key: ',' }], // < is Shift+,
+  zoomIn: [{ key: '[' }], // Canvas Zoom In
+  zoomOut: [{ key: ']' }], // Canvas Zoom Out
   resetZoom: [{ key: ':' }],
   toggleFold: [{ key: 'f', ctrlKey: false, metaKey: false, altKey: false }],
   selectColor1: [{ key: '1' }],

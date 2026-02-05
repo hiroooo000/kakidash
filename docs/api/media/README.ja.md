@@ -254,8 +254,14 @@ const kakidash = new Kakidash(container, {
     { "key": "ArrowRight" },
     { "key": "l" }
   ],
-  "addChild": [{ "key": "Tab" }],
-  "insertParent": [{ "key": "Tab", "shiftKey": true }],
+  "addChild": [
+    { "key": "Tab" },
+    { "key": "a" }
+  ],
+  "insertParent": [
+    { "key": "Tab", "shiftKey": true },
+    { "key": "a", "shiftKey": true }
+  ],
   "addSibling": [{ "key": "Enter" }],
   "addSiblingBefore": [{ "key": "Enter", "shiftKey": true }],
   "deleteNode": [
@@ -290,11 +296,17 @@ const kakidash = new Kakidash(container, {
   ],
   "bold": [{ "key": "b" }],
   "italic": [{ "key": "i" }],
-  "zoomIn": [
-    { "key": "+" },
-    { "key": "=" }
+  "increaseFontSize": [
+    { "key": ">", "shiftKey": true },
+    { "key": "." }
   ],
-  "zoomOut": [{ "key": "-" }],
+  "decreaseFontSize": [
+    { "key": "<", "shiftKey": true },
+    { "key": "," }
+  ],
+  "zoomIn": [{ "key": "[" }],
+  "zoomOut": [{ "key": "]" }],
+  "resetZoom": [{ "key": ":" }],
   "toggleFold": [{ "key": "f" }],
   "selectColor1": [{ "key": "1" }],
   "selectColor2": [{ "key": "2" }],
@@ -302,7 +314,8 @@ const kakidash = new Kakidash(container, {
   "selectColor4": [{ "key": "4" }],
   "selectColor5": [{ "key": "5" }],
   "selectColor6": [{ "key": "6" }],
-  "selectColor7": [{ "key": "7" }]
+  "selectColor7": [{ "key": "7" }],
+  "openCommandPalette": [{ "key": "m" }]
 }
 ```
 
@@ -317,8 +330,8 @@ const kakidash = new Kakidash(container, {
 | `F2` / `DblClick` / `Space` | ノードの編集を開始 (画像の場合はズーム) |
 | `Enter` | 兄弟ノードを追加 (下) |
 | `Shift + Enter` | 兄弟ノードを追加 (上) |
-| `Tab` | 子ノードを追加 |
-| `Shift + Tab` | 親ノードを挿入 |
+| `Tab` / `a` | 子ノードを追加 |
+| `Shift + Tab` / `Shift + a` | 親ノードを挿入 |
 | `Delete` / `Backspace` | ノードを削除 |
 | `Ctrl/Cmd + z` | 元に戻す (Undo) |
 | `Ctrl/Cmd + Shift + z` / `Ctrl + y` | やり直し (Redo) |
@@ -329,6 +342,9 @@ const kakidash = new Kakidash(container, {
 | `Wheel` | 上下スクロール (パン) |
 | `Shift + Wheel` | 左右スクロール (パン) |
 | `Ctrl/Cmd + Wheel` | ズームイン/アウト |
+| `[` | キャンバス拡大 |
+| `]` | キャンバス縮小 |
+| `:` | ズームリセット |
 | Click `+/-` / `f` | ノードの展開/折り畳み |
 
 ### Editing (Text Input)
@@ -343,8 +359,8 @@ const kakidash = new Kakidash(container, {
 | --- | --- |
 | `b` | 太字 (Bold) 切り替え |
 | `i` | 斜体 (Italic) 切り替え |
-| `+` | フォントサイズ拡大 |
-| `-` | フォントサイズ縮小 |
+| `Shift + . (>)` / `.` | フォントサイズ拡大 |
+| `Shift + , (<)` / `,` | フォントサイズ縮小 |
 | `1` - `7` | ノードの色を変更 (パレット順) |
 
 ## アーキテクチャ
@@ -388,6 +404,14 @@ pnpm turbo build
 pnpm test
 # or with turbo
 pnpm turbo test
+```
+
+### E2E Test (Playwright)
+
+```bash
+pnpm test:e2e
+# or with turbo
+pnpm turbo run test:e2e
 ```
 
 ### Lint

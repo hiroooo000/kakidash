@@ -465,7 +465,7 @@ export class InteractionHandler {
         this.handleBeginEdit();
         break;
 
-      case 'scaleUp':
+      case 'zoomIn':
         ke.preventDefault();
         // Zoom In at center
         if (this.options.onZoom) {
@@ -474,7 +474,7 @@ export class InteractionHandler {
           this.options.onZoom(-100, rect.left + rect.width / 2, rect.top + rect.height / 2);
         }
         break;
-      case 'scaleDown':
+      case 'zoomOut':
         ke.preventDefault();
         // Zoom Out at center
         if (this.options.onZoom) {
@@ -503,11 +503,11 @@ export class InteractionHandler {
         ke.preventDefault();
         this.options.onStyleAction?.(this.selectedNodeId, { type: 'italic' });
         break;
-      case 'zoomIn':
+      case 'increaseFontSize':
         ke.preventDefault();
         this.options.onStyleAction?.(this.selectedNodeId, { type: 'increaseSize' });
         break;
-      case 'zoomOut':
+      case 'decreaseFontSize':
         ke.preventDefault();
         this.options.onStyleAction?.(this.selectedNodeId, { type: 'decreaseSize' });
         break;
