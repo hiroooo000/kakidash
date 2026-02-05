@@ -12,6 +12,7 @@ export interface MindMapNodeData {
   isFolded?: boolean;
   parentId?: string;
   image?: string;
+  imageSize?: { width: number; height: number };
   layoutSide?: 'left' | 'right';
   icon?: string;
 }

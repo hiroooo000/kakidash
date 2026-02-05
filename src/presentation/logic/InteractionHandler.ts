@@ -28,7 +28,7 @@ export interface InteractionOptions {
   onCopyNode?: (nodeId: string) => void;
   onPasteNode?: (parentId: string) => void;
   onCutNode?: (nodeId: string) => void;
-  onPasteImage?: (parentId: string, imageData: string) => void;
+  onPasteImage?: (parentId: string, imageData: string, width: number, height: number) => void;
   onZoom?: (delta: number, x: number, y: number) => void;
   onZoomReset?: () => void;
   onUndo?: () => void;
@@ -330,7 +330,19 @@ export class InteractionHandler {
             const reader = new FileReader();
             reader.onload = (event) => {
               if (event.target?.result && this.options.onPasteImage && this.selectedNodeId) {
-                this.options.onPasteImage(this.selectedNodeId, event.target.result as string);
+                const result = event.target.result as string;
+                const img = new Image();
+                img.onload = () => {
+                  if (this.selectedNodeId && this.options.onPasteImage) {
+                    this.options.onPasteImage(
+                      this.selectedNodeId,
+                      result,
+                      img.naturalWidth,
+                      img.naturalHeight,
+                    );
+                  }
+                };
+                img.src = result;
               }
             };
             reader.readAsDataURL(blob);

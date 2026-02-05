@@ -14,6 +14,7 @@ export class Node {
   parentId: string | null;
   isRoot: boolean;
   image?: string;
+  imageSize?: { width: number; height: number };
   layoutSide?: 'left' | 'right';
   isFolded: boolean;
   icon?: string;
@@ -27,6 +28,7 @@ export class Node {
     layoutSide?: 'left' | 'right',
     isFolded: boolean = false,
     icon?: string,
+    imageSize?: { width: number; height: number },
   ) {
     this.id = id;
     this.topic = topic;
@@ -35,6 +37,7 @@ export class Node {
     this.parentId = parentId;
     this.isRoot = isRoot;
     this.image = image;
+    this.imageSize = imageSize;
     this.layoutSide = layoutSide;
     this.isFolded = isFolded;
     this.icon = icon;

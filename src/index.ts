@@ -102,7 +102,8 @@ export class Kakidash extends TypedEventEmitter<KakidashEventMap> {
       onCopyNode: (nodeId) => this.controller.copyNode(nodeId),
       onPasteNode: (parentId) => this.controller.pasteNode(parentId),
       onCutNode: (nodeId) => this.controller.cutNode(nodeId),
-      onPasteImage: (parentId, imageData) => this.controller.pasteImage(parentId, imageData),
+      onPasteImage: (parentId, imageData, width, height) =>
+        this.controller.pasteImage(parentId, imageData, width, height),
       onZoom: (delta, x, y) => this.controller.zoomBoard(delta, x, y),
       onZoomReset: () => this.controller.resetZoom(),
       onUndo: () => this.controller.undo(),
@@ -377,8 +378,8 @@ export class Kakidash extends TypedEventEmitter<KakidashEventMap> {
     this.controller.pasteNode(parentId);
   }
 
-  pasteImage(parentId: string, imageData: string): void {
-    this.controller.pasteImage(parentId, imageData);
+  pasteImage(parentId: string, imageData: string, width?: number, height?: number): void {
+    this.controller.pasteImage(parentId, imageData, width, height);
   }
 
   cutNode(nodeId: string): void {

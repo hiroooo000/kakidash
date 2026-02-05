@@ -61,7 +61,7 @@ export class MindMapService {
     return newNode;
   }
 
-  addImageNode(parentId: string, imageData: string): Node | null {
+  addImageNode(parentId: string, imageData: string, width?: number, height?: number): Node | null {
     const parent = this.mindMap.findNode(parentId);
     if (!parent) return null;
 
@@ -69,7 +69,18 @@ export class MindMapService {
 
     const id = this.idGenerator.generate();
     // Image nodes have empty topic
-    const newNode = new Node(id, '', parentId, false, imageData, undefined, false);
+    const imageSize = width && height ? { width, height } : undefined;
+    const newNode = new Node(
+      id,
+      '',
+      parentId,
+      false,
+      imageData,
+      undefined,
+      false,
+      undefined,
+      imageSize,
+    );
     parent.addChild(newNode);
     return newNode;
   }
@@ -365,6 +376,7 @@ export class MindMapService {
       node.layoutSide,
       node.isFolded,
       node.icon,
+      node.imageSize && { ...node.imageSize },
     );
     clone.style = { ...node.style };
     // Determine how to handle children. Recursively clone them.
@@ -407,7 +419,9 @@ export class MindMapService {
         image: node.image,
         layoutSide: node.layoutSide,
         isFolded: node.isFolded,
+
         icon: node.icon,
+        imageSize: node.imageSize,
       };
       return data;
     };
@@ -446,6 +460,7 @@ export class MindMapService {
         data.layoutSide,
         data.isFolded || false,
         data.icon,
+        data.imageSize,
       );
 
       if (data.style) {
