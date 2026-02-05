@@ -577,8 +577,8 @@ export class MindMapController {
     }
   }
 
-  pasteImage(parentId: string, imageData: string): void {
-    const newNode = this.service.addImageNode(parentId, imageData);
+  pasteImage(parentId: string, imageData: string, width?: number, height?: number): void {
+    const newNode = this.service.addImageNode(parentId, imageData, width, height);
     if (newNode) {
       this.render();
       this.selectNode(newNode.id);

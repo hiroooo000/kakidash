@@ -139,8 +139,18 @@ export class SvgRenderer implements Renderer {
       // Image Node
       const img = document.createElement('img');
       img.src = node.image;
-      img.style.maxWidth = '150px';
-      img.style.maxHeight = '150px';
+      if (node.imageSize) {
+        if (node.imageSize.width > 150) {
+          img.style.width = '150px';
+          img.style.height = 'auto';
+        } else {
+          img.style.width = `${node.imageSize.width}px`;
+          img.style.height = `${node.imageSize.height}px`;
+        }
+      } else {
+        img.style.maxWidth = '150px';
+        img.style.maxHeight = '150px';
+      }
       img.style.display = 'block';
       el.appendChild(img);
 
@@ -527,6 +537,13 @@ export class SvgRenderer implements Renderer {
 
   private measureNode(node: Node, mindMap?: MindMap): { width: number; height: number } {
     if (node.image) {
+      if (node.imageSize) {
+        if (node.imageSize.width > 150) {
+          const ratio = node.imageSize.height / node.imageSize.width;
+          return { width: 160, height: 150 * ratio + 10 };
+        }
+        return { width: node.imageSize.width + 10, height: node.imageSize.height + 10 };
+      }
       // Return fixed size for images + padding estimate
       // Max 150x150 + padding 10
       return { width: 160, height: 160 };
