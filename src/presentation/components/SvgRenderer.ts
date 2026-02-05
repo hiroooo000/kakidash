@@ -512,7 +512,7 @@ export class SvgRenderer implements Renderer {
     const { height } = this.measureNode(node, mindMap);
     const verticalGap = 20;
 
-    if (node.children.length === 0) {
+    if (node.children.length === 0 || node.isFolded) {
       return height + verticalGap;
     }
 
