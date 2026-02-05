@@ -964,8 +964,8 @@ export class MindMapController {
           { action: 'selectColor5', desc: 'Color 5', descJa: 'ノードの色を変更 (5)' },
           { action: 'selectColor6', desc: 'Color 6', descJa: 'ノードの色を変更 (6)' },
           { action: 'selectColor7', desc: 'Color 7', descJa: 'ノードの色を変更 (7)' },
-          { key: 'Shift + . (>)', desc: 'Increase Font Size', descJa: 'フォントサイズ拡大' },
-          { key: 'Shift + , (<)', desc: 'Decrease Font Size', descJa: 'フォントサイズ縮小' },
+          { action: 'zoomIn', desc: 'Increase Font Size', descJa: 'フォントサイズ拡大' },
+          { action: 'zoomOut', desc: 'Decrease Font Size', descJa: 'フォントサイズ縮小' },
         ],
       },
     ];

@@ -390,6 +390,14 @@ pnpm test
 pnpm turbo test
 ```
 
+### E2E Test (Playwright)
+
+```bash
+pnpm test:e2e
+# or with turbo
+pnpm turbo run test:e2e
+```
+
 ### Lint
 
 ```bash
