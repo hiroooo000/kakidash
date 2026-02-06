@@ -15,6 +15,7 @@ export interface MindMapNodeData {
   imageSize?: { width: number; height: number };
   layoutSide?: 'left' | 'right';
   icon?: string;
+  customWidth?: number;
 }
 
 export type Theme = 'default' | 'simple' | 'colorful' | 'custom';

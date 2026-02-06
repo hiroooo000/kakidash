@@ -112,6 +112,7 @@ export class Kakidash extends TypedEventEmitter<KakidashEventMap> {
       onEditEnd: (_) => this.controller.onEditEnd(),
       onToggleFold: (nodeId) => this.controller.toggleFold(nodeId),
       onToggleCommandPalette: () => this.controller.toggleCommandPalette(),
+      onUpdateNodeWidth: (nodeId, increment) => this.controller.updateNodeWidth(nodeId, increment),
       shortcuts: options.shortcuts,
     });
 

@@ -236,6 +236,34 @@ export class MindMapController {
   }
 
   // Interaction Handlers
+  updateNodeWidth(nodeId: string, increment: number): void {
+    if (this.interactionHandler && this.interactionHandler.isReadOnly) return;
+
+    const node = this.mindMap.findNode(nodeId);
+    if (!node) return;
+
+    // Determine current effective width
+    let currentWidth = node.customWidth;
+
+    if (currentWidth === undefined) {
+      // Use renderer's measurement logic to get the current natural width
+      // This is more robust than querying the DOM directly
+      const measured = this.renderer.measureNode(node, this.mindMap);
+      currentWidth = measured.width;
+    }
+
+    let newWidth = currentWidth + increment;
+
+    // Minimum width constraint (e.g., 50px)
+    if (newWidth < 50) newWidth = 50;
+
+    // Update via service
+    if (this.service.updateNodeCustomWidth(nodeId, newWidth)) {
+      this.render();
+      this.eventBus.emit('model:change', undefined);
+    }
+  }
+
   addChildNode(parentId: string): void {
     const parent = this.mindMap.findNode(parentId);
     if (parent && parent.isRoot && this.layoutMode === 'Both') {
