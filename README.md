@@ -263,8 +263,9 @@ Here is the complete default configuration. You can partially override these key
     { "key": "Backspace" }
   ],
   "beginEdit": [
-    { "key": "F2" },
-    { "key": " " }
+    { "key": "i" },
+    { "key": " " },
+    { "key": "F2" }
   ],
   "copy": [
     { "key": "c", "ctrlKey": true },
@@ -288,8 +289,8 @@ Here is the complete default configuration. You can partially override these key
     { "key": "y", "ctrlKey": true },
     { "key": "y", "metaKey": true }
   ],
-  "bold": [{ "key": "b" }],
-  "italic": [{ "key": "i" }],
+  "bold": [{ "key": "b", "shiftKey": true }],
+  "italic": [{ "key": "i", "shiftKey": true }],
   "increaseFontSize": [
     { "key": ">", "shiftKey": true },
     { "key": "." }
@@ -321,7 +322,7 @@ Here is the complete default configuration. You can partially override these key
 | `m` | Command Palette (Search / Icons) |
 | `Arrow Keys` | Navigate between nodes |
 | `h` / `j` / `k` / `l` | Navigate between nodes (Vim-style) |
-| `F2` / `DblClick` / `Space` | Start editing node (Space triggers zoom if image) |
+| `F2` / `DblClick` / `Space` / `i` | Start editing node (Space triggers zoom if image) |
 | `Enter` | Add sibling node (below) |
 | `Shift + Enter` | Add sibling node (above) |
 | `Tab` / `a` | Add child node |
@@ -351,8 +352,8 @@ Here is the complete default configuration. You can partially override these key
 ### Styling (Since selection)
 | Key | Description |
 | --- | --- |
-| `b` | Toggle Bold |
-| `i` | Toggle Italic |
+| `Shift + b` | Toggle Bold |
+| `Shift + i` | Toggle Italic |
 | `Shift + . (>)` / `.` | Increase font size |
 | `Shift + , (<)` / `,` | Decrease font size |
 | `Shift + ArrowLeft / Right` | Adjust node width |

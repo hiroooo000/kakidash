@@ -269,8 +269,9 @@ const kakidash = new Kakidash(container, {
     { "key": "Backspace" }
   ],
   "beginEdit": [
-    { "key": "F2" },
-    { "key": " " }
+    { "key": "i" },
+    { "key": " " },
+    { "key": "F2" }
   ],
   "copy": [
     { "key": "c", "ctrlKey": true },
@@ -294,8 +295,8 @@ const kakidash = new Kakidash(container, {
     { "key": "y", "ctrlKey": true },
     { "key": "y", "metaKey": true }
   ],
-  "bold": [{ "key": "b" }],
-  "italic": [{ "key": "i" }],
+  "bold": [{ "key": "b", "shiftKey": true }],
+  "italic": [{ "key": "i", "shiftKey": true }],
   "increaseFontSize": [
     { "key": ">", "shiftKey": true },
     { "key": "." }
@@ -327,7 +328,7 @@ const kakidash = new Kakidash(container, {
 | `m` | コマンドパレット (検索 / アイコン) |
 | `Arrow Keys` | ノード間の移動 |
 | `h` / `j` / `k` / `l` | ノード間の移動 (Vim風) |
-| `F2` / `DblClick` / `Space` | ノードの編集を開始 (画像の場合はズーム) |
+| `F2` / `DblClick` / `Space` / `i` | ノードの編集を開始 (画像の場合はズーム) |
 | `Enter` | 兄弟ノードを追加 (下) |
 | `Shift + Enter` | 兄弟ノードを追加 (上) |
 | `Tab` / `a` | 子ノードを追加 |
@@ -357,8 +358,8 @@ const kakidash = new Kakidash(container, {
 ### Styling (Since selection)
 | Key | Description |
 | --- | --- |
-| `b` | 太字 (Bold) 切り替え |
-| `i` | 斜体 (Italic) 切り替え |
+| `Shift + b` | 太字 (Bold) 切り替え |
+| `Shift + i` | 斜体 (Italic) 切り替え |
 | `Shift + . (>)` / `.` | フォントサイズ拡大 |
 | `Shift + , (<)` / `,` | フォントサイズ縮小 |
 | `Shift + ArrowLeft / Right` | ノード幅の変更 |
