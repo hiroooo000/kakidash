@@ -5,6 +5,24 @@
 この形式は [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) に基づいており、
 このプロジェクトは [セマンティック バージョニング](https://semver.org/spec/v2.0.0.html) に準拠しています。
 
+## [0.2.0] - 2026-02-07
+
+### 追加
+- ノードごとの幅調整機能（キーボードショートカット `Shift + Left/Right` およびAPI経由）。
+- ノードエディタの幅がカスタマイズされたノード幅に追従するように変更。
+
+### 変更
+- デフォルトのキーボードショートカットを更新:
+  - ノード編集: `i`, `Space`, `F2`
+  - 太字: `Shift + b`
+  - 斜体: `Shift + i`
+- アーキテクチャ分離のため `MindMapController` と `SvgRenderer` を疎結合化。
+- 依存関係を最新バージョンに更新 (`chore/update-dependencies`)。
+
+### その他
+- End-to-End (E2E) テストを `turbo:ci` チェックに統合。
+- CI/CDワークフローを更新し、Playwrightブラウザのインストールをサポート。
+
 ## [0.1.13] - 2026-02-05
 
 ### 修正

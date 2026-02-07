@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] - 2026-02-07
+
+### Added
+- Individual node width customization via keyboard shortcuts (`Shift + Left/Right`) and API.
+- Node editor width now dynamically matches the customized node width.
+
+### Changed
+- Updated default keyboard shortcuts:
+  - Edit Node: `i`, `Space`, `F2`
+  - Bold: `Shift + b`
+  - Italic: `Shift + i`
+- Decoupled `MindMapController` from `SvgRenderer` for better architectural separation.
+- Updated dependencies to latest versions (`chore/update-dependencies`).
+
+### Chore
+- Integrated End-to-End (E2E) tests into `turbo:ci` checks.
+- Updated CI/CD workflows to support Playwright browser installation.
+
 ## [0.1.13] - 2026-02-05
 
 ### Fixed
