@@ -645,9 +645,10 @@ export class MindMapController {
       let currentIndex = sizes.findIndex((s) => s.value === currentVal);
       if (currentIndex === -1) currentIndex = 0;
 
-      let newIndex = currentIndex;
-      if (action.type === 'increaseSize') newIndex = Math.min(sizes.length - 1, currentIndex + 1);
-      else newIndex = Math.max(0, currentIndex - 1);
+      const newIndex =
+        action.type === 'increaseSize'
+          ? Math.min(sizes.length - 1, currentIndex + 1)
+          : Math.max(0, currentIndex - 1);
 
       if (newIndex !== currentIndex) newStyle = { fontSize: sizes[newIndex].value };
     }
