@@ -501,12 +501,7 @@ export class SvgRenderer implements Renderer {
       const childHeight = this.getNodeHeight(child, mindMap);
       const childY = startY + childHeight / 2;
 
-      let childX = 0;
-      if (direction === 'right') {
-        childX = parentEdgeX + levelGap;
-      } else {
-        childX = parentEdgeX - levelGap;
-      }
+      const childX = direction === 'right' ? parentEdgeX + levelGap : parentEdgeX - levelGap;
 
       this.renderNode(child, childX, childY, selectedNodeId, layoutMode, false, direction, mindMap);
 
