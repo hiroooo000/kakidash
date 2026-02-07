@@ -209,7 +209,30 @@ export class SvgRenderer implements Renderer {
       }
 
       const textSpan = document.createElement('span');
-      textSpan.textContent = node.topic;
+      const urlRegex = /(https?:\/\/[^\s]+)/g;
+      const parts = node.topic.split(urlRegex);
+
+      parts.forEach((part) => {
+        if (part.match(urlRegex)) {
+          const a = document.createElement('a');
+          a.href = part;
+          a.target = '_blank';
+          a.rel = 'noopener noreferrer';
+          a.textContent = part;
+          a.style.color = '#3498DB'; // Link color
+          a.style.textDecoration = 'underline';
+          a.style.cursor = 'pointer';
+
+          // Stop propagation of click to prevent node selection when clicking link
+          a.addEventListener('mousedown', (e) => e.stopPropagation());
+          a.addEventListener('click', (e) => e.stopPropagation());
+
+          textSpan.appendChild(a);
+        } else {
+          textSpan.appendChild(document.createTextNode(part));
+        }
+      });
+
       el.appendChild(textSpan);
 
       const effectiveMaxWidth =
