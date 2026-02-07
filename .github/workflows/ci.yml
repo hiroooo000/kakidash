@@ -28,14 +28,11 @@ jobs:
     - name: Install dependencies
       run: pnpm install --frozen-lockfile
     
-    - name: Run All Checks (Turbo)
-      run: pnpm turbo:ci
-
     - name: Install Playwright Browsers
       run: pnpm exec playwright install --with-deps
 
-    - name: Run E2E Tests
-      run: pnpm turbo run test:e2e
+    - name: Run All Checks (Turbo)
+      run: pnpm turbo:ci
 
     - name: Upload Playwright Report
       if: failure()
