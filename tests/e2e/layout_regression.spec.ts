@@ -185,11 +185,11 @@ What the hand, dare seize the fire?`;
       await page.waitForTimeout(100);
 
       // Italic
-      await page.keyboard.press('i');
+      await page.keyboard.press('Shift+i');
       await page.waitForTimeout(100);
 
       // Bold
-      await page.keyboard.press('b');
+      await page.keyboard.press('Shift+b');
       await page.waitForTimeout(100);
 
       // Snapshot: Style Changed
