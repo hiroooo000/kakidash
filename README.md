@@ -26,6 +26,7 @@ Master the shortcuts and expand your mind map at the speed of thought.
   - Keyboard shortcuts for rapid operation.
   - Zoom, Pan (Screen navigation).
 - **Image Support**: Paste images from the clipboard.
+- **Auto Link**: Automatically detects URLs in node text and converts them to clickable links.
 - **Import/Export**: Save and load data in JSON format (including focus state).
 - **For Developers**:
   - TypeScript support.

@@ -59,6 +59,13 @@ class MockHTMLElement {
       offsetHeight: 30,
     };
   },
+  createTextNode: (text: string) => {
+    return {
+      nodeType: 3,
+      textContent: text,
+      nodeValue: text,
+    };
+  },
   addEventListener: vi.fn(),
   head: { appendChild: vi.fn() },
 };
