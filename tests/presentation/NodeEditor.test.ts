@@ -89,10 +89,11 @@ describe('NodeEditor', () => {
 
   it('should respect maxWidth option', () => {
     nodeEditor.setMaxWidth(200);
+    // Element has 8px padding. 200 + 16 = 216.
     nodeEditor.startEditing(element, 'node1');
 
     const textarea = container.querySelector('textarea')!;
-    expect(textarea.style.maxWidth).toBe('200px');
+    expect(textarea.style.maxWidth).toBe('216px');
   });
 
   it('should not set maxWidth when -1', () => {
@@ -180,5 +181,28 @@ describe('NodeEditor', () => {
 
     textarea = container.querySelector('textarea');
     expect(textarea).toBeNull();
+  });
+  it('should use element style maxWidth if available (override global) accounting for padding', () => {
+    nodeEditor.setMaxWidth(200);
+    element.style.maxWidth = '400px';
+    // Element has 8px padding (set in beforeEach everywhere? No, line 22).
+    // box-sizing: content-box (default). Width = 400 content + 16 padding.
+    // Textarea is border-box. To match content width 400, it needs width 400 + 16 = 416.
+
+    nodeEditor.startEditing(element, 'node1');
+
+    const textarea = container.querySelector('textarea')!;
+    // 400 + 8*2 = 416
+    expect(textarea.style.maxWidth).toBe('416px');
+  });
+
+  it('should fallback to global maxWidth (adjusted for padding) if element has no maxWidth', () => {
+    nodeEditor.setMaxWidth(200);
+    element.style.maxWidth = '';
+    nodeEditor.startEditing(element, 'node1');
+
+    const textarea = container.querySelector('textarea')!;
+    // 200 + 8*2 = 216
+    expect(textarea.style.maxWidth).toBe('216px');
   });
 });
