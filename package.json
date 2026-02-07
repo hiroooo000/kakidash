@@ -32,7 +32,7 @@
         "docs": "typedoc",
         "format": "prettier --write \"src/**/*.{ts,json}\"",
         "turbo": "turbo",
-        "turbo:ci": "turbo run typecheck build test lint docs",
+        "turbo:ci": "turbo run typecheck build test lint docs test:e2e",
         "test:e2e": "playwright test"
     },
     "keywords": [
