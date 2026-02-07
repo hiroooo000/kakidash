@@ -57,7 +57,7 @@ export const DEFAULT_SHORTCUTS: ShortcutConfig = {
   addSibling: [{ key: 'Enter' }],
   addSiblingBefore: [{ key: 'Enter', shiftKey: true }],
   deleteNode: [{ key: 'Delete' }, { key: 'Backspace' }],
-  beginEdit: [{ key: 'F2' }, { key: ' ' }],
+  beginEdit: [{ key: 'i' }, { key: ' ' }, { key: 'F2' }],
   copy: [
     { key: 'c', ctrlKey: true },
     { key: 'c', metaKey: true },
@@ -80,8 +80,8 @@ export const DEFAULT_SHORTCUTS: ShortcutConfig = {
     { key: 'y', ctrlKey: true },
     { key: 'y', metaKey: true },
   ],
-  bold: [{ key: 'b' }], // Changed to just 'b' in previous task, keeping it? Or should it be Ctrl+b? Previous code was just 'b'
-  italic: [{ key: 'i' }], // Previous code was just 'i'
+  bold: [{ key: 'b', shiftKey: true }], // Changed to just 'b' in previous task, keeping it? Or should it be Ctrl+b? Previous code was just 'b'
+  italic: [{ key: 'i', shiftKey: true }], // Previous code was just 'i'
   increaseFontSize: [{ key: '>', shiftKey: true }, { key: '.' }], // > is Shift+.
   decreaseFontSize: [{ key: '<', shiftKey: true }, { key: ',' }], // < is Shift+,
   zoomIn: [{ key: '[' }], // Canvas Zoom In

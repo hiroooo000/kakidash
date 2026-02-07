@@ -2,8 +2,8 @@ import { test } from '@playwright/test';
 import path from 'path';
 
 test('capture snapshot', async ({ page }) => {
-  console.log('Navigating to localhost:5173');
-  await page.goto('http://localhost:5173');
+  console.log('Navigating to Home');
+  await page.goto('/');
 
   // Wait for content. Adjust selector based on actual app.
   // Assuming 'svg' or standard body content.
