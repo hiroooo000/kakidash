@@ -4,19 +4,20 @@
 
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/unbound-method */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { MindMapController } from '../../src/presentation/logic/MindMapController';
 import { MindMap } from '../../src/domain/entities/MindMap';
 import { Node } from '../../src/domain/entities/Node';
 import { MindMapService } from '../../src/application/services/MindMapService';
-import { SvgRenderer } from '../../src/presentation/components/SvgRenderer';
+import { Renderer } from '../../src/presentation/components/Renderer';
 import { StyleEditor } from '../../src/presentation/components/StyleEditor';
 import { InteractionHandler } from '../../src/presentation/logic/InteractionHandler';
 import { CryptoIdGenerator } from '../../src/infrastructure/impl/CryptoIdGenerator';
 
 // Mock dependencies
 vi.mock('../../src/application/services/MindMapService');
-vi.mock('../../src/presentation/components/SvgRenderer');
+// vi.mock('../../src/presentation/components/SvgRenderer'); // No longer needed as we use interface mock
 vi.mock('../../src/presentation/components/StyleEditor');
 vi.mock('../../src/presentation/logic/InteractionHandler');
 
@@ -24,7 +25,7 @@ describe('MindMapController', () => {
   let controller: MindMapController;
   let mindMap: MindMap;
   let service: any; // Using any for mocked instance
-  let renderer: any;
+  let renderer: Renderer;
   let styleEditor: any;
   let interactionHandler: any;
   let eventBus: any;
@@ -37,7 +38,14 @@ describe('MindMapController', () => {
     // Instantiate mocks
     const idGenerator = new CryptoIdGenerator();
     service = new MindMapService(mindMap, idGenerator);
-    renderer = new SvgRenderer(document.createElement('div'));
+    // Mock Renderer
+    renderer = {
+      container: document.createElement('div'),
+      maxWidth: -1,
+      render: vi.fn(),
+      updateTransform: vi.fn(),
+      measureNode: vi.fn(),
+    };
     styleEditor = new StyleEditor(document.createElement('div'));
     interactionHandler = new InteractionHandler(document.createElement('div'), {} as any);
 
@@ -68,6 +76,7 @@ describe('MindMapController', () => {
     });
 
     renderer.container = mockContainer;
+    // renderer methods already mocked above or can be overridden here
     renderer.render = vi.fn();
     renderer.updateTransform = vi.fn();
 

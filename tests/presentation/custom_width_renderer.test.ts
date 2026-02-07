@@ -61,10 +61,10 @@ describe('SvgRenderer Custom Width', () => {
 
     expect(nodeEl.style.maxWidth).toBe('150px');
   });
-  // Note: We cannot easily test MindMapController logic here because this test is for SvgRenderer. 
+  // Note: We cannot easily test MindMapController logic here because this test is for SvgRenderer.
   // The fix was in MindMapController.
   // However, we established SvgRenderer exposes the nodeContainer which we used in the fix.
-  // We should add a new test file or update this one if we want to test Controller logic, 
+  // We should add a new test file or update this one if we want to test Controller logic,
   // but Controller tests are usually in MindMapController.test.ts.
   // I will create a new test file for the bug fix verification specifically.
 });

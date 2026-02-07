@@ -1,7 +1,7 @@
 import { MindMap } from '../../domain/entities/MindMap';
 import { Node, NodeStyle } from '../../domain/entities/Node';
 import { MindMapService } from '../../application/services/MindMapService';
-import { SvgRenderer } from '../components/SvgRenderer';
+import { Renderer } from '../components/Renderer';
 import { StyleEditor } from '../components/StyleEditor';
 import { InteractionHandler, Direction } from './InteractionHandler';
 import { LayoutMode } from '../../domain/interfaces/LayoutMode';
@@ -20,7 +20,7 @@ export interface IMindMapEventBus {
 export class MindMapController {
   private mindMap: MindMap;
   private service: MindMapService;
-  private renderer: SvgRenderer;
+  private renderer: Renderer;
   private eventBus: IMindMapEventBus;
   private styleEditor: StyleEditor;
   private commandPalette: CommandPalette;
@@ -50,7 +50,7 @@ export class MindMapController {
   constructor(
     mindMap: MindMap,
     service: MindMapService,
-    renderer: SvgRenderer,
+    renderer: Renderer,
     styleEditor: StyleEditor,
     eventBus: IMindMapEventBus,
   ) {
