@@ -37,6 +37,7 @@ export interface InteractionOptions {
   onEditEnd?: (nodeId: string) => void;
   onToggleFold?: (nodeId: string) => void;
   onToggleCommandPalette?: () => void;
+  onUpdateNodeWidth?: (nodeId: string, increment: number) => void;
   shortcuts?: ShortcutConfig;
   allowReadOnly?: boolean;
 }
@@ -530,6 +531,15 @@ export class InteractionHandler {
       case 'openCommandPalette':
         ke.preventDefault();
         this.options.onToggleCommandPalette?.();
+        break;
+
+      case 'increaseNodeWidth':
+        ke.preventDefault();
+        this.options.onUpdateNodeWidth?.(this.selectedNodeId, 20);
+        break;
+      case 'decreaseNodeWidth':
+        ke.preventDefault();
+        this.options.onUpdateNodeWidth?.(this.selectedNodeId, -20);
         break;
       default:
         // Handle dynamic color actions

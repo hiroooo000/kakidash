@@ -355,6 +355,7 @@ Here is the complete default configuration. You can partially override these key
 | `i` | Toggle Italic |
 | `Shift + . (>)` / `.` | Increase font size |
 | `Shift + , (<)` / `,` | Decrease font size |
+| `Shift + ArrowLeft / Right` | Adjust node width |
 | `1` - `7` | Change node color (Palette order) |
 
 ## Architecture

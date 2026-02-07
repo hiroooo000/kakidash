@@ -361,6 +361,7 @@ const kakidash = new Kakidash(container, {
 | `i` | 斜体 (Italic) 切り替え |
 | `Shift + . (>)` / `.` | フォントサイズ拡大 |
 | `Shift + , (<)` / `,` | フォントサイズ縮小 |
+| `Shift + ArrowLeft / Right` | ノード幅の変更 |
 | `1` - `7` | ノードの色を変更 (パレット順) |
 
 ## アーキテクチャ

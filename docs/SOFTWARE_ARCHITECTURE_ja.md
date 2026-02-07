@@ -64,7 +64,7 @@ classDiagram
     class MindMapController {
         -mindMap: MindMap
         -service: MindMapService
-        -renderer: SvgRenderer
+        -renderer: Renderer
         -styleEditor: StyleEditor
         -commandPalette: CommandPalette
         -interactionHandler: InteractionHandler
@@ -114,6 +114,11 @@ classDiagram
         +updateTransform()
     }
 
+    class Renderer {
+        <<interface>>
+        +render(mindMap)
+    }
+
     class InteractionHandler {
         -nodeEditor: NodeEditor
         -nodeDragger: NodeDragger
@@ -137,7 +142,8 @@ classDiagram
     
     MindMapController o-- MindMap : updates
     MindMapController o-- MindMapService : delegates logic
-    MindMapController o-- SvgRenderer : triggers draw
+    MindMapController o-- Renderer : triggers draw
+    SvgRenderer ..|> Renderer : implements
     MindMapController o-- CommandPalette : controls
     MindMapController o-- InteractionHandler : manages input
     
@@ -210,8 +216,9 @@ src/
   - マウス操作、キーボードショートカット、ドラッグ＆ドロップなどのユーザー入力をハンドリング。
 
 #### Components (`src/presentation/components`)
-- **SvgRenderer**:
-  - マインドマップのSVG描画を担当。
+- **Renderer (Interface) / SvgRenderer (Implementation)**:
+  - マインドマップの描画を担当。
+  - `MindMapController` は `Renderer` インターフェースに依存し、実装（`SvgRenderer`）はDIされます。
 - **NodeEditor / StyleEditor**:
   - ノード編集やスタイル編集などの複雑なUIロジックの分離。
 - **CommandPalette**:

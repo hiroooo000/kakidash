@@ -24,8 +24,17 @@ export class NodeEditor {
     // 1. Create textarea
     const input = this.createEditTextarea(element, currentText);
 
+    // Determine effective max width
+    let effectiveMaxWidth = this.maxWidth;
+    if (element.style.maxWidth) {
+      const parsed = parseInt(element.style.maxWidth, 10);
+      if (!isNaN(parsed)) {
+        effectiveMaxWidth = parsed;
+      }
+    }
+
     // 2. Apply styles
-    this.applyTextareaStyles(input, element, this.maxWidth);
+    this.applyTextareaStyles(input, element, effectiveMaxWidth);
 
     // 3. Store original styles
     const originalOutline = element.style.outline;
@@ -34,7 +43,7 @@ export class NodeEditor {
     element.style.boxShadow = 'none';
 
     // 4. Create size updater
-    const updateSize = this.createSizeUpdater(input, element, this.maxWidth);
+    const updateSize = this.createSizeUpdater(input, element, effectiveMaxWidth);
 
     // 5. Initial sizing
     updateSize();
@@ -89,18 +98,27 @@ export class NodeEditor {
     element: HTMLElement,
     maxWidth: number,
   ): void {
+    const computed = window.getComputedStyle(element);
+
     if (maxWidth !== -1) {
       textarea.style.whiteSpace = 'pre-wrap';
       textarea.style.wordWrap = 'break-word';
       textarea.style.overflowWrap = 'anywhere';
-      textarea.style.maxWidth = `${maxWidth}px`;
+
+      // Adjust maxWidth for border-box (add padding and border)
+      const paddingX =
+        (parseFloat(computed.paddingLeft) || 0) + (parseFloat(computed.paddingRight) || 0);
+      const borderX =
+        (parseFloat(computed.borderLeftWidth) || 0) + (parseFloat(computed.borderRightWidth) || 0);
+      const adjustedMaxWidth = maxWidth + paddingX + borderX;
+
+      textarea.style.maxWidth = `${adjustedMaxWidth}px`;
       textarea.style.width = 'max-content';
     } else {
       textarea.style.whiteSpace = 'pre';
     }
 
     // Copy styles to match appearance
-    const computed = window.getComputedStyle(element);
     textarea.style.font = computed.font;
     textarea.style.padding = computed.padding;
     textarea.style.boxSizing = 'border-box';
@@ -156,9 +174,9 @@ export class NodeEditor {
 
       document.body.appendChild(span);
 
-      // Add a little buffer for cursor and borders
-      const width = span.offsetWidth + 20;
-      const height = span.offsetHeight + 10;
+      // Add a little buffer for cursor and borders (minimal)
+      const width = span.offsetWidth + 4;
+      const height = span.offsetHeight;
 
       textarea.style.width = Math.max(width, element.offsetWidth) + 'px';
       textarea.style.height = Math.max(height, element.offsetHeight) + 'px';

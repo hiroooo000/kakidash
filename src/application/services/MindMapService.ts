@@ -143,6 +143,16 @@ export class MindMapService {
     }
   }
 
+  updateNodeCustomWidth(id: string, width: number | undefined): boolean {
+    const node = this.mindMap.findNode(id);
+    if (node) {
+      this.saveState();
+      node.customWidth = width;
+      return true;
+    }
+    return false;
+  }
+
   moveNode(nodeId: string, newParentId: string, layoutSide?: 'left' | 'right'): boolean {
     // Handle side update for same parent (re-layout)
     const node = this.mindMap.findNode(nodeId);
@@ -422,6 +432,7 @@ export class MindMapService {
 
         icon: node.icon,
         imageSize: node.imageSize,
+        customWidth: node.customWidth,
       };
       return data;
     };
@@ -461,6 +472,7 @@ export class MindMapService {
         data.isFolded || false,
         data.icon,
         data.imageSize,
+        data.customWidth,
       );
 
       if (data.style) {

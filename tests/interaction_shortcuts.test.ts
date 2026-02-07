@@ -27,7 +27,9 @@ describe('InteractionHandler Shortcuts', () => {
       onRedo: vi.fn(),
       onStyleAction: vi.fn(),
       onToggleFold: vi.fn(),
+
       onDropNode: vi.fn(),
+      onUpdateNodeWidth: vi.fn(),
     };
   });
 
@@ -116,5 +118,33 @@ describe('InteractionHandler Shortcuts', () => {
     document.body.dispatchEvent(event);
 
     expect(options.onToggleCommandPalette).toHaveBeenCalled();
+  });
+
+  it('should trigger onUpdateNodeWidth with Shift+ArrowRight', () => {
+    const handler = new InteractionHandler(container, options);
+    handler.updateSelection('root');
+
+    const event = new KeyboardEvent('keydown', {
+      key: 'ArrowRight',
+      shiftKey: true,
+      bubbles: true,
+    });
+    document.body.dispatchEvent(event);
+
+    expect(options.onUpdateNodeWidth).toHaveBeenCalledWith('root', 20);
+  });
+
+  it('should trigger onUpdateNodeWidth with Shift+ArrowLeft', () => {
+    const handler = new InteractionHandler(container, options);
+    handler.updateSelection('root');
+
+    const event = new KeyboardEvent('keydown', {
+      key: 'ArrowLeft',
+      shiftKey: true,
+      bubbles: true,
+    });
+    document.body.dispatchEvent(event);
+
+    expect(options.onUpdateNodeWidth).toHaveBeenCalledWith('root', -20);
   });
 });

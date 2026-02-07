@@ -38,7 +38,9 @@ export type ShortcutAction =
   | 'selectColor5'
   | 'selectColor6'
   | 'selectColor7'
-  | 'openCommandPalette';
+  | 'openCommandPalette'
+  | 'increaseNodeWidth'
+  | 'decreaseNodeWidth';
 
 export type ShortcutConfig = Partial<Record<ShortcutAction, KeyBinding[]>>;
 
@@ -94,4 +96,6 @@ export const DEFAULT_SHORTCUTS: ShortcutConfig = {
   selectColor6: [{ key: '6' }],
   selectColor7: [{ key: '7' }],
   openCommandPalette: [{ key: 'm' }],
+  increaseNodeWidth: [{ key: 'ArrowRight', shiftKey: true }],
+  decreaseNodeWidth: [{ key: 'ArrowLeft', shiftKey: true }],
 };

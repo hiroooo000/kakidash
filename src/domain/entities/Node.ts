@@ -18,6 +18,7 @@ export class Node {
   layoutSide?: 'left' | 'right';
   isFolded: boolean;
   icon?: string;
+  customWidth?: number;
 
   constructor(
     id: string,
@@ -29,6 +30,7 @@ export class Node {
     isFolded: boolean = false,
     icon?: string,
     imageSize?: { width: number; height: number },
+    customWidth?: number,
   ) {
     this.id = id;
     this.topic = topic;
@@ -41,6 +43,7 @@ export class Node {
     this.layoutSide = layoutSide;
     this.isFolded = isFolded;
     this.icon = icon;
+    this.customWidth = customWidth;
   }
 
   addChild(node: Node): void {

@@ -1,7 +1,7 @@
 import { MindMap } from '../../domain/entities/MindMap';
 import { Node, NodeStyle } from '../../domain/entities/Node';
 import { MindMapService } from '../../application/services/MindMapService';
-import { SvgRenderer } from '../components/SvgRenderer';
+import { Renderer } from '../components/Renderer';
 import { StyleEditor } from '../components/StyleEditor';
 import { InteractionHandler, Direction } from './InteractionHandler';
 import { LayoutMode } from '../../domain/interfaces/LayoutMode';
@@ -20,7 +20,7 @@ export interface IMindMapEventBus {
 export class MindMapController {
   private mindMap: MindMap;
   private service: MindMapService;
-  private renderer: SvgRenderer;
+  private renderer: Renderer;
   private eventBus: IMindMapEventBus;
   private styleEditor: StyleEditor;
   private commandPalette: CommandPalette;
@@ -50,7 +50,7 @@ export class MindMapController {
   constructor(
     mindMap: MindMap,
     service: MindMapService,
-    renderer: SvgRenderer,
+    renderer: Renderer,
     styleEditor: StyleEditor,
     eventBus: IMindMapEventBus,
   ) {
@@ -236,6 +236,34 @@ export class MindMapController {
   }
 
   // Interaction Handlers
+  updateNodeWidth(nodeId: string, increment: number): void {
+    if (this.interactionHandler && this.interactionHandler.isReadOnly) return;
+
+    const node = this.mindMap.findNode(nodeId);
+    if (!node) return;
+
+    // Determine current effective width
+    let currentWidth = node.customWidth;
+
+    if (currentWidth === undefined) {
+      // Use renderer's measurement logic to get the current natural width
+      // This is more robust than querying the DOM directly
+      const measured = this.renderer.measureNode(node, this.mindMap);
+      currentWidth = measured.width;
+    }
+
+    let newWidth = currentWidth + increment;
+
+    // Minimum width constraint (e.g., 50px)
+    if (newWidth < 50) newWidth = 50;
+
+    // Update via service
+    if (this.service.updateNodeCustomWidth(nodeId, newWidth)) {
+      this.render();
+      this.eventBus.emit('model:change', undefined);
+    }
+  }
+
   addChildNode(parentId: string): void {
     const parent = this.mindMap.findNode(parentId);
     if (parent && parent.isRoot && this.layoutMode === 'Both') {

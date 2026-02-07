@@ -212,12 +212,15 @@ export class SvgRenderer implements Renderer {
       textSpan.textContent = node.topic;
       el.appendChild(textSpan);
 
-      if (this.maxWidth !== -1) {
+      const effectiveMaxWidth =
+        node.customWidth ?? (this.maxWidth !== -1 ? this.maxWidth : undefined);
+
+      if (effectiveMaxWidth !== undefined) {
         textSpan.style.whiteSpace = 'pre-wrap';
         textSpan.style.wordWrap = 'break-word';
         textSpan.style.overflowWrap = 'anywhere';
         textSpan.style.minWidth = '0'; // Allow flex to shrink
-        el.style.maxWidth = `${this.maxWidth}px`;
+        el.style.maxWidth = `${effectiveMaxWidth}px`;
         el.style.width = 'max-content';
       } else {
         textSpan.style.whiteSpace = 'pre';
@@ -535,7 +538,7 @@ export class SvgRenderer implements Renderer {
     return Math.max(height + verticalGap, childrenTotalHeight);
   }
 
-  private measureNode(node: Node, mindMap?: MindMap): { width: number; height: number } {
+  public measureNode(node: Node, mindMap?: MindMap): { width: number; height: number } {
     if (node.image) {
       if (node.imageSize) {
         if (node.imageSize.width > 150) {
@@ -582,12 +585,15 @@ export class SvgRenderer implements Renderer {
     textSpan.textContent = node.topic;
     el.appendChild(textSpan);
 
-    if (this.maxWidth !== -1) {
+    const effectiveMaxWidth =
+      node.customWidth ?? (this.maxWidth !== -1 ? this.maxWidth : undefined);
+
+    if (effectiveMaxWidth !== undefined) {
       textSpan.style.whiteSpace = 'pre-wrap';
       textSpan.style.wordWrap = 'break-word';
       textSpan.style.overflowWrap = 'anywhere';
       textSpan.style.minWidth = '0'; // Allow flex to shrink
-      el.style.maxWidth = `${this.maxWidth}px`;
+      el.style.maxWidth = `${effectiveMaxWidth}px`;
       el.style.width = 'max-content';
     } else {
       textSpan.style.whiteSpace = 'pre';
