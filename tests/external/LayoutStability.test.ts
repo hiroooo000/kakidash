@@ -37,7 +37,10 @@ vi.mock('../../src/presentation/components/SvgRenderer', () => ({
 // Mock DOM dependencies
 class MockHTMLElement {
   dataset = {};
-  style = {};
+  style = {
+    setProperty: vi.fn(),
+    removeProperty: vi.fn(),
+  };
   addEventListener = vi.fn();
   setAttribute = vi.fn();
   appendChild = vi.fn();
@@ -56,7 +59,10 @@ class MockHTMLElement {
 (global as any).HTMLElement = MockHTMLElement;
 (global as any).document = {
   createElement: () => ({
-    style: {},
+    style: {
+      setProperty: vi.fn(),
+      removeProperty: vi.fn(),
+    },
     dataset: {},
     classList: { add: vi.fn(), remove: vi.fn(), contains: vi.fn() },
     appendChild: vi.fn(),

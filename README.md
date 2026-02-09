@@ -20,6 +20,7 @@ Master the shortcuts and expand your mind map at the speed of thought.
   - Font size adjustment.
   - Bold (`Bold`), Italic (`Italic`).
   - Color changes via palette (Style Editor).
+  - **Themes**: Switch between multiple built-in themes (Default, Simple, Colorful, Dark).
   - **Icon Settings**: Add/Remove flat icons via Command Palette (`m` key).
 - **Interaction**:
   - Drag and drop for node movement and reordering.
@@ -96,6 +97,14 @@ const kakidash = new Kakidash(container, {
 
 // Add initial data or nodes if needed
 kakidash.addNode(kakidash.getRootId(), 'Hello World');
+
+### 3. Theme Selection
+
+You can switch themes dynamically:
+
+```typescript
+kakidash.setTheme('dark'); // 'default', 'simple', 'colorful', 'dark'
+```
 ```
 
 #### B. Browser Direct Import (Script Tag / CDN)
@@ -410,6 +419,10 @@ pnpm test:e2e
 # or with turbo
 pnpm turbo run test:e2e
 ```
+
+> [!NOTE]
+> Running E2E tests requires browsers and system dependencies to be installed. If you run them for the first time or encounter dependency errors, run the following command:
+> `npx playwright install --with-deps`
 
 ### Lint
 

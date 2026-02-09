@@ -14,6 +14,7 @@ import { Renderer } from '../../src/presentation/components/Renderer';
 import { StyleEditor } from '../../src/presentation/components/StyleEditor';
 import { InteractionHandler } from '../../src/presentation/logic/InteractionHandler';
 import { CryptoIdGenerator } from '../../src/infrastructure/impl/CryptoIdGenerator';
+import { ThemeRegistry } from '../../src/presentation/components/ThemeRegistry';
 
 // Mock dependencies
 vi.mock('../../src/application/services/MindMapService');
@@ -95,6 +96,16 @@ describe('MindMapController', () => {
     expect(renderer.container.clientWidth).toBe(1000);
     // init sets pan to 0.2 * width = 200
     expect(controller['panX']).toBe(200);
+  });
+
+  it('init should apply initial theme', () => {
+    const registry = ThemeRegistry.getInstance();
+    const applySpy = vi.spyOn(registry, 'applyTheme');
+
+    controller.init(1000);
+
+    expect(applySpy).toHaveBeenCalledWith(expect.anything(), 'default');
+    applySpy.mockRestore();
   });
 
   it('addNode should call service and emit events', () => {
