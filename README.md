@@ -420,6 +420,10 @@ pnpm test:e2e
 pnpm turbo run test:e2e
 ```
 
+> [!NOTE]
+> Running E2E tests requires browsers and system dependencies to be installed. If you run them for the first time or encounter dependency errors, run the following command:
+> `npx playwright install --with-deps`
+
 ### Lint
 
 ```bash

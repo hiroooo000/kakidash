@@ -426,6 +426,10 @@ pnpm test:e2e
 pnpm turbo run test:e2e
 ```
 
+> [!NOTE]
+> E2Eテストの実行にはブラウザとシステム依存関係のインストールが必要です。初回実行時や依存関係エラーが発生した場合は、以下のコマンドを実行してください：
+> `npx playwright install --with-deps`
+
 ### Lint
 
 ```bash

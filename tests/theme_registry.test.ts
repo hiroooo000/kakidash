@@ -33,7 +33,7 @@ describe('ThemeRegistry', () => {
     const newTheme: ThemeDefinition = {
       name: 'test-theme',
       isDark: false,
-      styles: JSON.parse(JSON.stringify(DEFAULT_THEME.styles)),
+      styles: JSON.parse(JSON.stringify(DEFAULT_THEME.styles)) as ThemeDefinition['styles'],
     };
     registry.registerTheme(newTheme);
     const retrieved = registry.getTheme('test-theme');
