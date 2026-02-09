@@ -22,6 +22,7 @@ Kakidashのミッションは、**アウトプット速度の最大化**です�
   - フォントサイズ変更
   - 太字 (Bold)、斜体 (Italic)
   - カラーパレットによる色変更 (Style Editor)
+  - **テーマ**: 複数の組み込みテーマ (Default, Simple, Colorful, Dark) の切り替え
   - **アイコン設定**: コマンドパレットからのフラットアイコン追加・削除 (`m` key)
 - **インタラクション**:
   - ドラッグ＆ドロップによるノード移動・並び替え
@@ -99,6 +100,14 @@ const kakidash = new Kakidash(container, {
 
 // 必要に応じて初期データをロードしたり、ノードを追加したりします
 kakidash.addNode(kakidash.getRootId(), 'Hello World');
+
+### 3. テーマの切り替え
+
+テーマを動的に切り替えることができます:
+
+```typescript
+kakidash.setTheme('dark'); // 'default', 'simple', 'colorful', 'dark'
+```
 ```
 
 #### B. ブラウザ直接読み込み (Script Tag / CDN)

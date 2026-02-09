@@ -1,5 +1,6 @@
 import { Renderer } from './Renderer';
 import { MindMap } from '../../domain/entities/MindMap';
+import { ThemeRegistry } from './ThemeRegistry';
 import { Node } from '../../domain/entities/Node';
 import { LayoutMode } from '../../domain/interfaces/LayoutMode';
 import { SVG_ICONS } from '../resources/Icons';
@@ -81,40 +82,34 @@ export class SvgRenderer implements Renderer {
     this.nodeContainer.style.transform = transform;
   }
 
-  // Palette for Colorful mode
-  private static readonly RAINBOW_PALETTE = [
-    '#E74C3C', // Red
-    '#3498DB', // Blue
-    '#2ECC71', // Green
-    '#F1C40F', // Yellow
-    '#9B59B6', // Purple
-    '#E67E22', // Orange
-    '#1ABC9C', // Teal
-  ];
-
   private getThemeColor(node: Node, mindMap: MindMap): string {
-    if (mindMap.theme === 'colorful') {
+    const currentTheme = ThemeRegistry.getInstance().getCurrentTheme();
+    // Default fallback
+
+    if (currentTheme.getColor) {
+      // ... existing colorful logic adapted
       if (node.isRoot) return '#333';
 
       // Find the direct child of root that is an ancestor of this node (or is this node)
       let current = node;
       while (current.parentId && current.parentId !== mindMap.root.id) {
-        // If for some reason we can't find parent, break
         const parent = mindMap.findNode(current.parentId);
         if (!parent) break;
         current = parent;
       }
 
-      // 'current' is now a direct child of root (or we failed to climb).
-      // Find index in root's children
       const rootChildren = mindMap.root.children;
       const index = rootChildren.findIndex((c) => c.id === current.id);
 
       if (index !== -1) {
-        return SvgRenderer.RAINBOW_PALETTE[index % SvgRenderer.RAINBOW_PALETTE.length];
+        // Calculate depth for potential future use, though colorful usually just uses index
+        // const depth = this.getNodeDepth(node, mindMap);
+        return currentTheme.getColor(index, 0);
       }
     }
-    return '#ccc';
+
+    // Fallback to connection color from theme style if not dynamic
+    return currentTheme.styles.connection.color;
   }
 
   private renderNode(
@@ -127,6 +122,7 @@ export class SvgRenderer implements Renderer {
     direction: 'left' | 'right' = 'right',
     mindMap?: MindMap,
   ): void {
+    const currentTheme = ThemeRegistry.getInstance().getCurrentTheme();
     const el = document.createElement('div');
     el.dataset.id = node.id;
 
@@ -262,39 +258,47 @@ export class SvgRenderer implements Renderer {
     if (node.image) el.style.padding = '5px';
 
     // Setting color
-    if (mindMap?.theme === 'custom') {
+    // Setting color
+    if (currentTheme.name === 'custom') {
       if (node.isRoot) {
         el.style.color = 'var(--mindmap-root-color, var(--vscode-editor-foreground, black))';
       } else {
         el.style.color = 'var(--mindmap-child-color, var(--vscode-editor-foreground, black))';
       }
     } else {
-      el.style.color = 'var(--vscode-editor-foreground, black)';
+      if (node.isRoot) {
+        el.style.color = 'var(--mindmap-root-color)';
+      } else {
+        el.style.color = 'var(--mindmap-child-color)';
+      }
     }
 
     // Theme-based Border
-    const theme = mindMap?.theme || 'default';
-    const themeColor = mindMap ? this.getThemeColor(node, mindMap) : '#ccc';
+    // WE NOW RELY ON CSS VARIABLES SET BY ThemeRegistry
+    // But for specific logic like "Simple theme has no border", the CSS variable should handle it (border: none).
+    // The only exception is dynamic colorful border.
 
-    if (theme === 'simple' && !node.isRoot) {
-      el.style.border = 'none';
-      // Simple always none
-    } else if (theme === 'custom') {
-      // Custom theme uses variables
+    const themeColor = this.getThemeColor(node, mindMap!); // mindMap is likely present if we are rendering
+
+    if (currentTheme.name === 'colorful') {
+      // Colorful theme specific overrides (dynamic color)
+      // We can't easily do this via static CSS variables unless we set style directly.
+      el.style.border = `2px solid ${themeColor}`;
+    } else if (currentTheme.name === 'custom') {
+      // Custom
       if (node.isRoot) {
         const defaultRootBorder = '2px solid var(--vscode-editor-foreground, #333)';
         el.style.border = `var(--mindmap-root-border, ${defaultRootBorder})`;
       } else {
-        // Custom starting default? Or allow CSS var to define existence.
-        // If "Soft" is the default custom, it has borders.
         el.style.border = `var(--mindmap-child-border, 1px solid #ccc)`;
       }
     } else {
-      // Default & Colorful
-      if (theme === 'colorful') {
-        el.style.border = `2px solid ${themeColor}`;
+      // Default / Simple / Dark
+      // Use CSS variables
+      if (node.isRoot) {
+        el.style.border = 'var(--mindmap-root-border)';
       } else {
-        el.style.border = '1px solid var(--vscode-editorGroup-border, #ccc)';
+        el.style.border = 'var(--mindmap-child-border)';
       }
     }
 
@@ -302,7 +306,7 @@ export class SvgRenderer implements Renderer {
     if (node.isRoot) {
       el.style.fontSize = '1.2em';
       el.style.fontWeight = 'bold';
-      if (theme !== 'custom') {
+      if (currentTheme.name !== 'custom') {
         el.style.border = '2px solid var(--vscode-editor-foreground, #333)';
       }
     }
@@ -316,18 +320,20 @@ export class SvgRenderer implements Renderer {
     // Background handling
     if (node.style.background) {
       el.style.backgroundColor = node.style.background;
-    } else if (theme === 'custom') {
-      // Custom theme uses variables
+    } else if (currentTheme.name === 'custom') {
+      // Custom variable fallbacks
       if (node.isRoot) {
         el.style.backgroundColor = `var(--mindmap-root-background, var(--vscode-editor-background, white))`;
       } else {
         el.style.backgroundColor = `var(--mindmap-child-background, var(--vscode-editor-background, white))`;
       }
     } else {
-      // Standard themes default background
-      // Use editorWidget.background for better contrast vs editor.background (canvas)
-      el.style.backgroundColor =
-        'var(--vscode-editorWidget-background, var(--vscode-editor-background, white))';
+      // Standard themes via Registry variables
+      if (node.isRoot) {
+        el.style.backgroundColor = 'var(--mindmap-root-background)';
+      } else {
+        el.style.backgroundColor = 'var(--mindmap-child-background)';
+      }
     }
 
     const { width: nodeWidth } = this.measureNode(node);
@@ -627,30 +633,31 @@ export class SvgRenderer implements Renderer {
     // The reported issue is about height not being accounted for.
 
     // Copy-pasted border logic to match renderNode
-    const theme = mindMap?.theme || 'default';
-    const themeColor = mindMap ? this.getThemeColor(node, mindMap) : '#ccc';
+    // Measurement logic needs similar updates
+    // For brevity, using simpler approach or copying the logic:
+    const mTheme = ThemeRegistry.getInstance().getCurrentTheme();
+    const mThemeColor = mindMap ? this.getThemeColor(node, mindMap) : '#ccc';
 
-    if (theme === 'simple' && !node.isRoot) {
-      el.style.border = 'none';
-    } else if (theme === 'custom') {
+    if (mTheme.name === 'colorful') {
+      el.style.border = `2px solid ${mThemeColor}`;
+    } else if (mTheme.name === 'custom') {
       if (node.isRoot) {
-        const defaultRootBorder = '2px solid var(--vscode-editor-foreground, #333)';
-        el.style.border = `var(--mindmap-root-border, ${defaultRootBorder})`;
+        el.style.border = `var(--mindmap-root-border, 2px solid #333)`;
       } else {
         el.style.border = `var(--mindmap-child-border, 1px solid #ccc)`;
       }
     } else {
-      if (theme === 'colorful') {
-        el.style.border = `2px solid ${themeColor}`;
+      if (node.isRoot) {
+        el.style.border = 'var(--mindmap-root-border)';
       } else {
-        el.style.border = '1px solid var(--vscode-editorGroup-border, #ccc)';
+        el.style.border = 'var(--mindmap-child-border)';
       }
     }
 
     if (node.isRoot) {
       el.style.fontSize = '1.2em';
       el.style.fontWeight = 'bold';
-      if (theme !== 'custom') {
+      if (mTheme.name !== 'custom') {
         el.style.border = '2px solid var(--vscode-editor-foreground, #333)';
       }
     }
@@ -692,8 +699,20 @@ export class SvgRenderer implements Renderer {
       // Use style.stroke to allow CSS variable override for Custom theme
       path.style.stroke = `var(--mindmap-connection-color, ${color})`;
     } else {
-      // Standard themes use direct color (or class if we had one, but color is calculated)
-      path.style.stroke = color;
+      // Use ThemeRegistry variable
+      path.style.stroke = 'var(--mindmap-connection-color, #ccc)';
+      // But wait, getThemeColor returns specific color for colorful or dynamic.
+      // If color arg is passed, we should use it if it differs from default?
+      // getThemeColor returns var(--node-color) for colorful? No, it returns hex.
+      // If color is passed and it is a hex (not var), we should use it.
+      // For 'colorful', color is dynamic.
+
+      const currentTheme = ThemeRegistry.getInstance().getCurrentTheme();
+      if (currentTheme.name === 'colorful') {
+        path.style.stroke = color;
+      } else {
+        path.style.stroke = 'var(--mindmap-connection-color)';
+      }
     }
 
     path.setAttribute('fill', 'none');

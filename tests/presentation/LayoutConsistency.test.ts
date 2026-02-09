@@ -142,7 +142,7 @@ describe('LayoutConsistency', () => {
     const measuredDefault = getMeasuredElement(node, mindMap);
 
     expect(renderedDefault.style.border).toBe(measuredDefault.style.border);
-    expect(renderedDefault.style.border).toContain('1px solid'); // Check for default border presence
+    expect(renderedDefault.style.border).toContain('var(--mindmap-child-border)'); // Check for default border variable
 
     // Simple theme
     mindMap.theme = 'simple';
@@ -150,7 +150,7 @@ describe('LayoutConsistency', () => {
     const measuredSimple = getMeasuredElement(node, mindMap);
     expect(renderedSimple.style.border).toBe(measuredSimple.style.border);
     // Relax checks for specific string format as happy-dom might use 'none none' etc.
-    expect(renderedSimple.style.border).toContain('none');
+    expect(renderedSimple.style.border).toContain('var(--mindmap-child-border)');
   });
 
   it('should have consistent structure when icon is present', () => {

@@ -12,6 +12,7 @@ graph TD
     subgraph Presentation ["Presentation Layer"]
         Controller[MindMapController]
         View[SvgRenderer / StyleEditor]
+        Registry[ThemeRegistry]
         Command[CommandPalette]
         Interaction[InteractionHandler]
     end
@@ -28,7 +29,7 @@ graph TD
 
     subgraph Domain ["Domain Layer"]
         Entities[MindMap, Node]
-        Interfaces[Repository / Interfaces]
+        Interfaces[Repository / Interfaces / ThemeDefinition]
     end
 
     %% Dependency Rules
@@ -192,8 +193,9 @@ src/
   - `Node`: 各ノードのデータ構造と振る舞い（親子関係、スタイル、アイコンの管理など）。
 - **Interfaces**:
   - `IdGenerator`: ID生成の抽象化インターフェース。
-  - `MindMapData`: データエクスポート/インポート用の型定義。
-  - `MindMapStyles`: スタイル設定の型定義。
+  - `MindMapData`: データのエクスポート/インポート用の型定義。
+  - `MindMapStyles`: スタイル設定用の型定義。
+  - `ThemeDefinition`: テーマ定義のためのインターフェース。
 
 ### 3.2 Application Layer (`src/application`)
 ドメイン層のエンティティを調整し、アプリケーションとしてのユースケースを実現します。
@@ -220,7 +222,9 @@ src/
   - マインドマップの描画を担当。
   - `MindMapController` は `Renderer` インターフェースに依存し、実装（`SvgRenderer`）はDIされます。
 - **NodeEditor / StyleEditor**:
-  - ノード編集やスタイル編集などの複雑なUIロジックの分離。
+  - ノード編集やスタイリングのための複雑なUIロジックを分離。
+- **ThemeRegistry**:
+  - 利用可能なテーマを管理し、CSS変数を介して適用します。
 - **CommandPalette**:
   - `m`キーなどで呼び出し可能なコマンド兼検索パレット。
   - ノード検索結果の表示とナビゲーションを提供。

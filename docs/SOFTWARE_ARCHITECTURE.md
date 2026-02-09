@@ -12,6 +12,7 @@ graph TD
     subgraph Presentation ["Presentation Layer"]
         Controller[MindMapController]
         View[SvgRenderer / StyleEditor]
+        Registry[ThemeRegistry]
         Command[CommandPalette]
         Interaction[InteractionHandler]
     end
@@ -28,7 +29,7 @@ graph TD
 
     subgraph Domain ["Domain Layer"]
         Entities[MindMap, Node]
-        Interfaces[Repository / Interfaces]
+        Interfaces[Repository / Interfaces / ThemeDefinition]
     end
 
     %% Dependency Rules
@@ -188,6 +189,7 @@ The core of business logic. Has no external dependencies.
   - `IdGenerator`: Abstraction interface for ID generation.
   - `MindMapData`: Type definitions for data export/import.
   - `MindMapStyles`: Type definitions for style settings.
+  - `ThemeDefinition`: Interface for defining themes.
 
 ### 3.2 Application Layer (`src/application`)
 Orchestrates domain entities to implement application use cases.
@@ -214,6 +216,8 @@ Handles user interface and user input.
   - Responsible for SVG rendering of the mind map.
 - **NodeEditor / StyleEditor**:
   - Separates complex UI logic for node editing and styling.
+- **ThemeRegistry**:
+  - Manages available themes and applies them via CSS variables.
 - **CommandPalette**:
   - Command and search palette callable via `m` key.
   - Provides node search results and navigation.

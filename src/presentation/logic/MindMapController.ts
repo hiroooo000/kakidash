@@ -12,6 +12,7 @@ import { ShortcutAction, KeyBinding } from '../../domain/interfaces/ShortcutConf
 import { MindMapStyles } from '../../domain/interfaces/MindMapStyles';
 import { StyleAction } from './StyleAction';
 import { CommandPalette } from '../components/CommandPalette';
+import { ThemeRegistry } from '../components/ThemeRegistry';
 
 export interface IMindMapEventBus {
   emit<K extends keyof KakidashEventMap>(event: K, payload: KakidashEventMap[K]): void;
@@ -80,6 +81,17 @@ export class MindMapController {
   public init(containerWidth: number) {
     this.panX = containerWidth * 0.2; // Default Right mode
     this.targetPanX = this.panX;
+
+    // Apply initial theme
+    const theme = this.mindMap.theme;
+    if (theme === 'custom') {
+      const registry = ThemeRegistry.getInstance();
+      registry.setCustomTheme(this.savedCustomStyles);
+      registry.applyTheme(this.renderer.container, 'custom');
+    } else {
+      ThemeRegistry.getInstance().applyTheme(this.renderer.container, theme);
+    }
+
     this.startAnimationLoop();
     this.render();
   }
@@ -445,7 +457,9 @@ export class MindMapController {
       this.savedCustomStyles.canvas = { ...this.savedCustomStyles.canvas, ...styles.canvas };
 
     if (this.mindMap.theme === 'custom') {
-      this.applyCustomStylesToDOM(this.savedCustomStyles);
+      const registry = ThemeRegistry.getInstance();
+      registry.setCustomTheme(this.savedCustomStyles);
+      registry.applyTheme(this.renderer.container, 'custom');
     }
   }
 
@@ -454,22 +468,11 @@ export class MindMapController {
     if (this.layoutSwitcher) this.layoutSwitcher.setTheme(theme);
 
     if (theme === 'custom') {
-      this.applyCustomStylesToDOM(this.savedCustomStyles);
-    } else {
-      const container = this.renderer.container;
-      const varsToReset = [
-        '--mindmap-root-border',
-        '--mindmap-root-background',
-        '--mindmap-root-color',
-        '--mindmap-child-border',
-        '--mindmap-child-background',
-        '--mindmap-child-color',
-        '--mindmap-connection-color',
-        '--mindmap-canvas-background',
-      ];
-      varsToReset.forEach((v) => container.style.removeProperty(v));
-      container.style.backgroundColor = 'var(--vscode-editor-background, transparent)';
+      // Ensure custom theme is updated in registry before applying
+      ThemeRegistry.getInstance().setCustomTheme(this.savedCustomStyles);
     }
+
+    ThemeRegistry.getInstance().applyTheme(this.renderer.container, theme);
 
     this.render();
     this.eventBus.emit('model:change', undefined);
@@ -692,25 +695,8 @@ export class MindMapController {
     }
   }
 
-  private applyCustomStylesToDOM(styles: MindMapStyles): void {
-    const cssVars: Record<string, string> = {};
-    if (styles.rootNode?.border) cssVars['--mindmap-root-border'] = styles.rootNode.border;
-    if (styles.rootNode?.background)
-      cssVars['--mindmap-root-background'] = styles.rootNode.background;
-    if (styles.rootNode?.color) cssVars['--mindmap-root-color'] = styles.rootNode.color;
-    if (styles.childNode?.border) cssVars['--mindmap-child-border'] = styles.childNode.border;
-    if (styles.childNode?.background)
-      cssVars['--mindmap-child-background'] = styles.childNode.background;
-    if (styles.childNode?.color) cssVars['--mindmap-child-color'] = styles.childNode.color;
-    if (styles.connection?.color) cssVars['--mindmap-connection-color'] = styles.connection.color;
-    if (styles.canvas?.background)
-      cssVars['--mindmap-canvas-background'] = styles.canvas.background;
-
-    const container = this.renderer.container;
-    Object.entries(cssVars).forEach(([key, value]) => container.style.setProperty(key, value));
-    if (styles.canvas?.background)
-      container.style.backgroundColor = 'var(--mindmap-canvas-background, transparent)';
-  }
+  // applyCustomStylesToDOM is no longer needed as ThemeRegistry handles it via setCustomTheme and applyTheme
+  // private applyCustomStylesToDOM(styles: MindMapStyles): void { ... }
 
   private ensureExplicitLayoutSides(parent: Node): void {
     if (!parent.isRoot || this.layoutMode !== 'Both') return;
