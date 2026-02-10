@@ -56,7 +56,7 @@
                 "tsconfig.json"
             ],
             "outputs": [
-                "docs/**"
+                "docs/api/**"
             ]
         },
         "format": {
