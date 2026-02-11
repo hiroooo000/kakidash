@@ -217,6 +217,8 @@ src/
   - MVCパターンのControllerの役割。
 - **InteractionHandler**:
   - マウス操作、キーボードショートカット、ドラッグ＆ドロップなどのユーザー入力をハンドリング。
+- **ImageExporter**:
+  - マインドマップのDOM要像をSVG/PNG画像に変換し、ファイル保存処理を行う。
 
 #### Components (`src/presentation/components`)
 - **Renderer (Interface) / SvgRenderer (Implementation)**:

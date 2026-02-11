@@ -211,6 +211,8 @@ Handles user interface and user input.
   - Acts as the Controller in the MVC pattern.
 - **InteractionHandler**:
   - Handles user inputs such as mouse operations, keyboard shortcuts, and drag-and-drop.
+- **ImageExporter**:
+  - Converts mind map DOM elements to SVG/PNG images and handles file saving.
 
 #### Components (`src/presentation/components`)
 - **SvgRenderer**:

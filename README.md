@@ -28,7 +28,10 @@ Master the shortcuts and expand your mind map at the speed of thought.
   - Zoom, Pan (Screen navigation).
 - **Image Support**: Paste images from the clipboard.
 - **Auto Link**: Automatically detects URLs in node text and converts them to clickable links.
-- **Import/Export**: Save and load data in JSON format. Import from XMind files (.xmind).
+- **Import/Export**:
+  - Save and load data in JSON format.
+  - Import from XMind files (.xmind).
+  - **Image Export**: Export mind map as PNG or SVG image (Command Palette > Export).
 - **For Developers**:
   - TypeScript support.
   - Read-only mode.
