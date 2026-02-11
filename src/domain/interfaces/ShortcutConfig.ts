@@ -56,7 +56,7 @@ export const DEFAULT_SHORTCUTS: ShortcutConfig = {
   ],
   addSibling: [{ key: 'Enter' }],
   addSiblingBefore: [{ key: 'Enter', shiftKey: true }],
-  deleteNode: [{ key: 'Delete' }, { key: 'Backspace' }],
+  deleteNode: [{ key: 'Delete' }, { key: 'Backspace' }, { key: 'd' }],
   beginEdit: [{ key: 'i' }, { key: ' ' }, { key: 'F2' }],
   copy: [
     { key: 'c', ctrlKey: true },
