@@ -25,10 +25,10 @@ export class CommandPalette {
     topic: string;
     type: 'command' | 'node';
   }> = [
+    { id: 'icon', topic: '> Icon', type: 'command' },
     { id: 'search-nodes', topic: '> Search Nodes', type: 'command' },
     { id: 'import', topic: '> Import', type: 'command' },
     { id: 'export', topic: '> Export', type: 'command' },
-    { id: 'icon', topic: '> Icon', type: 'command' },
   ];
 
   private readonly IMPORT_COMMANDS: Array<{
