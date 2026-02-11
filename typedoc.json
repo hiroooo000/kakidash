@@ -8,5 +8,6 @@
     "plugin": [],
     "excludePrivate": true,
     "excludeProtected": true,
-    "theme": "default"
+    "theme": "default",
+    "gitRevision": "main"
 }
