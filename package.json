@@ -31,6 +31,7 @@
         "lint": "eslint src tests",
         "docs": "typedoc",
         "format": "prettier --write \"src/**/*.{ts,json}\"",
+        "ci": "pnpm format && pnpm turbo run typecheck build lint docs && pnpm run test&& pnpm run test:e2e",
         "turbo": "turbo",
         "turbo:ci": "turbo run typecheck build test lint docs test:e2e",
         "test:e2e": "playwright test"
