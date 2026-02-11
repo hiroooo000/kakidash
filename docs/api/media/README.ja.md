@@ -34,6 +34,7 @@ Kakidashのミッションは、**アウトプット速度の最大化**です�
   - JSON形式でのデータ保存・読み込み。
   - XMindファイル(.xmind)のインポート。
   - **画像エクスポート**: PNGおよびSVG形式でのマインドマップ画像出力（コマンドパレット > Export）。
+  - **Markdownエクスポート**: マインドマップをMarkdown形式で出力（コマンドパレット > Export > Markdown）。
 - **開発者向け**:
   - TypeScript対応
   - 読み取り専用 (Read-only) モード

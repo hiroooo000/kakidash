@@ -32,6 +32,7 @@ Master the shortcuts and expand your mind map at the speed of thought.
   - Save and load data in JSON format.
   - Import from XMind files (.xmind).
   - **Image Export**: Export mind map as PNG or SVG image (Command Palette > Export).
+  - **Markdown Export**: Export mind map as a Markdown file (Command Palette > Export > Markdown).
 - **For Developers**:
   - TypeScript support.
   - Read-only mode.

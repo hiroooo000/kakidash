@@ -15,6 +15,7 @@ import { CommandPalette } from '../components/CommandPalette';
 import { ThemeRegistry } from '../components/ThemeRegistry';
 import { XMindImporter } from '../../infrastructure/impl/XMindImporter';
 import { ImageExporter } from './ImageExporter';
+import { MarkdownExporter } from './MarkdownExporter';
 
 export interface IMindMapEventBus {
   emit<K extends keyof KakidashEventMap>(event: K, payload: KakidashEventMap[K]): void;
@@ -705,6 +706,8 @@ export class MindMapController {
       void this.exportPng();
     } else if (command === 'export-svg') {
       void this.exportSvg();
+    } else if (command === 'export-markdown') {
+      void this.exportMarkdown();
     }
   }
 
@@ -716,6 +719,11 @@ export class MindMapController {
   public async exportSvg(): Promise<void> {
     const exporter = new ImageExporter();
     await exporter.exportToSvg(this.renderer.container);
+  }
+
+  public async exportMarkdown(): Promise<void> {
+    const exporter = new MarkdownExporter();
+    await exporter.export(this.mindMap);
   }
 
   public importXMind(): void {
