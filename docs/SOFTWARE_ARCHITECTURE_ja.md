@@ -20,6 +20,7 @@ graph TD
     subgraph Infrastructure ["Infrastructure Layer"]
         IdGenImpl[CryptoIdGenerator]
         EventBusImpl[EventEmitter]
+        Importer[XMindImporter]
     end
 
     subgraph Application ["Application Layer"]
@@ -237,6 +238,8 @@ src/
   - Web Crypto APIを使用したID生成の実装。`domain/interfaces/IdGenerator`の実装。
 - **EventEmitter**:
   - イベントバスの実装。
+- **XMindImporter**:
+  - `jszip`を使用したXMindファイルの解析とインポート処理の実装。
 
 ## 4. 主要な処理シーケンス
 

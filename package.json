@@ -51,6 +51,7 @@
         "@playwright/test": "^1.58.2",
         "@types/argparse": "^2.0.17",
         "@types/estree": "^1.0.8",
+        "@types/jszip": "^3.4.1",
         "@types/node": "^25.2.1",
         "@types/whatwg-mimetype": "^3.0.2",
         "@types/ws": "^8.18.1",
@@ -68,5 +69,8 @@
         "vite-plugin-dts": "^4.5.4",
         "vitest": "^4.0.17"
     },
-    "packageManager": "pnpm@10.26.0"
+    "packageManager": "pnpm@10.26.0",
+    "dependencies": {
+        "jszip": "^3.10.1"
+    }
 }

@@ -4,6 +4,7 @@ export interface CommandPaletteOptions {
   onInput: (query: string) => void;
   onSelect: (nodeId: string) => void;
   onIconSelect: (icon: string) => void;
+  onCommandSelect: (command: string) => void;
   onClose: () => void;
 }
 
@@ -17,7 +18,7 @@ export class CommandPalette {
 
   private results: Array<{ id: string; topic: string; type?: 'command' | 'node' | 'icon' }> = [];
   private selectedIndex: number = -1;
-  private mode: 'menu' | 'search' | 'icon' = 'menu';
+  private mode: 'menu' | 'search' | 'icon' | 'import' = 'menu';
 
   private readonly MENU_COMMANDS: Array<{
     id: string;
@@ -25,8 +26,15 @@ export class CommandPalette {
     type: 'command' | 'node';
   }> = [
     { id: 'search-nodes', topic: '> Search Nodes', type: 'command' },
+    { id: 'import', topic: '> Import', type: 'command' },
     { id: 'icon', topic: '> Icon', type: 'command' },
   ];
+
+  private readonly IMPORT_COMMANDS: Array<{
+    id: string;
+    topic: string;
+    type: 'command';
+  }> = [{ id: 'import-xmind', topic: '> XMind (.xmind)', type: 'command' }];
 
   /*
     1. 🔵 (Good)
@@ -126,6 +134,11 @@ export class CommandPalette {
           c.topic.toLowerCase().includes(val.toLowerCase()),
         );
         this.renderList(filtered);
+      } else if (this.mode === 'import') {
+        const filtered = this.IMPORT_COMMANDS.filter((c) =>
+          c.topic.toLowerCase().includes(val.toLowerCase()),
+        );
+        this.renderList(filtered);
       } else if (this.mode === 'icon') {
         const filtered = this.ICON_LIST.filter((c) =>
           c.topic.toLowerCase().includes(val.toLowerCase()),
@@ -150,7 +163,7 @@ export class CommandPalette {
         e.preventDefault();
         this.close();
       } else if (e.key === 'Backspace' && this.inputEl.value === '') {
-        if (this.mode === 'search' || this.mode === 'icon') {
+        if (this.mode === 'search' || this.mode === 'icon' || this.mode === 'import') {
           this.mode = 'menu';
           this.inputEl.placeholder = 'Type to filter commands...';
           this.renderList(this.MENU_COMMANDS);
@@ -214,7 +227,10 @@ export class CommandPalette {
     this.selectedIndex = -1;
 
     if (items.length === 0) {
-      if (this.inputEl.value.trim() !== '' && (this.mode === 'search' || this.mode === 'icon')) {
+      if (
+        this.inputEl.value.trim() !== '' &&
+        (this.mode === 'search' || this.mode === 'icon' || this.mode === 'import')
+      ) {
         const li = document.createElement('li');
         li.textContent = 'No results found';
         li.style.padding = '8px';
@@ -281,6 +297,11 @@ export class CommandPalette {
         this.switchToSearchMode();
       } else if (item.id === 'icon') {
         this.switchToIconMode();
+      } else if (item.id === 'import') {
+        this.switchToImportMode();
+      } else if (item.id === 'import-xmind') {
+        this.options.onCommandSelect('import-xmind');
+        this.close();
       }
     } else if (item.type === 'icon') {
       this.options.onIconSelect(item.id);
@@ -305,6 +326,14 @@ export class CommandPalette {
     this.inputEl.value = '';
     this.inputEl.placeholder = 'Select icon...';
     this.renderList(this.ICON_LIST);
+    this.inputEl.focus();
+  }
+
+  private switchToImportMode() {
+    this.mode = 'import';
+    this.inputEl.value = '';
+    this.inputEl.placeholder = 'Select format...';
+    this.renderList(this.IMPORT_COMMANDS);
     this.inputEl.focus();
   }
 

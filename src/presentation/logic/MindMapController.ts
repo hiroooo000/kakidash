@@ -13,6 +13,7 @@ import { MindMapStyles } from '../../domain/interfaces/MindMapStyles';
 import { StyleAction } from './StyleAction';
 import { CommandPalette } from '../components/CommandPalette';
 import { ThemeRegistry } from '../components/ThemeRegistry';
+import { XMindImporter } from '../../infrastructure/impl/XMindImporter';
 
 export interface IMindMapEventBus {
   emit<K extends keyof KakidashEventMap>(event: K, payload: KakidashEventMap[K]): void;
@@ -64,6 +65,7 @@ export class MindMapController {
       onInput: (query) => this.handleSearchInput(query),
       onSelect: (nodeId) => this.handleSearchResultSelect(nodeId),
       onIconSelect: (icon) => this.handleIconSelect(icon),
+      onCommandSelect: (command) => this.handleCommandSelect(command),
       onClose: () => {
         if (this.interactionHandler) this.interactionHandler.container.focus();
       },
@@ -693,6 +695,45 @@ export class MindMapController {
       this.eventBus.emit('model:change', undefined);
       setTimeout(() => this.ensureNodeVisible(this.selectedNodeId!, true, true), 0);
     }
+  }
+
+  private handleCommandSelect(command: string): void {
+    if (command === 'import-xmind') {
+      this.importXMind();
+    }
+  }
+
+  public importXMind(): void {
+    // Check if root has children to confirm replacement
+    if (this.mindMap.root.children.length > 0) {
+      if (!window.confirm('Current mind map will be replaced. Continue?')) {
+        return;
+      }
+    }
+
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.xmind';
+    input.style.display = 'none';
+    document.body.appendChild(input);
+
+    input.onchange = async (e: Event) => {
+      const target = e.target as HTMLInputElement;
+      const file = target.files?.[0];
+      if (file) {
+        try {
+          const importer = new XMindImporter();
+          const data = await importer.extractMindMapData(file);
+          this.loadData(data); // Use loadData to handle selection and events centrally
+        } catch (err) {
+          console.error(err);
+          alert('Failed to import XMind file.');
+        }
+      }
+      document.body.removeChild(input);
+    };
+
+    input.click();
   }
 
   // applyCustomStylesToDOM is no longer needed as ThemeRegistry handles it via setCustomTheme and applyTheme
