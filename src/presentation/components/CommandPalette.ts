@@ -44,6 +44,7 @@ export class CommandPalette {
   }> = [
     { id: 'export-png', topic: '> PNG Image (.png)', type: 'command' },
     { id: 'export-svg', topic: '> SVG Image (.svg)', type: 'command' },
+    { id: 'export-markdown', topic: '> Markdown (.md)', type: 'command' },
   ];
 
   /*
@@ -332,6 +333,9 @@ export class CommandPalette {
         this.close();
       } else if (item.id === 'export-svg') {
         this.options.onCommandSelect('export-svg');
+        this.close();
+      } else if (item.id === 'export-markdown') {
+        this.options.onCommandSelect('export-markdown');
         this.close();
       }
     } else if (item.type === 'icon') {
