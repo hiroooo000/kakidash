@@ -18,7 +18,7 @@ export class CommandPalette {
 
   private results: Array<{ id: string; topic: string; type?: 'command' | 'node' | 'icon' }> = [];
   private selectedIndex: number = -1;
-  private mode: 'menu' | 'search' | 'icon' | 'import' = 'menu';
+  private mode: 'menu' | 'search' | 'icon' | 'import' | 'export' = 'menu';
 
   private readonly MENU_COMMANDS: Array<{
     id: string;
@@ -27,6 +27,7 @@ export class CommandPalette {
   }> = [
     { id: 'search-nodes', topic: '> Search Nodes', type: 'command' },
     { id: 'import', topic: '> Import', type: 'command' },
+    { id: 'export', topic: '> Export', type: 'command' },
     { id: 'icon', topic: '> Icon', type: 'command' },
   ];
 
@@ -35,6 +36,15 @@ export class CommandPalette {
     topic: string;
     type: 'command';
   }> = [{ id: 'import-xmind', topic: '> XMind (.xmind)', type: 'command' }];
+
+  private readonly EXPORT_COMMANDS: Array<{
+    id: string;
+    topic: string;
+    type: 'command';
+  }> = [
+    { id: 'export-png', topic: '> PNG Image (.png)', type: 'command' },
+    { id: 'export-svg', topic: '> SVG Image (.svg)', type: 'command' },
+  ];
 
   /*
     1. 🔵 (Good)
@@ -139,6 +149,11 @@ export class CommandPalette {
           c.topic.toLowerCase().includes(val.toLowerCase()),
         );
         this.renderList(filtered);
+      } else if (this.mode === 'export') {
+        const filtered = this.EXPORT_COMMANDS.filter((c) =>
+          c.topic.toLowerCase().includes(val.toLowerCase()),
+        );
+        this.renderList(filtered);
       } else if (this.mode === 'icon') {
         const filtered = this.ICON_LIST.filter((c) =>
           c.topic.toLowerCase().includes(val.toLowerCase()),
@@ -163,7 +178,12 @@ export class CommandPalette {
         e.preventDefault();
         this.close();
       } else if (e.key === 'Backspace' && this.inputEl.value === '') {
-        if (this.mode === 'search' || this.mode === 'icon' || this.mode === 'import') {
+        if (
+          this.mode === 'search' ||
+          this.mode === 'icon' ||
+          this.mode === 'import' ||
+          this.mode === 'export'
+        ) {
           this.mode = 'menu';
           this.inputEl.placeholder = 'Type to filter commands...';
           this.renderList(this.MENU_COMMANDS);
@@ -229,7 +249,10 @@ export class CommandPalette {
     if (items.length === 0) {
       if (
         this.inputEl.value.trim() !== '' &&
-        (this.mode === 'search' || this.mode === 'icon' || this.mode === 'import')
+        (this.mode === 'search' ||
+          this.mode === 'icon' ||
+          this.mode === 'import' ||
+          this.mode === 'export')
       ) {
         const li = document.createElement('li');
         li.textContent = 'No results found';
@@ -299,8 +322,16 @@ export class CommandPalette {
         this.switchToIconMode();
       } else if (item.id === 'import') {
         this.switchToImportMode();
+      } else if (item.id === 'export') {
+        this.switchToExportMode();
       } else if (item.id === 'import-xmind') {
         this.options.onCommandSelect('import-xmind');
+        this.close();
+      } else if (item.id === 'export-png') {
+        this.options.onCommandSelect('export-png');
+        this.close();
+      } else if (item.id === 'export-svg') {
+        this.options.onCommandSelect('export-svg');
         this.close();
       }
     } else if (item.type === 'icon') {
@@ -334,6 +365,14 @@ export class CommandPalette {
     this.inputEl.value = '';
     this.inputEl.placeholder = 'Select format...';
     this.renderList(this.IMPORT_COMMANDS);
+    this.inputEl.focus();
+  }
+
+  private switchToExportMode() {
+    this.mode = 'export';
+    this.inputEl.value = '';
+    this.inputEl.placeholder = 'Select format...';
+    this.renderList(this.EXPORT_COMMANDS);
     this.inputEl.focus();
   }
 
