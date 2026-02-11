@@ -16,27 +16,39 @@ describe('XMindImporter', () => {
   let file: File;
 
   beforeEach(() => {
-    // Reset mocks
     vi.clearAllMocks();
 
-    // Setup mock instance
     mockJSZipInstance = {
       loadAsync: vi.fn(),
       file: vi.fn(),
     };
 
-    // Setup constructor mock to return the instance
-    // IMPORTANT: Must use standard function, not arrow function, to be new-able
     (JSZip as unknown as any).mockImplementation(function () {
       return mockJSZipInstance;
     });
 
     importer = new XMindImporter();
-    // Create dummy file
     file = new File(['dummy content'], 'mindmap.xmind', { type: 'application/octet-stream' });
   });
 
-  it('should extract and transform valid XMind data', async () => {
+  const setupMockZip = (contentJson: string, imageFiles: Record<string, string> = {}) => {
+    const mockContentFile = {
+      async: vi.fn().mockResolvedValue(contentJson),
+    };
+
+    mockJSZipInstance.loadAsync.mockResolvedValue(mockJSZipInstance);
+    mockJSZipInstance.file.mockImplementation((path: string) => {
+      if (path === 'content.json') return mockContentFile;
+      if (imageFiles[path]) {
+        return {
+          async: vi.fn().mockResolvedValue(imageFiles[path]),
+        };
+      }
+      return null;
+    });
+  };
+
+  it('should extract and transform valid XMind data (Text Only)', async () => {
     const mockContentJson = JSON.stringify([
       {
         id: 'sheet1',
@@ -45,49 +57,125 @@ describe('XMindImporter', () => {
           id: 'root1',
           title: 'Central Topic',
           children: {
-            attached: [
-              { id: 'sub1', title: 'Subtopic 1' },
-              { id: 'sub2', title: 'Subtopic 2' },
-            ],
+            attached: [{ id: 'sub1', title: 'Subtopic 1' }],
           },
         },
       },
     ]);
 
-    const mockFileObj = {
-      async: vi.fn().mockResolvedValue(mockContentJson),
-    };
+    setupMockZip(mockContentJson);
 
-    mockJSZipInstance.loadAsync.mockResolvedValue({
-      file: vi.fn().mockReturnValue(mockFileObj),
+    const result = await importer.extractMindMapData(file);
+
+    expect(result.nodeData.topic).toBe('Central Topic');
+    expect(result.nodeData.children).toHaveLength(1);
+    expect(result.nodeData.children![0].topic).toBe('Subtopic 1');
+  });
+
+  it('should split text and image into parent-child nodes if both exist', async () => {
+    const mockContentJson = JSON.stringify([
+      {
+        id: 'sheet1',
+        title: 'Sheet 1',
+        rootTopic: {
+          id: 'root1',
+          title: 'Text Topic',
+          image: { src: 'xap:resources/image.png' },
+          children: { attached: [] },
+        },
+      },
+    ]);
+
+    setupMockZip(mockContentJson, {
+      'resources/image.png': 'base64EncodedImageString',
     });
 
     const result = await importer.extractMindMapData(file);
 
-    expect(mockJSZipInstance.loadAsync).toHaveBeenCalledWith(file);
-    expect(result).toBeDefined();
-    expect(result.nodeData.topic).toBe('Central Topic');
-    expect(result.nodeData.root).toBe(true);
+    expect(result.nodeData.topic).toBe('Text Topic');
+    expect(result.nodeData.image).toBeUndefined(); // Parent should not have image property
+
+    // Should have 1 child (the image node)
+    expect(result.nodeData.children).toBeTruthy();
+    expect(result.nodeData.children).toHaveLength(1);
+
+    const imageNode = result.nodeData.children![0];
+    expect(imageNode.topic).toBe('');
+    expect(imageNode.image).toBe('data:image/png;base64,base64EncodedImageString');
+  });
+
+  it('should create single node if only image exists', async () => {
+    const mockContentJson = JSON.stringify([
+      {
+        id: 'sheet1',
+        title: 'Sheet 1',
+        rootTopic: {
+          id: 'root1',
+          title: '',
+          image: { src: 'xap:resources/photo.jpg' },
+        },
+      },
+    ]);
+
+    setupMockZip(mockContentJson, {
+      'resources/photo.jpg': 'base64JpegString',
+    });
+
+    const result = await importer.extractMindMapData(file);
+
+    expect(result.nodeData.topic).toBe('');
+    expect(result.nodeData.image).toBe('data:image/jpeg;base64,base64JpegString');
+    expect(result.nodeData.children).toHaveLength(0);
+  });
+
+  it('should handle nested children correctly when text+image splits', async () => {
+    // If Text+Image Split happens, original children should attach to Text Node (Parent)
+    const mockContentJson = JSON.stringify([
+      {
+        id: 'sheet1',
+        title: 'Sheet 1',
+        rootTopic: {
+          id: 'root1',
+          title: 'Parent Text',
+          image: { src: 'xap:resources/img.gif' },
+          children: {
+            attached: [{ id: 'child1', title: 'Original Child' }],
+          },
+        },
+      },
+    ]);
+
+    setupMockZip(mockContentJson, { 'resources/img.gif': 'gifdata' });
+
+    const result = await importer.extractMindMapData(file);
+
+    expect(result.nodeData.topic).toBe('Parent Text');
+    // Should have 2 children: Image Node AND Original Child
     expect(result.nodeData.children).toHaveLength(2);
-    expect(result.nodeData.children![0].topic).toBe('Subtopic 1');
+
+    const childTopics = result.nodeData.children!.map((c) => c.topic);
+    expect(childTopics).toContain('Original Child');
+    expect(childTopics).toContain(''); // Image node topic
+
+    const imageNode = result.nodeData.children!.find((c) => c.image);
+    expect(imageNode).toBeDefined();
+    expect(imageNode!.image).toBe('data:image/gif;base64,gifdata');
   });
 
   it('should throw error if content.json is missing', async () => {
-    mockJSZipInstance.loadAsync.mockResolvedValue({
-      file: vi.fn().mockReturnValue(null), // file not found
-    });
+    // Setup mock that returns null for content.json
+    mockJSZipInstance.loadAsync.mockResolvedValue(mockJSZipInstance);
+    mockJSZipInstance.file.mockReturnValue(null);
 
     await expect(importer.extractMindMapData(file)).rejects.toThrow('Failed to import XMind file');
   });
 
   it('should throw error if content.json is empty or invalid JSON', async () => {
-    const mockFileObj = {
+    const mockContentFile = {
       async: vi.fn().mockResolvedValue('invalid json'),
     };
-
-    mockJSZipInstance.loadAsync.mockResolvedValue({
-      file: vi.fn().mockReturnValue(mockFileObj),
-    });
+    mockJSZipInstance.loadAsync.mockResolvedValue(mockJSZipInstance);
+    mockJSZipInstance.file.mockReturnValue(mockContentFile);
 
     await expect(importer.extractMindMapData(file)).rejects.toThrow('Failed to import XMind file');
   });

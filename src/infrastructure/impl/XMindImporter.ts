@@ -16,12 +16,14 @@ interface XMindTopic {
     attached?: XMindTopic[];
     detached?: XMindTopic[];
   };
+  image?: {
+    src: string;
+  };
   notes?: {
     plain: {
       content: string;
     };
   };
-  // We might capture markers/labels later if needed
 }
 
 export class XMindImporter {
@@ -51,8 +53,10 @@ export class XMindImporter {
       // XMind files can contain multiple sheets. We'll take the first one for now.
       const primarySheet = xmindData[0];
 
+      const rootNode = await this.transformTopic(primarySheet.rootTopic, zip, true);
+
       const mindMapData: MindMapData = {
-        nodeData: this.transformTopic(primarySheet.rootTopic, true),
+        nodeData: rootNode,
         theme: 'default', // XMind themes are complex, we'll default to 'default'
         direction: 1, // Default direction
       };
@@ -65,28 +69,81 @@ export class XMindImporter {
     }
   }
 
-  private transformTopic(topic: XMindTopic, isRoot: boolean = false): MindMapNodeData {
-    // We generate new IDs to avoid conflicts with existing IDs or if XMind IDs are not UUIDs
-    // However, keeping stable IDs might be better for re-import?
-    // For now, let's generate new IDs to be safe and consistent with our app's ID generation.
-    // Or we can use the XMind ID if it's compatible. XMind IDs are usually short strings.
-    // Let's generate new UUIDs to ensure uniqueness in our system.
+  private async transformTopic(
+    topic: XMindTopic,
+    zip: JSZip,
+    isRoot: boolean = false,
+  ): Promise<MindMapNodeData> {
+    const nodeId = this.idGenerator.generate();
+    const children: MindMapNodeData[] = [];
 
-    const newNode: MindMapNodeData = {
-      id: this.idGenerator.generate(),
-      topic: topic.title || '',
-      root: isRoot,
-      children: [],
-    };
-
+    // Process Original Children First (Recursively)
     if (topic.children && topic.children.attached) {
-      newNode.children = topic.children.attached.map((child) => this.transformTopic(child, false));
+      for (const child of topic.children.attached) {
+        children.push(await this.transformTopic(child, zip, false));
+      }
     }
 
-    // We could map notes here if our MindMapNodeData supported them (it doesn't seem to explicitly yet based on interface, or maybe I missed it)
-    // Checking MindMapNodeData definition: it has style, icon, image, folded, etc. No explicit 'notes'.
-    // So we'll skip notes for now.
+    // Handle Image
+    let imageData: string | undefined = undefined;
+    if (topic.image && topic.image.src && topic.image.src.startsWith('xap:')) {
+      const path = topic.image.src.substring(4); // remove 'xap:'
+      // Some paths might start with /, XMind is inconsistent sometimes? usually xap:resources/foo.png
+      // zip.file() handles relative paths.
+      const file = zip.file(path);
+      if (file) {
+        const base64 = await file.async('base64');
+        const ext = path.split('.').pop()?.toLowerCase();
+        let mime = 'image/png';
+        if (ext === 'jpg' || ext === 'jpeg') mime = 'image/jpeg';
+        else if (ext === 'svg') mime = 'image/svg+xml';
+        else if (ext === 'gif') mime = 'image/gif';
 
-    return newNode;
+        imageData = `data:${mime};base64,${base64}`;
+      }
+    }
+
+    // Case 1: Text + Image -> Text Node (Parent) + Image Node (Child)
+    if (topic.title && imageData) {
+      const textNode: MindMapNodeData = {
+        id: nodeId,
+        topic: topic.title,
+        root: isRoot,
+        children: children, // Original children attach to text node
+      };
+
+      const imageNodeId = this.idGenerator.generate();
+      const imageNode: MindMapNodeData = {
+        id: imageNodeId,
+        topic: '',
+        image: imageData,
+        children: [],
+      };
+
+      // Add image node as a child of the text node
+      // User requested "add the image node as a child of that text node"
+      textNode.children?.push(imageNode);
+
+      return textNode;
+    }
+    // Case 2: Image Only -> Image Node
+    else if (imageData) {
+      return {
+        id: nodeId,
+        topic: '', // Empty topic for image node
+        image: imageData,
+        root: isRoot,
+        children: children,
+      };
+    }
+    // Case 3: Text Only (or Empty) -> Text Node
+    else {
+      return {
+        id: nodeId,
+        topic: topic.title || '',
+        root: isRoot,
+        children: children,
+      };
+    }
   }
 }
