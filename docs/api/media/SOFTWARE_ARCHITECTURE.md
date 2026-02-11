@@ -20,6 +20,7 @@ graph TD
     subgraph Infrastructure ["Infrastructure Layer"]
         IdGenImpl[CryptoIdGenerator]
         EventBusImpl[EventEmitter]
+        Importer[XMindImporter]
     end
 
     subgraph Application ["Application Layer"]
@@ -230,6 +231,8 @@ Provides concrete implementations for interfaces defined in domain and applicati
   - Implementation of ID generation using Web Crypto API. Implements `domain/interfaces/IdGenerator`.
 - **EventEmitter**:
   - Implementation of the event bus.
+- **XMindImporter**:
+  - Implementation of XMind file parsing and importing using `jszip`.
 
 ## 4. Major Processing Sequence
 
