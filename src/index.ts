@@ -27,7 +27,10 @@ export type { MindMapStyles } from './domain/interfaces/MindMapStyles';
 export type { Direction } from './presentation/logic/InteractionHandler';
 export type { NodeStyle } from './domain/entities/Node';
 export { Node } from './domain/entities/Node';
-export { MindMap } from './domain/entities/MindMap';
+import { FileHandler } from './domain/interfaces/FileHandler';
+export type { FileHandler } from './domain/interfaces/FileHandler';
+export { SvgGenerator } from './presentation/logic/SvgGenerator';
+export { XMindImporter } from './infrastructure/impl/XMindImporter';
 
 export interface KakidashOptions {
   shortcuts?: ShortcutConfig;
@@ -40,6 +43,12 @@ export interface KakidashOptions {
    * Custom styles to apply to the mind map initially.
    */
   customStyles?: MindMapStyles;
+  /**
+   * Optional handler for file I/O operations.
+   * If provided, this handler will be used instead of default browser DOM APIs
+   * for importing and exporting files.
+   */
+  fileHandler?: FileHandler;
 }
 
 // Custom styles definition removed (using imported MindMapStyles)
@@ -89,9 +98,16 @@ export class Kakidash extends TypedEventEmitter<KakidashEventMap> {
       onToggleFold: (nodeId) => this.controller.toggleFold(nodeId),
     });
 
-    this.controller = new MindMapController(this.mindMap, service, renderer, styleEditor, {
-      emit: (event, payload) => this.emit(event, payload),
-    });
+    this.controller = new MindMapController(
+      this.mindMap,
+      service,
+      renderer,
+      styleEditor,
+      {
+        emit: (event, payload) => this.emit(event, payload),
+      },
+      options.fileHandler,
+    );
 
     styleEditor.onUpdate = (nodeId, style) => {
       this.controller.updateNode(nodeId, { style });

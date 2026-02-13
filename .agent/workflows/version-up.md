@@ -3,6 +3,7 @@ description: Perform version bump and release preparation
 ---
 
 // turbo-all
+
 1. **Cleanup and Update Environment**
    Ensure the working tree is clean with `git status`, then switch to the main branch and pull the latest changes using `git checkout main && git pull origin main`.
 

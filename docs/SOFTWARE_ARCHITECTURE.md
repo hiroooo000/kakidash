@@ -38,7 +38,7 @@ graph TD
     Infrastructure --> Application
     Infrastructure --> Domain
     Application --> Domain
-    
+
     %% Specific Dependencies
     Controller --> Service
     Service --> Entities
@@ -52,7 +52,7 @@ This diagram shows concrete relations between major classes.
 ```mermaid
 classDiagram
     direction TB
-    
+
     class Kakidash {
         -mindMap: MindMap
         -controller: MindMapController
@@ -136,27 +136,26 @@ classDiagram
     %% Relationships
     Kakidash *-- MindMapController : manages
     Kakidash *-- MindMap : holds state
-    
+
     MindMapController o-- MindMap : updates
     MindMapController o-- MindMapService : delegates logic
     MindMapController o-- SvgRenderer : triggers draw
     MindMapController o-- CommandPalette : controls
     MindMapController o-- InteractionHandler : manages input
-    
+
     MindMapService o-- MindMap : operates on
     MindMapService *-- HistoryManager : manages history
     MindMapService o-- IdGenerator : uses
 
     MindMap *-- Node : root node
     Node "1" *-- "many" Node : children
-    
+
     InteractionHandler *-- NodeEditor
     InteractionHandler *-- NodeDragger
     InteractionHandler *-- ShortcutManager
-    
+
     CryptoIdGenerator ..|> IdGenerator : implements
 ```
-
 
 ## 2. Directory Structure
 
@@ -181,9 +180,10 @@ src/
 ## 3. Layer Details
 
 ### 3.1 Domain Layer (`src/domain`)
+
 The core of business logic. Has no external dependencies.
 
-- **Entities**: 
+- **Entities**:
   - `MindMap`: Root entity managing the entire mind map.
   - `Node`: Data structure and behavior for each node (parent-child relationship, style, and icon management, etc.).
 - **Interfaces**:
@@ -193,9 +193,11 @@ The core of business logic. Has no external dependencies.
   - `ThemeDefinition`: Interface for defining themes.
 
 ### 3.2 Application Layer (`src/application`)
+
 Orchestrates domain entities to implement application use cases.
 
 #### Services (`src/application/services`)
+
 - **MindMapService**:
   - Implements major use cases such as adding, deleting, moving, editing nodes, and icon settings.
   - Coordinates with history management (Undo/Redo).
@@ -203,9 +205,11 @@ Orchestrates domain entities to implement application use cases.
   - Manages operation history using the Memento pattern.
 
 ### 3.3 Presentation Layer (`src/presentation`)
+
 Handles user interface and user input.
 
 #### Logic (`src/presentation/logic`)
+
 - **MindMapController**:
   - Receives events from the View and invokes Application Service.
   - Acts as the Controller in the MVC pattern.
@@ -217,6 +221,7 @@ Handles user interface and user input.
   - Converts mind map data to Markdown format and handles file saving.
 
 #### Components (`src/presentation/components`)
+
 - **SvgRenderer**:
   - Responsible for SVG rendering of the mind map.
 - **NodeEditor / StyleEditor**:
@@ -228,9 +233,11 @@ Handles user interface and user input.
   - Provides node search results and navigation.
 
 ### 3.4 Infrastructure Layer (`src/infrastructure`)
+
 Provides concrete implementations for interfaces defined in domain and application layers.
 
 #### Implementations (`src/infrastructure/impl`)
+
 - **CryptoIdGenerator**:
   - Implementation of ID generation using Web Crypto API. Implements `domain/interfaces/IdGenerator`.
 - **EventEmitter**:
@@ -255,19 +262,19 @@ sequenceDiagram
 
     User->>Controller: addChildNode(parentId)
     activate Controller
-    
+
     Controller->>Service: addNode(parentId, "New Topic")
     activate Service
-    
+
     Service->>IdGen: generate()
     IdGen-->>Service: uuid
-    
+
     Service->>Entity: new Node(uuid, ...)
     Service->>Entity: parent.addChild(newNode)
-    
+
     Service-->>Controller: newNode
     deactivate Service
-    
+
     Controller->>Renderer: render(mindMap)
     Controller-->>User: Update View
     deactivate Controller
@@ -287,13 +294,13 @@ sequenceDiagram
 
     User->>Controller: undo()
     activate Controller
-    
+
     Controller->>Service: undo()
     activate Service
-    
+
     Service->>History: undo(currentState)
     History-->>Service: previousState
-    
+
     alt previousState exists
         Service->>Service: importData(previousState)
         Service-->>Controller: true
@@ -301,7 +308,7 @@ sequenceDiagram
         Service-->>Controller: false
     end
     deactivate Service
-    
+
     opt if true
         Controller->>Controller: render()
         Controller-->>User: Update View
@@ -322,12 +329,12 @@ sequenceDiagram
 
     User->>Controller: moveNode(nodeId, targetId, side)
     activate Controller
-    
+
     Controller->>Service: moveNode(nodeId, targetId, side)
     activate Service
-    
+
     Service->>Entity: findNode(nodeId), findNode(targetId)
-    
+
     alt Validation Failed (Cycle / Root Move)
         Entity-->>Service: false (from moveNode checks)
         Service-->>Controller: false
@@ -339,7 +346,7 @@ sequenceDiagram
         Service-->>Controller: true
     end
     deactivate Service
-    
+
     opt if true
         Controller->>Controller: render()
         Controller-->>User: Update View
@@ -367,22 +374,22 @@ sequenceDiagram
     activate Palette
     Palette-->>Controller: onInput("query")
     activate Controller
-    
+
     Controller->>Service: searchNodes("query")
     activate Service
     Service-->>Controller: Node[] results
     deactivate Service
-    
+
     Controller->>Palette: setResults(results)
     deactivate Controller
     deactivate Palette
-    
+
     User->>Palette: Select Result
     activate Palette
     Palette-->>Controller: onSelect(nodeId)
     deactivate Palette
     activate Controller
-    
+
     Controller->>Controller: selectNode(nodeId)
     Controller->>Controller: ensureNodeVisible(nodeId)
     Controller-->>User: Focus Node
@@ -390,6 +397,7 @@ sequenceDiagram
 ```
 
 ## 5. Entry Point and DI (`src/index.ts`)
+
 Instantiates components and injects dependencies upon application startup.
 
 ```typescript

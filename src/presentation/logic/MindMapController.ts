@@ -16,6 +16,7 @@ import { ThemeRegistry } from '../components/ThemeRegistry';
 import { XMindImporter } from '../../infrastructure/impl/XMindImporter';
 import { ImageExporter } from './ImageExporter';
 import { MarkdownExporter } from './MarkdownExporter';
+import { FileHandler } from '../../domain/interfaces/FileHandler';
 
 export interface IMindMapEventBus {
   emit<K extends keyof KakidashEventMap>(event: K, payload: KakidashEventMap[K]): void;
@@ -30,6 +31,7 @@ export class MindMapController {
   private commandPalette: CommandPalette;
   private interactionHandler!: InteractionHandler;
   private layoutSwitcher!: LayoutSwitcher;
+  private fileHandler?: FileHandler;
 
   private selectedNodeId: string | null = null;
   private layoutMode: LayoutMode = 'Right';
@@ -57,12 +59,14 @@ export class MindMapController {
     renderer: Renderer,
     styleEditor: StyleEditor,
     eventBus: IMindMapEventBus,
+    fileHandler?: FileHandler,
   ) {
     this.mindMap = mindMap;
     this.service = service;
     this.renderer = renderer;
     this.styleEditor = styleEditor;
     this.eventBus = eventBus;
+    this.fileHandler = fileHandler;
     this.commandPalette = new CommandPalette(this.renderer.container, {
       onInput: (query) => this.handleSearchInput(query),
       onSelect: (nodeId) => this.handleSearchResultSelect(nodeId),
@@ -156,6 +160,7 @@ export class MindMapController {
     layoutSide?: 'left' | 'right',
     options: { emitChange?: boolean } = { emitChange: true },
   ): Node | null {
+    this.eventBus.emit('command', { name: 'addNode', args: { parentId, topic, layoutSide } });
     const node = this.service.addNode(parentId, topic, layoutSide);
     if (node) {
       this.render();
@@ -173,6 +178,7 @@ export class MindMapController {
     topic: string = 'New topic',
     options: { emitChange?: boolean } = { emitChange: true },
   ): Node | null {
+    this.eventBus.emit('command', { name: 'addSibling', args: { referenceId, position, topic } });
     const node = this.mindMap.findNode(referenceId);
     if (!node || !node.parentId) return null;
 
@@ -202,6 +208,7 @@ export class MindMapController {
     topic: string = 'New topic',
     options: { emitChange?: boolean } = { emitChange: true },
   ): Node | null {
+    this.eventBus.emit('command', { name: 'insertParent', args: { targetId, topic } });
     const newNode = this.service.insertParent(targetId, topic);
     if (newNode) {
       this.render();
@@ -214,6 +221,7 @@ export class MindMapController {
   }
 
   deleteNode(nodeId: string): void {
+    this.eventBus.emit('command', { name: 'deleteNode', args: { nodeId } });
     const result = this.service.removeNode(nodeId);
     if (result) {
       this.render();
@@ -226,6 +234,7 @@ export class MindMapController {
     nodeId: string,
     updates: { topic?: string; style?: Partial<NodeStyle>; icon?: string },
   ): void {
+    this.eventBus.emit('command', { name: 'updateNode', args: { nodeId, updates } });
     let changed = false;
     if (this.interactionHandler && this.interactionHandler.isReadOnly) return;
 
@@ -253,6 +262,7 @@ export class MindMapController {
 
   // Interaction Handlers
   updateNodeWidth(nodeId: string, increment: number): void {
+    this.eventBus.emit('command', { name: 'updateNodeWidth', args: { nodeId, increment } });
     if (this.interactionHandler && this.interactionHandler.isReadOnly) return;
 
     const node = this.mindMap.findNode(nodeId);
@@ -366,6 +376,7 @@ export class MindMapController {
   }
 
   moveNode(nodeId: string, targetId: string, position: 'top' | 'bottom' | 'left' | 'right'): void {
+    this.eventBus.emit('command', { name: 'moveNode', args: { nodeId, targetId, position } });
     const target = this.mindMap.findNode(targetId);
     if (!target) return;
 
@@ -410,6 +421,7 @@ export class MindMapController {
   }
 
   setLayoutMode(mode: LayoutMode): void {
+    this.eventBus.emit('command', { name: 'setLayoutMode', args: { mode } });
     this.layoutMode = mode;
     if (this.layoutSwitcher) this.layoutSwitcher.setMode(mode);
 
@@ -445,6 +457,7 @@ export class MindMapController {
   }
 
   updateGlobalStyles(styles: MindMapStyles): void {
+    this.eventBus.emit('command', { name: 'updateGlobalStyles', args: { styles } });
     if (styles.rootNode)
       this.savedCustomStyles.rootNode = { ...this.savedCustomStyles.rootNode, ...styles.rootNode };
     if (styles.childNode)
@@ -468,6 +481,7 @@ export class MindMapController {
   }
 
   setTheme(theme: Theme): void {
+    this.eventBus.emit('command', { name: 'setTheme', args: { theme } });
     this.service.setTheme(theme);
     if (this.layoutSwitcher) this.layoutSwitcher.setTheme(theme);
 
@@ -538,6 +552,7 @@ export class MindMapController {
 
   undo(): void {
     if (this.service.undo()) {
+      this.eventBus.emit('command', { name: 'undo' });
       this.render();
       this.eventBus.emit('model:change', undefined);
     }
@@ -545,6 +560,7 @@ export class MindMapController {
 
   redo(): void {
     if (this.service.redo()) {
+      this.eventBus.emit('command', { name: 'redo' });
       this.render();
       this.eventBus.emit('model:change', undefined);
     }
@@ -552,6 +568,7 @@ export class MindMapController {
 
   toggleFold(nodeId: string): void {
     if (this.service.toggleNodeFold(nodeId)) {
+      this.eventBus.emit('command', { name: 'toggleFold', args: { nodeId } });
       this.render();
       this.eventBus.emit('model:change', undefined);
     }
@@ -590,6 +607,7 @@ export class MindMapController {
   }
 
   pasteNode(parentId: string): void {
+    this.eventBus.emit('command', { name: 'pasteNode', args: { parentId } });
     const newNode = this.service.pasteNode(parentId);
     if (newNode) {
       this.render();
@@ -601,6 +619,7 @@ export class MindMapController {
   }
 
   cutNode(nodeId: string): void {
+    this.eventBus.emit('command', { name: 'cutNode', args: { nodeId } });
     const node = this.mindMap.findNode(nodeId);
     if (node) {
       const parentId = node.parentId;
@@ -613,6 +632,7 @@ export class MindMapController {
   }
 
   pasteImage(parentId: string, imageData: string, width?: number, height?: number): void {
+    this.eventBus.emit('command', { name: 'pasteImage', args: { parentId, width, height } });
     const newNode = this.service.addImageNode(parentId, imageData, width, height);
     if (newNode) {
       this.render();
@@ -701,7 +721,7 @@ export class MindMapController {
 
   private handleCommandSelect(command: string): void {
     if (command === 'import-xmind') {
-      this.importXMind();
+      void this.importXMind();
     } else if (command === 'export-png') {
       void this.exportPng();
     } else if (command === 'export-svg') {
@@ -712,26 +732,54 @@ export class MindMapController {
   }
 
   public async exportPng(): Promise<void> {
+    this.eventBus.emit('command', { name: 'exportPng' });
     const exporter = new ImageExporter();
-    await exporter.exportToPng(this.renderer.container);
+    await exporter.exportToPng(this.renderer.container, this.fileHandler);
   }
 
   public async exportSvg(): Promise<void> {
+    this.eventBus.emit('command', { name: 'exportSvg' });
     const exporter = new ImageExporter();
-    await exporter.exportToSvg(this.renderer.container);
+    await exporter.exportToSvg(this.renderer.container, this.fileHandler);
   }
 
   public async exportMarkdown(): Promise<void> {
+    this.eventBus.emit('command', { name: 'exportMarkdown' });
     const exporter = new MarkdownExporter();
-    await exporter.export(this.mindMap);
+    await exporter.export(this.mindMap, this.fileHandler);
   }
 
-  public importXMind(): void {
+  public async importXMind(): Promise<void> {
+    this.eventBus.emit('command', { name: 'importXMind' });
     // Check if root has children to confirm replacement
     if (this.mindMap.root.children.length > 0) {
       if (!window.confirm('Current mind map will be replaced. Continue?')) {
         return;
       }
+    }
+
+    if (this.fileHandler) {
+      const content = await this.fileHandler.onImportFile('xmind');
+      if (content) {
+        try {
+          const importer = new XMindImporter();
+          let file: File;
+          if (content instanceof ArrayBuffer) {
+            file = new File([content], 'imported.xmind');
+          } else if (typeof content === 'string') {
+            file = new File([content], 'imported.xmind');
+          } else {
+            return;
+          }
+
+          const data = await importer.extractMindMapData(file);
+          this.loadData(data);
+        } catch (err) {
+          console.error(err);
+          alert('Failed to import XMind file.');
+        }
+      }
+      return;
     }
 
     const input = document.createElement('input');
@@ -747,7 +795,7 @@ export class MindMapController {
         try {
           const importer = new XMindImporter();
           const data = await importer.extractMindMapData(file);
-          this.loadData(data); // Use loadData to handle selection and events centrally
+          this.loadData(data);
         } catch (err) {
           console.error(err);
           alert('Failed to import XMind file.');
@@ -758,9 +806,6 @@ export class MindMapController {
 
     input.click();
   }
-
-  // applyCustomStylesToDOM is no longer needed as ThemeRegistry handles it via setCustomTheme and applyTheme
-  // private applyCustomStylesToDOM(styles: MindMapStyles): void { ... }
 
   private ensureExplicitLayoutSides(parent: Node): void {
     if (!parent.isRoot || this.layoutMode !== 'Both') return;

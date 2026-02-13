@@ -1,52 +1,49 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>kakidash DEMO</title>
-  <style>
-    body {
-      margin: 0;
-      padding: 0;
-      width: 100vw;
-      height: 100vh;
-      overflow: hidden;
-      font-family: sans-serif;
-    }
-
-    #mindmap-container {
-      width: 100%;
-      height: 100%;
-      background-color: #f0f0f0;
-    }
-  </style>
-</head>
-
-<body>
-  <div id="mindmap-container"></div>
-  <script type="module">
-    import { Kakidash } from '/src/index.ts';
-
-    try {
-      const app = document.getElementById('mindmap-container');
-      const kakidash = new Kakidash(app);
-      window.kakidash = kakidash;
-
-      // Add some sample nodes
-      const rootId = kakidash.getRootId();
-      const child1 = kakidash.addNode(rootId, 'Child 1');
-      const child2 = kakidash.addNode(rootId, 'Child 2');
-
-      if (child1) {
-        kakidash.addNode(child1.id, 'GrandChild 1.1');
-        kakidash.addNode(child1.id, 'GrandChild 1.2');
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>kakidash DEMO</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        width: 100vw;
+        height: 100vh;
+        overflow: hidden;
+        font-family: sans-serif;
       }
 
-    } catch (e) {
-      console.error('Initialization error:', e);
-    }
-  </script>
-</body>
+      #mindmap-container {
+        width: 100%;
+        height: 100%;
+        background-color: #f0f0f0;
+      }
+    </style>
+  </head>
 
+  <body>
+    <div id="mindmap-container"></div>
+    <script type="module">
+      import { Kakidash } from '/src/index.ts';
+
+      try {
+        const app = document.getElementById('mindmap-container');
+        const kakidash = new Kakidash(app);
+        window.kakidash = kakidash;
+
+        // Add some sample nodes
+        const rootId = kakidash.getRootId();
+        const child1 = kakidash.addNode(rootId, 'Child 1');
+        const child2 = kakidash.addNode(rootId, 'Child 2');
+
+        if (child1) {
+          kakidash.addNode(child1.id, 'GrandChild 1.1');
+          kakidash.addNode(child1.id, 'GrandChild 1.2');
+        }
+      } catch (e) {
+        console.error('Initialization error:', e);
+      }
+    </script>
+  </body>
 </html>

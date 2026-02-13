@@ -8,4 +8,5 @@ export type KakidashEventMap = {
   'node:move': { nodeId: string; newParentId: string; position?: string };
   'model:load': MindMapData;
   'model:change': void; // Generic change event
+  command: { name: string; args?: any }; // Command Execution Event
 };

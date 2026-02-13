@@ -72,6 +72,28 @@ describe('XMindImporter', () => {
     expect(result.nodeData.children![0].topic).toBe('Subtopic 1');
   });
 
+  it('should support ArrayBuffer as input', async () => {
+    const mockContentJson = JSON.stringify([
+      {
+        id: 'sheet1',
+        title: 'Sheet 1',
+        rootTopic: {
+          id: 'root1',
+          title: 'Buffer Topic',
+          children: { attached: [] },
+        },
+      },
+    ]);
+
+    setupMockZip(mockContentJson);
+    const buffer = new ArrayBuffer(8);
+
+    const result = await importer.extractMindMapData(buffer);
+
+    expect(result.nodeData.topic).toBe('Buffer Topic');
+    expect(mockJSZipInstance.loadAsync).toHaveBeenCalledWith(buffer);
+  });
+
   it('should split text and image into parent-child nodes if both exist', async () => {
     const mockContentJson = JSON.stringify([
       {

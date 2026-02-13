@@ -69,8 +69,8 @@ jobs:
         if: steps.check_tag.outputs.exists == 'false'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: "v${{ env.VERSION }}"
-          name: "Release v${{ env.VERSION }}"
+          tag_name: 'v${{ env.VERSION }}'
+          name: 'Release v${{ env.VERSION }}'
           draft: false
           prerelease: false
           files: |
@@ -80,8 +80,6 @@ jobs:
             dist/index.d.ts
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-
 
       - name: Upload Build Artifact
         if: steps.check_tag.outputs.exists == 'false' || github.event_name == 'workflow_dispatch'
