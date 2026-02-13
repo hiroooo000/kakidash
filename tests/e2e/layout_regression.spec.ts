@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Layout Regression', () => {
+  test.setTimeout(60000); // Increased timeout to accommodate stability waits
   test.beforeEach(async ({ page }) => {
     // Ensure clean state from persistence, but keep index.html structure
     await page.goto('/');
@@ -24,6 +25,7 @@ test.describe('Layout Regression', () => {
       for (let i = 1; i <= 10; i++) {
         const newNodeText = `NewNode${i}`;
 
+        await page.waitForTimeout(300); // Ensure stability
         if (i === 1) {
           // First node: Add Child to Root
           await page.keyboard.press('Tab');
@@ -37,8 +39,8 @@ test.describe('Layout Regression', () => {
 
         await editor.fill(newNodeText);
         await page.keyboard.press('Enter');
-
         await expect(editor).not.toBeVisible();
+        await page.waitForTimeout(300); // Wait for pan animation
 
         // Verify the new node exists with the correct text
         const newNode = page.locator('.mindmap-node').filter({ hasText: newNodeText }).first();
@@ -56,6 +58,7 @@ test.describe('Layout Regression', () => {
     await test.step('Phase 2: Multiline Text Update', async () => {
       const node3 = page.locator('.mindmap-node').filter({ hasText: 'NewNode3' }).first();
       await node3.click();
+      await page.waitForTimeout(500); // Wait for potential panning animation
       await node3.dblclick();
 
       const editor = page.locator('textarea');
@@ -88,6 +91,7 @@ Could frame thy fearful symmetry?`;
       for (let i = 1; i <= 10; i++) {
         const childText = `NewNode4-${i}`;
         // Always add child to previous node to create deep hierarchy
+        await page.waitForTimeout(300); // Ensure stability before keyboard action
         await page.keyboard.press('Tab');
 
         const childEditor = page.locator('textarea');
@@ -95,6 +99,7 @@ Could frame thy fearful symmetry?`;
         await childEditor.fill(childText);
         await page.keyboard.press('Enter');
         await expect(childEditor).not.toBeVisible();
+        await page.waitForTimeout(300); // Wait for pan animation to settle
 
         // Verify the new node exists with the correct text
         const finalNode = page.locator('.mindmap-node').filter({ hasText: childText }).first();
@@ -122,6 +127,7 @@ Could frame thy fearful symmetry?`;
       await expect(node4_3).toHaveCSS('outline-style', 'solid');
 
       // Update NewNode4-3
+      await page.waitForTimeout(500); // Wait for navigation animation
       await node4_3.dblclick();
       const subEditor = page.locator('textarea');
       await expect(subEditor).toBeVisible();
