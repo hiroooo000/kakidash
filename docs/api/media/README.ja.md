@@ -56,26 +56,28 @@ pnpm add kakidash
 ```html
 <!DOCTYPE html>
 <html lang="ja">
-<head>
-    <meta charset="UTF-8">
+  <head>
+    <meta charset="UTF-8" />
     <title>Kakidash Demo</title>
     <style>
-        /* コンテナのサイズ指定は必須です */
-        #mindmap-container {
-            width: 100vw;
-            height: 100vh;
-            border: 1px solid #ccc; /* 境界線はお好みで */
-            margin: 0;
-            padding: 0;
-            overflow: hidden; /* コンテナ内でのスクロールを防ぐため */
-        }
-        body { margin: 0; }
+      /* コンテナのサイズ指定は必須です */
+      #mindmap-container {
+        width: 100vw;
+        height: 100vh;
+        border: 1px solid #ccc; /* 境界線はお好みで */
+        margin: 0;
+        padding: 0;
+        overflow: hidden; /* コンテナ内でのスクロールを防ぐため */
+      }
+      body {
+        margin: 0;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div id="mindmap-container"></div>
     <!-- Script挿入場所 -->
-</body>
+  </body>
 </html>
 ```
 
@@ -87,7 +89,7 @@ pnpm add kakidash
 pnpm add kakidash
 ```
 
-```typescript
+````typescript
 import { Kakidash } from 'kakidash';
 
 // コンテナ取得
@@ -111,8 +113,9 @@ kakidash.addNode(kakidash.getRootId(), 'Hello World');
 
 ```typescript
 kakidash.setTheme('dark'); // 'default', 'simple', 'colorful', 'dark'
-```
-```
+````
+
+````
 
 #### B. ブラウザ直接読み込み (Script Tag / CDN)
 
@@ -133,12 +136,12 @@ kakidash.setTheme('dark'); // 'default', 'simple', 'colorful', 'dark'
     // 初期化
     const container = document.getElementById('mindmap-container');
     const kakidash = new Kakidash(container);
-    
+
     // 動作確認
     // 動作確認
     console.log('Kakidash initialized:', kakidash);
 </script>
-```
+````
 
 ## スタイルのカスタマイズ
 
@@ -149,28 +152,28 @@ kakidash.setTheme('dark'); // 'default', 'simple', 'colorful', 'dark'
 // 設定は内部に保存されます
 kakidash.updateGlobalStyles({
   // ルートノード（中心）のスタイル
-  rootNode: { 
+  rootNode: {
     border: '4px solid gold',
     background: '#ffeeee',
-    color: '#333' // フォント色
+    color: '#333', // フォント色
   },
-  
+
   // 子ノード（枝）のスタイル
-  childNode: { 
-    border: '2px dashed blue', 
+  childNode: {
+    border: '2px dashed blue',
     background: 'white',
-    color: '#555' // フォント色
+    color: '#555', // フォント色
   },
-  
+
   // 接続線の色
-  connection: { 
-    color: 'orange' 
+  connection: {
+    color: 'orange',
   },
-  
+
   // マインドマップ全体の背景
   canvas: {
-    background: '#fafafa' // 透明にする場合は 'transparent'
-  }
+    background: '#fafafa', // 透明にする場合は 'transparent'
+  },
 });
 
 // 2. カスタムテーマを有効化してスタイルを反映
@@ -181,13 +184,13 @@ kakidash.setTheme('custom');
 
 すべての値は標準的なCSSの文字列として指定可能です。
 
-| オブジェクト | プロパティ | 説明 | 例 |
-| --- | --- | --- | --- |
-| `rootNode`, `childNode` | `border` | 枠線の指定 | `'2px solid red'`, `'none'` |
-| | `background` | 背景色 | `'#ffffff'`, `'rgba(0,0,0,0.5)'`, `'transparent'` |
-| | `color` | 文字色 | `'#333'`, `'black'` |
-| `connection` | `color` | 接続線の色 | `'#ccc'`, `'orange'` |
-| `canvas` | `background` | キャンバス全体の背景 | `'#f0f0f0'`, `'transparent'` |
+| オブジェクト            | プロパティ   | 説明                 | 例                                                |
+| ----------------------- | ------------ | -------------------- | ------------------------------------------------- |
+| `rootNode`, `childNode` | `border`     | 枠線の指定           | `'2px solid red'`, `'none'`                       |
+|                         | `background` | 背景色               | `'#ffffff'`, `'rgba(0,0,0,0.5)'`, `'transparent'` |
+|                         | `color`      | 文字色               | `'#333'`, `'black'`                               |
+| `connection`            | `color`      | 接続線の色           | `'#ccc'`, `'orange'`                              |
+| `canvas`                | `background` | キャンバス全体の背景 | `'#f0f0f0'`, `'transparent'`                      |
 
 ## API Reference
 
@@ -215,15 +218,15 @@ kakidash.setTheme('custom');
 
 ### Events
 
-| Event Name | Payload | Description |
-| --- | --- | --- |
-| `node:select` | `string \| null` | ノードが選択されたときに発火します。 |
-| `node:add` | `{ id: string; topic: string }` | 新しいノードが追加されたときに発火します。 |
-| `node:remove` | `string` | ノードが削除されたときに発火します。 |
-| `node:update` | `{ id: string; topic?: string; icon?: string }` | ノードが更新されたときに発火します。 |
-| `node:move` | `{ nodeId: string; newParentId: string; position?: string }` | ノードが移動されたときに発火します。 |
-| `model:load` | `MindMapData` | データがロードされたときに発火します。 |
-| `model:change` | `void` | データモデルが変更されたときに発火します。 |
+| Event Name     | Payload                                                      | Description                                |
+| -------------- | ------------------------------------------------------------ | ------------------------------------------ |
+| `node:select`  | `string \| null`                                             | ノードが選択されたときに発火します。       |
+| `node:add`     | `{ id: string; topic: string }`                              | 新しいノードが追加されたときに発火します。 |
+| `node:remove`  | `string`                                                     | ノードが削除されたときに発火します。       |
+| `node:update`  | `{ id: string; topic?: string; icon?: string }`              | ノードが更新されたときに発火します。       |
+| `node:move`    | `{ nodeId: string; newParentId: string; position?: string }` | ノードが移動されたときに発火します。       |
+| `model:load`   | `MindMapData`                                                | データがロードされたときに発火します。     |
+| `model:change` | `void`                                                       | データモデルが変更されたときに発火します。 |
 
 ```typescript
 kakidash.on('node:select', (nodeId) => {
@@ -242,7 +245,7 @@ const kakidash = new Kakidash(container, {
   shortcuts: {
     // 'addChild' を Ctrl+N に変更する例
     addChild: [{ key: 'n', ctrlKey: true }],
-  }
+  },
 });
 ```
 
@@ -252,41 +255,19 @@ const kakidash = new Kakidash(container, {
 
 ```json
 {
-  "navUp": [
-    { "key": "ArrowUp" },
-    { "key": "k" }
-  ],
-  "navDown": [
-    { "key": "ArrowDown" },
-    { "key": "j" }
-  ],
-  "navLeft": [
-    { "key": "ArrowLeft" },
-    { "key": "h" }
-  ],
-  "navRight": [
-    { "key": "ArrowRight" },
-    { "key": "l" }
-  ],
-  "addChild": [
-    { "key": "Tab" },
-    { "key": "a" }
-  ],
+  "navUp": [{ "key": "ArrowUp" }, { "key": "k" }],
+  "navDown": [{ "key": "ArrowDown" }, { "key": "j" }],
+  "navLeft": [{ "key": "ArrowLeft" }, { "key": "h" }],
+  "navRight": [{ "key": "ArrowRight" }, { "key": "l" }],
+  "addChild": [{ "key": "Tab" }, { "key": "a" }],
   "insertParent": [
     { "key": "Tab", "shiftKey": true },
     { "key": "a", "shiftKey": true }
   ],
   "addSibling": [{ "key": "Enter" }],
   "addSiblingBefore": [{ "key": "Enter", "shiftKey": true }],
-  "deleteNode": [
-    { "key": "Delete" },
-    { "key": "Backspace" }
-  ],
-  "beginEdit": [
-    { "key": "i" },
-    { "key": " " },
-    { "key": "F2" }
-  ],
+  "deleteNode": [{ "key": "Delete" }, { "key": "Backspace" }],
+  "beginEdit": [{ "key": "i" }, { "key": " " }, { "key": "F2" }],
   "copy": [
     { "key": "c", "ctrlKey": true },
     { "key": "c", "metaKey": true }
@@ -311,14 +292,8 @@ const kakidash = new Kakidash(container, {
   ],
   "bold": [{ "key": "b", "shiftKey": true }],
   "italic": [{ "key": "i", "shiftKey": true }],
-  "increaseFontSize": [
-    { "key": ">", "shiftKey": true },
-    { "key": "." }
-  ],
-  "decreaseFontSize": [
-    { "key": "<", "shiftKey": true },
-    { "key": "," }
-  ],
+  "increaseFontSize": [{ "key": ">", "shiftKey": true }, { "key": "." }],
+  "decreaseFontSize": [{ "key": "<", "shiftKey": true }, { "key": "," }],
   "zoomIn": [{ "key": "[" }],
   "zoomOut": [{ "key": "]" }],
   "resetZoom": [{ "key": ":" }],
@@ -337,51 +312,55 @@ const kakidash = new Kakidash(container, {
 ## Shortcuts
 
 ### General
-| Key | Description |
-| --- | --- |
-| `m` | コマンドパレット (検索 / アイコン) |
-| `Arrow Keys` | ノード間の移動 |
-| `h` / `j` / `k` / `l` | ノード間の移動 (Vim風) |
-| `F2` / `DblClick` / `Space` / `i` | ノードの編集を開始 (画像の場合はズーム) |
-| `Enter` | 兄弟ノードを追加 (下) |
-| `Shift + Enter` | 兄弟ノードを追加 (上) |
-| `Tab` / `a` | 子ノードを追加 |
-| `Shift + Tab` / `Shift + a` | 親ノードを挿入 |
-| `Delete` / `Backspace` | ノードを削除 |
-| `Ctrl/Cmd + z` | 元に戻す (Undo) |
-| `Ctrl/Cmd + Shift + z` / `Ctrl + y` | やり直し (Redo) |
-| `Ctrl/Cmd + C` | コピー |
-| `Ctrl/Cmd + X` | 切り取り |
-| `Ctrl/Cmd + V` | 貼り付け (画像も可) |
-| `Drag` (Canvas) | 画面のパン (移動) |
-| `Wheel` | 上下スクロール (パン) |
-| `Shift + Wheel` | 左右スクロール (パン) |
-| `Ctrl/Cmd + Wheel` | ズームイン/アウト |
-| `[` | キャンバス拡大 |
-| `]` | キャンバス縮小 |
-| `:` | ズームリセット |
-| Click `+/-` / `f` | ノードの展開/折り畳み |
+
+| Key                                 | Description                             |
+| ----------------------------------- | --------------------------------------- |
+| `m`                                 | コマンドパレット (検索 / アイコン)      |
+| `Arrow Keys`                        | ノード間の移動                          |
+| `h` / `j` / `k` / `l`               | ノード間の移動 (Vim風)                  |
+| `F2` / `DblClick` / `Space` / `i`   | ノードの編集を開始 (画像の場合はズーム) |
+| `Enter`                             | 兄弟ノードを追加 (下)                   |
+| `Shift + Enter`                     | 兄弟ノードを追加 (上)                   |
+| `Tab` / `a`                         | 子ノードを追加                          |
+| `Shift + Tab` / `Shift + a`         | 親ノードを挿入                          |
+| `Delete` / `Backspace`              | ノードを削除                            |
+| `Ctrl/Cmd + z`                      | 元に戻す (Undo)                         |
+| `Ctrl/Cmd + Shift + z` / `Ctrl + y` | やり直し (Redo)                         |
+| `Ctrl/Cmd + C`                      | コピー                                  |
+| `Ctrl/Cmd + X`                      | 切り取り                                |
+| `Ctrl/Cmd + V`                      | 貼り付け (画像も可)                     |
+| `Drag` (Canvas)                     | 画面のパン (移動)                       |
+| `Wheel`                             | 上下スクロール (パン)                   |
+| `Shift + Wheel`                     | 左右スクロール (パン)                   |
+| `Ctrl/Cmd + Wheel`                  | ズームイン/アウト                       |
+| `[`                                 | キャンバス拡大                          |
+| `]`                                 | キャンバス縮小                          |
+| `:`                                 | ズームリセット                          |
+| Click `+/-` / `f`                   | ノードの展開/折り畳み                   |
 
 ### Editing (Text Input)
-| Key | Description |
-| --- | --- |
-| `Enter` | 編集を確定 |
-| `Shift + Enter` | 改行 |
-| `Esc` | 編集をキャンセル |
+
+| Key             | Description      |
+| --------------- | ---------------- |
+| `Enter`         | 編集を確定       |
+| `Shift + Enter` | 改行             |
+| `Esc`           | 編集をキャンセル |
 
 ### Styling (Since selection)
-| Key | Description |
-| --- | --- |
-| `Shift + b` | 太字 (Bold) 切り替え |
-| `Shift + i` | 斜体 (Italic) 切り替え |
-| `Shift + . (>)` / `.` | フォントサイズ拡大 |
-| `Shift + , (<)` / `,` | フォントサイズ縮小 |
-| `Shift + ArrowLeft / Right` | ノード幅の変更 |
-| `1` - `7` | ノードの色を変更 (パレット順) |
+
+| Key                         | Description                   |
+| --------------------------- | ----------------------------- |
+| `Shift + b`                 | 太字 (Bold) 切り替え          |
+| `Shift + i`                 | 斜体 (Italic) 切り替え        |
+| `Shift + . (>)` / `.`       | フォントサイズ拡大            |
+| `Shift + , (<)` / `,`       | フォントサイズ縮小            |
+| `Shift + ArrowLeft / Right` | ノード幅の変更                |
+| `1` - `7`                   | ノードの色を変更 (パレット順) |
 
 ## アーキテクチャ
 
 ソフトウェアアーキテクチャの詳細や内部モジュールの依存関係については、以下を参照してください：
+
 - [ソフトウェアアーキテクチャ設計書](./docs/SOFTWARE_ARCHITECTURE_ja.md)
 
 ## Development

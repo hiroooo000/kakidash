@@ -1,39 +1,35 @@
 {
-    "name": "kakidash",
-    "image": "mcr.microsoft.com/devcontainers/javascript-node:22",
-    "features": {
-        "ghcr.io/devcontainers/features/github-cli:1": {
-            "version": "latest"
-        },
-        "ghcr.io/devcontainers/features/python:1": {
-            "version": "3.12",
-            "installTools": true,
-            "installJupyter": false
-        },
-        "ghcr.io/devcontainers/features/node:1": {
-            "version": "lts",
-            "pnpm": "latest"
+  "name": "kakidash",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:22",
+  "features": {
+    "ghcr.io/devcontainers/features/github-cli:1": {
+      "version": "latest"
+    },
+    "ghcr.io/devcontainers/features/python:1": {
+      "version": "3.12",
+      "installTools": true,
+      "installJupyter": false
+    },
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "lts",
+      "pnpm": "latest"
+    }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": ["dbaeumer.vscode-eslint", "esbenp.prettier-vscode", "mhutchie.git-graph"],
+      "settings": {
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+          "source.fixAll.eslint": "explicit"
         }
-    },
-    "customizations": {
-        "vscode": {
-            "extensions": [
-                "dbaeumer.vscode-eslint",
-                "esbenp.prettier-vscode",
-                "mhutchie.git-graph"
-            ],
-            "settings": {
-                "editor.formatOnSave": true,
-                "editor.codeActionsOnSave": {
-                    "source.fixAll.eslint": "explicit"
-                }
-            }
-        }
-    },
-    "containerEnv": {
-        "TZ": "Asia/Tokyo"
-    },
-    "remoteUser": "node",
-    "privileged": true,
-    "postCreateCommand": "pip install requests python-dotenv && if [ -f package.json ]; then pnpm install && npx playwright install --with-deps; fi"
+      }
+    }
+  },
+  "containerEnv": {
+    "TZ": "Asia/Tokyo"
+  },
+  "remoteUser": "node",
+  "privileged": true,
+  "postCreateCommand": "pip install requests python-dotenv && if [ -f package.json ]; then pnpm install && npx playwright install --with-deps; fi"
 }

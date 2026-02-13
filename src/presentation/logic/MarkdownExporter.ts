@@ -1,11 +1,12 @@
 import { MindMap } from '../../domain/entities/MindMap';
 import { Node } from '../../domain/entities/Node';
+import { FileHandler } from '../../domain/interfaces/FileHandler';
 
 export class MarkdownExporter {
-  public async export(mindMap: MindMap): Promise<void> {
+  public async export(mindMap: MindMap, fileHandler?: FileHandler): Promise<void> {
     const markdown = this.generateMarkdown(mindMap);
     const blob = new Blob([markdown], { type: 'text/markdown;charset=utf-8' });
-    await this.saveFile(blob, 'mindmap.md');
+    await this.saveFile(blob, 'mindmap.md', fileHandler);
   }
 
   private generateMarkdown(mindMap: MindMap): string {
@@ -41,8 +42,13 @@ export class MarkdownExporter {
     return node.topic;
   }
 
-  private async saveFile(blob: Blob, filename: string): Promise<void> {
+  private async saveFile(blob: Blob, filename: string, fileHandler?: FileHandler): Promise<void> {
     try {
+      if (fileHandler) {
+        await fileHandler.onExportFile(blob, filename, 'md');
+        return;
+      }
+
       if (typeof window.showSaveFilePicker === 'function') {
         const handle = await window.showSaveFilePicker({
           suggestedName: filename,

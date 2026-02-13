@@ -1,0 +1,26 @@
+
+/workspaces/kakidash/tests/presentation/logic/MindMapController.test.ts
+   85:5   error    Unsafe call of an `any` typed value                                                                                                                                                                                                                                                                                                         @typescript-eslint/no-unsafe-call
+   85:34  warning  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                    @typescript-eslint/no-explicit-any
+   85:39  error    Unsafe member access .mockResolvedValue on an `any` value                                                                                                                                                                                                                                                                                   @typescript-eslint/no-unsafe-member-access
+   86:11  error    Unsafe assignment of an `any` value                                                                                                                                                                                                                                                                                                         @typescript-eslint/no-unsafe-assignment
+   86:90  warning  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                    @typescript-eslint/no-explicit-any
+   91:26  error    Unsafe argument of type `any` assigned to a parameter of type `MindMapData`                                                                                                                                                                                                                                                                 @typescript-eslint/no-unsafe-argument
+   97:12  error    A method that is not declared with `this: void` may cause unintentional scoping of `this` when separated from its object.
+Consider using an arrow function or explicitly `.bind()`ing the method to avoid calling the method with an unintended `this` value. 
+If a function does not access `this`, it can be annotated with `this: void`  @typescript-eslint/unbound-method
+  102:13  error    This assertion is unnecessary since it does not change the type of the expression                                                                                                                                                                                                                                                           @typescript-eslint/no-unnecessary-type-assertion
+  104:12  error    A method that is not declared with `this: void` may cause unintentional scoping of `this` when separated from its object.
+Consider using an arrow function or explicitly `.bind()`ing the method to avoid calling the method with an unintended `this` value. 
+If a function does not access `this`, it can be annotated with `this: void`  @typescript-eslint/unbound-method
+  105:12  error    A method that is not declared with `this: void` may cause unintentional scoping of `this` when separated from its object.
+Consider using an arrow function or explicitly `.bind()`ing the method to avoid calling the method with an unintended `this` value. 
+If a function does not access `this`, it can be annotated with `this: void`  @typescript-eslint/unbound-method
+  124:12  error    A method that is not declared with `this: void` may cause unintentional scoping of `this` when separated from its object.
+Consider using an arrow function or explicitly `.bind()`ing the method to avoid calling the method with an unintended `this` value. 
+If a function does not access `this`, it can be annotated with `this: void`  @typescript-eslint/unbound-method
+  142:5   error    Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator                                                                                                                                                                          @typescript-eslint/no-floating-promises
+
+✖ 12 problems (10 errors, 2 warnings)
+  1 error and 0 warnings potentially fixable with the `--fix` option.
+

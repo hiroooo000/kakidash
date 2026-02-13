@@ -38,7 +38,7 @@ graph TD
     Infrastructure --> Application
     Infrastructure --> Domain
     Application --> Domain
-    
+
     %% Specific Dependencies
     Controller --> Service
     Service --> Entities
@@ -52,7 +52,7 @@ graph TD
 ```mermaid
 classDiagram
     direction TB
-    
+
     class Kakidash {
         -mindMap: MindMap
         -controller: MindMapController
@@ -141,28 +141,27 @@ classDiagram
     %% Relationships
     Kakidash *-- MindMapController : manages
     Kakidash *-- MindMap : holds state
-    
+
     MindMapController o-- MindMap : updates
     MindMapController o-- MindMapService : delegates logic
     MindMapController o-- Renderer : triggers draw
     SvgRenderer ..|> Renderer : implements
     MindMapController o-- CommandPalette : controls
     MindMapController o-- InteractionHandler : manages input
-    
+
     MindMapService o-- MindMap : operates on
     MindMapService *-- HistoryManager : manages history
     MindMapService o-- IdGenerator : uses
 
     MindMap *-- Node : root node
     Node "1" *-- "many" Node : children
-    
+
     InteractionHandler *-- NodeEditor
     InteractionHandler *-- NodeDragger
     InteractionHandler *-- ShortcutManager
-    
+
     CryptoIdGenerator ..|> IdGenerator : implements
 ```
-
 
 ## 2. ディレクトリ構造
 
@@ -187,9 +186,10 @@ src/
 ## 3. レイヤー詳細
 
 ### 3.1 Domain Layer (`src/domain`)
+
 ビジネスロジックの中核です。外部への依存を持ちません。
 
-- **Entities**: 
+- **Entities**:
   - `MindMap`: マインドマップ全体を管理するルートエンティティ。
   - `Node`: 各ノードのデータ構造と振る舞い（親子関係、スタイル、アイコンの管理など）。
 - **Interfaces**:
@@ -199,9 +199,11 @@ src/
   - `ThemeDefinition`: テーマ定義のためのインターフェース。
 
 ### 3.2 Application Layer (`src/application`)
+
 ドメイン層のエンティティを調整し、アプリケーションとしてのユースケースを実現します。
 
 #### Services (`src/application/services`)
+
 - **MindMapService**:
   - ノードの追加、削除、移動、編集、アイコン設定などの主要なユースケースを実装。
   - アクションの履歴管理（Undo/Redo）との連携。
@@ -209,9 +211,11 @@ src/
   - Mementoパターンを用いた操作履歴の管理。
 
 ### 3.3 Presentation Layer (`src/presentation`)
+
 ユーザーインターフェースとユーザー入力を処理します。
 
 #### Logic (`src/presentation/logic`)
+
 - **MindMapController**:
   - Viewからのイベントを受け取り、Application Serviceを呼び出す。
   - MVCパターンのControllerの役割。
@@ -223,6 +227,7 @@ src/
   - マインドマップのデータをMarkdown形式に変換し、ファイル保存処理を行う。
 
 #### Components (`src/presentation/components`)
+
 - **Renderer (Interface) / SvgRenderer (Implementation)**:
   - マインドマップの描画を担当。
   - `MindMapController` は `Renderer` インターフェースに依存し、実装（`SvgRenderer`）はDIされます。
@@ -235,9 +240,11 @@ src/
   - ノード検索結果の表示とナビゲーションを提供。
 
 ### 3.4 Infrastructure Layer (`src/infrastructure`)
+
 ドメインやアプリケーション層で定義されたインターフェースの具体的な実装を提供します。
 
 #### Implementations (`src/infrastructure/impl`)
+
 - **CryptoIdGenerator**:
   - Web Crypto APIを使用したID生成の実装。`domain/interfaces/IdGenerator`の実装。
 - **EventEmitter**:
@@ -262,19 +269,19 @@ sequenceDiagram
 
     User->>Controller: addChildNode(parentId)
     activate Controller
-    
+
     Controller->>Service: addNode(parentId, "New Topic")
     activate Service
-    
+
     Service->>IdGen: generate()
     IdGen-->>Service: uuid
-    
+
     Service->>Entity: new Node(uuid, ...)
     Service->>Entity: parent.addChild(newNode)
-    
+
     Service-->>Controller: newNode
     deactivate Service
-    
+
     Controller->>Renderer: render(mindMap)
     Controller-->>User: Update View
     deactivate Controller
@@ -294,13 +301,13 @@ sequenceDiagram
 
     User->>Controller: undo()
     activate Controller
-    
+
     Controller->>Service: undo()
     activate Service
-    
+
     Service->>History: undo(currentState)
     History-->>Service: previousState
-    
+
     alt previousState exists
         Service->>Service: importData(previousState)
         Service-->>Controller: true
@@ -308,7 +315,7 @@ sequenceDiagram
         Service-->>Controller: false
     end
     deactivate Service
-    
+
     opt if true
         Controller->>Controller: render()
         Controller-->>User: Update View
@@ -329,12 +336,12 @@ sequenceDiagram
 
     User->>Controller: moveNode(nodeId, targetId, side)
     activate Controller
-    
+
     Controller->>Service: moveNode(nodeId, targetId, side)
     activate Service
-    
+
     Service->>Entity: findNode(nodeId), findNode(targetId)
-    
+
     alt Validation Failed (Cycle / Root Move)
         Entity-->>Service: false (from moveNode checks)
         Service-->>Controller: false
@@ -346,7 +353,7 @@ sequenceDiagram
         Service-->>Controller: true
     end
     deactivate Service
-    
+
     opt if true
         Controller->>Controller: render()
         Controller-->>User: Update View
@@ -374,22 +381,22 @@ sequenceDiagram
     activate Palette
     Palette-->>Controller: onInput("query")
     activate Controller
-    
+
     Controller->>Service: searchNodes("query")
     activate Service
     Service-->>Controller: Node[] results
     deactivate Service
-    
+
     Controller->>Palette: setResults(results)
     deactivate Controller
     deactivate Palette
-    
+
     User->>Palette: Select Result
     activate Palette
     Palette-->>Controller: onSelect(nodeId)
     deactivate Palette
     activate Controller
-    
+
     Controller->>Controller: selectNode(nodeId)
     Controller->>Controller: ensureNodeVisible(nodeId)
     Controller-->>User: Focus Node
@@ -397,6 +404,7 @@ sequenceDiagram
 ```
 
 ## 5. エントリーポイントとDI (`src/index.ts`)
+
 アプリケーションの起動時に各コンポーネントのインスタンス化と依存性の注入（Dependency Injection）を行います。
 
 ```typescript

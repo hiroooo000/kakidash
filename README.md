@@ -45,6 +45,7 @@ pnpm add kakidash
 ```
 
 ## Usage
+
 ### 1. HTML Preparation
 
 Prepare a container element (e.g., `div`) to display `kakidash`.
@@ -53,26 +54,28 @@ Prepare a container element (e.g., `div`) to display `kakidash`.
 ```html
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
+  <head>
+    <meta charset="UTF-8" />
     <title>Kakidash Demo</title>
     <style>
-        /* Container size is required */
-        #mindmap-container {
-            width: 100vw;
-            height: 100vh;
-            border: 1px solid #ccc;
-            margin: 0;
-            padding: 0;
-            overflow: hidden; /* Prevent scrolling within container */
-        }
-        body { margin: 0; }
+      /* Container size is required */
+      #mindmap-container {
+        width: 100vw;
+        height: 100vh;
+        border: 1px solid #ccc;
+        margin: 0;
+        padding: 0;
+        overflow: hidden; /* Prevent scrolling within container */
+      }
+      body {
+        margin: 0;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div id="mindmap-container"></div>
     <!-- Script Injection Here -->
-</body>
+  </body>
 </html>
 ```
 
@@ -84,7 +87,7 @@ Prepare a container element (e.g., `div`) to display `kakidash`.
 pnpm add kakidash
 ```
 
-```typescript
+````typescript
 import { Kakidash } from 'kakidash';
 
 // Get container
@@ -108,8 +111,9 @@ You can switch themes dynamically:
 
 ```typescript
 kakidash.setTheme('dark'); // 'default', 'simple', 'colorful', 'dark'
-```
-```
+````
+
+````
 
 #### B. Browser Direct Import (Script Tag / CDN)
 
@@ -129,10 +133,10 @@ Use the built `umd` file. The library will be exposed under the global variable 
     // Initialize
     const container = document.getElementById('mindmap-container');
     const kakidash = new Kakidash(container);
-    
+
     console.log('Kakidash initialized:', kakidash);
 </script>
-```
+````
 
 ## Custom Styling
 
@@ -143,28 +147,28 @@ You can define custom styles using `updateGlobalStyles`. These settings are pers
 // These settings are saved internally.
 kakidash.updateGlobalStyles({
   // Root node style
-  rootNode: { 
+  rootNode: {
     border: '4px solid gold',
     background: '#ffeeee',
-    color: '#333' // Font color
+    color: '#333', // Font color
   },
-  
+
   // Child nodes style
-  childNode: { 
-    border: '2px dashed blue', 
+  childNode: {
+    border: '2px dashed blue',
     background: 'white',
-    color: '#555' // Font color
+    color: '#555', // Font color
   },
-  
+
   // Connection line color
-  connection: { 
-    color: 'orange' 
+  connection: {
+    color: 'orange',
   },
-  
+
   // Entire canvas background
   canvas: {
-    background: '#fafafa' // Use 'transparent' for transparency
-  }
+    background: '#fafafa', // Use 'transparent' for transparency
+  },
 });
 
 // 2. Activate the custom theme to see your changes
@@ -175,13 +179,13 @@ kakidash.setTheme('custom');
 
 All values accept standard CSS strings.
 
-| Object | Property | Description | Example |
-| --- | --- | --- | --- |
-| `rootNode`, `childNode` | `border` | Node border | `'2px solid red'`, `'none'` |
-| | `background` | Node background | `'#ffffff'`, `'rgba(0,0,0,0.5)'`, `'transparent'` |
-| | `color` | Text color | `'#333'`, `'black'` |
-| `connection` | `color` | Connection line color | `'#ccc'`, `'orange'` |
-| `canvas` | `background` | Canvas background | `'#f0f0f0'`, `'transparent'` |
+| Object                  | Property     | Description           | Example                                           |
+| ----------------------- | ------------ | --------------------- | ------------------------------------------------- |
+| `rootNode`, `childNode` | `border`     | Node border           | `'2px solid red'`, `'none'`                       |
+|                         | `background` | Node background       | `'#ffffff'`, `'rgba(0,0,0,0.5)'`, `'transparent'` |
+|                         | `color`      | Text color            | `'#333'`, `'black'`                               |
+| `connection`            | `color`      | Connection line color | `'#ccc'`, `'orange'`                              |
+| `canvas`                | `background` | Canvas background     | `'#f0f0f0'`, `'transparent'`                      |
 
 ## API Reference
 
@@ -209,15 +213,15 @@ All values accept standard CSS strings.
 
 ### Events
 
-| Event Name | Payload | Description |
-| --- | --- | --- |
-| `node:select` | `string \| null` | Fired when a node is selected. |
-| `node:add` | `{ id: string; topic: string }` | Fired when a new node is added. |
-| `node:remove` | `string` | Fired when a node is removed. |
-| `node:update` | `{ id: string; topic?: string; icon?: string }` | Fired when a node is updated. |
-| `node:move` | `{ nodeId: string; newParentId: string; position?: string }` | Fired when a node is moved. |
-| `model:load` | `MindMapData` | Fired when data is loaded. |
-| `model:change` | `void` | Fired when the data model changes. |
+| Event Name     | Payload                                                      | Description                        |
+| -------------- | ------------------------------------------------------------ | ---------------------------------- |
+| `node:select`  | `string \| null`                                             | Fired when a node is selected.     |
+| `node:add`     | `{ id: string; topic: string }`                              | Fired when a new node is added.    |
+| `node:remove`  | `string`                                                     | Fired when a node is removed.      |
+| `node:update`  | `{ id: string; topic?: string; icon?: string }`              | Fired when a node is updated.      |
+| `node:move`    | `{ nodeId: string; newParentId: string; position?: string }` | Fired when a node is moved.        |
+| `model:load`   | `MindMapData`                                                | Fired when data is loaded.         |
+| `model:change` | `void`                                                       | Fired when the data model changes. |
 
 ```typescript
 kakidash.on('node:select', (nodeId) => {
@@ -236,7 +240,7 @@ const kakidash = new Kakidash(container, {
   shortcuts: {
     // Override 'addChild' to Ctrl+N
     addChild: [{ key: 'n', ctrlKey: true }],
-  }
+  },
 });
 ```
 
@@ -246,41 +250,19 @@ Here is the complete default configuration. You can partially override these key
 
 ```json
 {
-  "navUp": [
-    { "key": "ArrowUp" },
-    { "key": "k" }
-  ],
-  "navDown": [
-    { "key": "ArrowDown" },
-    { "key": "j" }
-  ],
-  "navLeft": [
-    { "key": "ArrowLeft" },
-    { "key": "h" }
-  ],
-  "navRight": [
-    { "key": "ArrowRight" },
-    { "key": "l" }
-  ],
-  "addChild": [
-    { "key": "Tab" },
-    { "key": "a" }
-  ],
+  "navUp": [{ "key": "ArrowUp" }, { "key": "k" }],
+  "navDown": [{ "key": "ArrowDown" }, { "key": "j" }],
+  "navLeft": [{ "key": "ArrowLeft" }, { "key": "h" }],
+  "navRight": [{ "key": "ArrowRight" }, { "key": "l" }],
+  "addChild": [{ "key": "Tab" }, { "key": "a" }],
   "insertParent": [
     { "key": "Tab", "shiftKey": true },
     { "key": "a", "shiftKey": true }
   ],
   "addSibling": [{ "key": "Enter" }],
   "addSiblingBefore": [{ "key": "Enter", "shiftKey": true }],
-  "deleteNode": [
-    { "key": "Delete" },
-    { "key": "Backspace" }
-  ],
-  "beginEdit": [
-    { "key": "i" },
-    { "key": " " },
-    { "key": "F2" }
-  ],
+  "deleteNode": [{ "key": "Delete" }, { "key": "Backspace" }],
+  "beginEdit": [{ "key": "i" }, { "key": " " }, { "key": "F2" }],
   "copy": [
     { "key": "c", "ctrlKey": true },
     { "key": "c", "metaKey": true }
@@ -305,14 +287,8 @@ Here is the complete default configuration. You can partially override these key
   ],
   "bold": [{ "key": "b", "shiftKey": true }],
   "italic": [{ "key": "i", "shiftKey": true }],
-  "increaseFontSize": [
-    { "key": ">", "shiftKey": true },
-    { "key": "." }
-  ],
-  "decreaseFontSize": [
-    { "key": "<", "shiftKey": true },
-    { "key": "," }
-  ],
+  "increaseFontSize": [{ "key": ">", "shiftKey": true }, { "key": "." }],
+  "decreaseFontSize": [{ "key": "<", "shiftKey": true }, { "key": "," }],
   "zoomIn": [{ "key": "[" }],
   "zoomOut": [{ "key": "]" }],
   "resetZoom": [{ "key": ":" }],
@@ -331,51 +307,55 @@ Here is the complete default configuration. You can partially override these key
 ## Shortcuts
 
 ### General
-| Key | Description |
-| --- | --- |
-| `m` | Command Palette (Search / Icons) |
-| `Arrow Keys` | Navigate between nodes |
-| `h` / `j` / `k` / `l` | Navigate between nodes (Vim-style) |
-| `F2` / `DblClick` / `Space` / `i` | Start editing node (Space triggers zoom if image) |
-| `Enter` | Add sibling node (below) |
-| `Shift + Enter` | Add sibling node (above) |
-| `Tab` / `a` | Add child node |
-| `Shift + Tab` / `Shift + a` | Insert parent node |
-| `Delete` / `Backspace` | Delete node |
-| `Ctrl/Cmd + z` | Undo |
-| `Ctrl/Cmd + Shift + z` / `Ctrl + y` | Redo |
-| `Ctrl/Cmd + C` | Copy |
-| `Ctrl/Cmd + X` | Cut |
-| `Ctrl/Cmd + V` | Paste (Images supported) |
-| `Drag` (Canvas) | Pan screen |
-| `Wheel` | Vertical scroll (Pan) |
-| `Shift + Wheel` | Horizontal scroll (Pan) |
-| `Ctrl/Cmd + Wheel` | Zoom in/out |
-| `[` | Canvas Zoom In |
-| `]` | Canvas Zoom Out |
-| `:` | Reset Zoom |
-| Click `+/-` / `f` | Toggle node folding |
+
+| Key                                 | Description                                       |
+| ----------------------------------- | ------------------------------------------------- |
+| `m`                                 | Command Palette (Search / Icons)                  |
+| `Arrow Keys`                        | Navigate between nodes                            |
+| `h` / `j` / `k` / `l`               | Navigate between nodes (Vim-style)                |
+| `F2` / `DblClick` / `Space` / `i`   | Start editing node (Space triggers zoom if image) |
+| `Enter`                             | Add sibling node (below)                          |
+| `Shift + Enter`                     | Add sibling node (above)                          |
+| `Tab` / `a`                         | Add child node                                    |
+| `Shift + Tab` / `Shift + a`         | Insert parent node                                |
+| `Delete` / `Backspace`              | Delete node                                       |
+| `Ctrl/Cmd + z`                      | Undo                                              |
+| `Ctrl/Cmd + Shift + z` / `Ctrl + y` | Redo                                              |
+| `Ctrl/Cmd + C`                      | Copy                                              |
+| `Ctrl/Cmd + X`                      | Cut                                               |
+| `Ctrl/Cmd + V`                      | Paste (Images supported)                          |
+| `Drag` (Canvas)                     | Pan screen                                        |
+| `Wheel`                             | Vertical scroll (Pan)                             |
+| `Shift + Wheel`                     | Horizontal scroll (Pan)                           |
+| `Ctrl/Cmd + Wheel`                  | Zoom in/out                                       |
+| `[`                                 | Canvas Zoom In                                    |
+| `]`                                 | Canvas Zoom Out                                   |
+| `:`                                 | Reset Zoom                                        |
+| Click `+/-` / `f`                   | Toggle node folding                               |
 
 ### Editing (Text Input)
-| Key | Description |
-| --- | --- |
-| `Enter` | Confirm edit |
-| `Shift + Enter` | New line |
-| `Esc` | Cancel edit |
+
+| Key             | Description  |
+| --------------- | ------------ |
+| `Enter`         | Confirm edit |
+| `Shift + Enter` | New line     |
+| `Esc`           | Cancel edit  |
 
 ### Styling (Since selection)
-| Key | Description |
-| --- | --- |
-| `Shift + b` | Toggle Bold |
-| `Shift + i` | Toggle Italic |
-| `Shift + . (>)` / `.` | Increase font size |
-| `Shift + , (<)` / `,` | Decrease font size |
-| `Shift + ArrowLeft / Right` | Adjust node width |
-| `1` - `7` | Change node color (Palette order) |
+
+| Key                         | Description                       |
+| --------------------------- | --------------------------------- |
+| `Shift + b`                 | Toggle Bold                       |
+| `Shift + i`                 | Toggle Italic                     |
+| `Shift + . (>)` / `.`       | Increase font size                |
+| `Shift + , (<)` / `,`       | Decrease font size                |
+| `Shift + ArrowLeft / Right` | Adjust node width                 |
+| `1` - `7`                   | Change node color (Palette order) |
 
 ## Architecture
 
 For details on the software architecture and internal module dependencies, please refer to:
+
 - [Software Architecture Design](./docs/SOFTWARE_ARCHITECTURE.md)
 
 ## Development

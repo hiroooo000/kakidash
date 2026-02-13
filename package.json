@@ -1,77 +1,77 @@
 {
-    "name": "kakidash",
-    "version": "0.2.1",
-    "description": "A lightweight, dependency-free Mindmap library for the browser.",
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/hiroooo000/kakidash.git"
-    },
-    "homepage": "https://github.com/hiroooo000/kakidash#readme",
-    "bugs": {
-        "url": "https://github.com/hiroooo000/kakidash/issues"
-    },
-    "type": "module",
-    "main": "./dist/kakidash.cjs",
-    "module": "./dist/kakidash.es.js",
-    "types": "./dist/index.d.ts",
-    "exports": {
-        ".": {
-            "import": "./dist/kakidash.es.js",
-            "require": "./dist/kakidash.cjs"
-        }
-    },
-    "files": [
-        "dist"
-    ],
-    "scripts": {
-        "dev": "vite --host",
-        "typecheck": "tsc --noEmit",
-        "build": "vite build",
-        "test": "vitest run",
-        "lint": "eslint src tests",
-        "docs": "typedoc",
-        "format": "prettier --write \"src/**/*.{ts,json}\"",
-        "ci": "pnpm format && pnpm turbo run typecheck build lint docs && pnpm run test&& pnpm run test:e2e",
-        "turbo": "turbo",
-        "turbo:ci": "turbo run typecheck build test lint docs test:e2e",
-        "test:e2e": "playwright test"
-    },
-    "keywords": [
-        "mindmap",
-        "javascript",
-        "typescript",
-        "svg",
-        "visualization",
-        "diagram"
-    ],
-    "author": "hiroooo000 <hiroooo000@gmail.com>",
-    "license": "MIT",
-    "sideEffects": false,
-    "devDependencies": {
-        "@eslint/js": "^10.0.1",
-        "@playwright/test": "^1.58.2",
-        "@types/argparse": "^2.0.17",
-        "@types/estree": "^1.0.8",
-        "@types/jszip": "^3.4.1",
-        "@types/node": "^25.2.1",
-        "@types/whatwg-mimetype": "^3.0.2",
-        "@types/ws": "^8.18.1",
-        "eslint": "^10.0.0",
-        "eslint-config-prettier": "^10.1.8",
-        "eslint-plugin-prettier": "^5.5.4",
-        "globals": "^17.3.0",
-        "happy-dom": "^20.5.0",
-        "prettier": "^3.2.5",
-        "turbo": "^2.8.3",
-        "typedoc": "^0.28.16",
-        "typescript": "^5.4.0",
-        "typescript-eslint": "^8.54.0",
-        "vite": "^7.3.1",
-        "vite-plugin-dts": "^4.5.4",
-        "vitest": "^4.0.17"
-    },
-    "packageManager": "pnpm@10.26.0",
-    "dependencies": {
-        "jszip": "^3.10.1"
+  "name": "kakidash",
+  "version": "0.2.1",
+  "description": "A lightweight, dependency-free Mindmap library for the browser.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hiroooo000/kakidash.git"
+  },
+  "homepage": "https://github.com/hiroooo000/kakidash#readme",
+  "bugs": {
+    "url": "https://github.com/hiroooo000/kakidash/issues"
+  },
+  "type": "module",
+  "main": "./dist/kakidash.cjs",
+  "module": "./dist/kakidash.es.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/kakidash.es.js",
+      "require": "./dist/kakidash.cjs"
     }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "dev": "vite --host",
+    "typecheck": "tsc --noEmit",
+    "build": "vite build",
+    "test": "vitest run",
+    "lint": "eslint src tests",
+    "docs": "typedoc",
+    "format": "prettier --write \"src/**/*.{ts,json}\"",
+    "ci": "pnpm format && pnpm turbo run typecheck build lint docs && pnpm run test&& pnpm run test:e2e",
+    "turbo": "turbo",
+    "turbo:ci": "turbo run typecheck build test lint docs test:e2e",
+    "test:e2e": "playwright test"
+  },
+  "keywords": [
+    "mindmap",
+    "javascript",
+    "typescript",
+    "svg",
+    "visualization",
+    "diagram"
+  ],
+  "author": "hiroooo000 <hiroooo000@gmail.com>",
+  "license": "MIT",
+  "sideEffects": false,
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.58.2",
+    "@types/argparse": "^2.0.17",
+    "@types/estree": "^1.0.8",
+    "@types/jszip": "^3.4.1",
+    "@types/node": "^25.2.1",
+    "@types/whatwg-mimetype": "^3.0.2",
+    "@types/ws": "^8.18.1",
+    "eslint": "^10.0.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.4",
+    "globals": "^17.3.0",
+    "happy-dom": "^20.5.0",
+    "prettier": "^3.2.5",
+    "turbo": "^2.8.3",
+    "typedoc": "^0.28.16",
+    "typescript": "^5.4.0",
+    "typescript-eslint": "^8.54.0",
+    "vite": "^7.3.1",
+    "vite-plugin-dts": "^4.5.4",
+    "vitest": "^4.0.17"
+  },
+  "packageManager": "pnpm@10.26.0",
+  "dependencies": {
+    "jszip": "^3.10.1"
+  }
 }

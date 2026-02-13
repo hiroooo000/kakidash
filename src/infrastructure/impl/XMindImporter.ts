@@ -33,10 +33,12 @@ export class XMindImporter {
     this.idGenerator = new CryptoIdGenerator();
   }
 
-  public async extractMindMapData(file: File): Promise<MindMapData> {
+  public async extractMindMapData(
+    data: ArrayBuffer | Blob | Uint8Array | string,
+  ): Promise<MindMapData> {
     const zip = new JSZip();
     try {
-      const contents = await zip.loadAsync(file);
+      const contents = await zip.loadAsync(data);
       const contentFile = contents.file('content.json');
 
       if (!contentFile) {
