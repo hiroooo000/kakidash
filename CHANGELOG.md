@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.2] - 2026-02-14
+
+### Added
+
+- Enhanced event system to support VS Code integration.
+- Abstracted file I/O interfaces and extracted logic for XMind and SVG.
+
+### Fixed
+
+- Stabilized E2E tests by adjusting timeouts for layout regression checks.
+- Resolved type errors in `KakidashEvents.ts` by defining `KakidashCommandArgs`.
+
+### Chore
+
+- Optimized development environment setup and Turbo task configurations.
+
 ## [0.2.1] - 2026-02-12
 
 ### Added
