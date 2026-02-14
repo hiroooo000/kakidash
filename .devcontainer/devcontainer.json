@@ -15,9 +15,18 @@
       "pnpm": "latest"
     }
   },
+  "mounts": [
+    "source=kakidash-node-modules,target=${containerWorkspaceFolder}/node_modules,type=volume",
+    "source=kakidash-pnpm-store,target=${containerWorkspaceFolder}/.pnpm-store,type=volume",
+    "source=kakidash-turbo-cache,target=${containerWorkspaceFolder}/.turbo,type=volume"
+  ],
   "customizations": {
     "vscode": {
-      "extensions": ["dbaeumer.vscode-eslint", "esbenp.prettier-vscode", "mhutchie.git-graph"],
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "mhutchie.git-graph"
+      ],
       "settings": {
         "editor.formatOnSave": true,
         "editor.codeActionsOnSave": {
@@ -27,9 +36,10 @@
     }
   },
   "containerEnv": {
-    "TZ": "Asia/Tokyo"
+    "TZ": "Asia/Tokyo",
+    "PLAYWRIGHT_BROWSERS_PATH": "0"
   },
   "remoteUser": "node",
   "privileged": true,
-  "postCreateCommand": "pip install requests python-dotenv && if [ -f package.json ]; then pnpm install && npx playwright install --with-deps; fi"
+  "postCreateCommand": ".devcontainer/postCreateCommand.sh | tee .devcontainer/postCreateCommand.log"
 }
