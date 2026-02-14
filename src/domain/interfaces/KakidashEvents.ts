@@ -1,5 +1,10 @@
 import { MindMapData } from './MindMapData';
 
+export type KakidashCommandArgs = {
+  name: string;
+  args?: any;
+};
+
 export type KakidashEventMap = {
   'node:select': string | null; // Node ID or null
   'node:add': { id: string; topic: string };
@@ -8,5 +13,5 @@ export type KakidashEventMap = {
   'node:move': { nodeId: string; newParentId: string; position?: string };
   'model:load': MindMapData;
   'model:change': void; // Generic change event
-  command: { name: string; args?: any }; // Command Execution Event
+  command: KakidashCommandArgs; // Command Execution Event
 };
