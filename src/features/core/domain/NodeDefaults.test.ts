@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { Node } from '../../src/features/core/domain/Node';
+import { Node } from '@/features/core/domain/Node';
 
 describe('Node Defaults', () => {
   it('should initialize with default fontSize of 16px', () => {

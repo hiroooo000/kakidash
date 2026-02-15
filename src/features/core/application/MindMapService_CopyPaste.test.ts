@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { Node } from '../../src/features/core/domain/Node';
-import { MindMap } from '../../src/features/core/domain/MindMap';
-import { MindMapService } from '../../src/features/core/application/MindMapService';
-import { CryptoIdGenerator } from '../../src/shared/infrastructure/CryptoIdGenerator';
+import { Node } from '@/features/core/domain/Node';
+import { MindMap } from '@/features/core/domain/MindMap';
+import { MindMapService } from '@/features/core/application/MindMapService';
+import { CryptoIdGenerator } from '@/shared/infrastructure/CryptoIdGenerator';
 
 describe('MindMapService Copy/Paste', () => {
   let mindMap: MindMap;

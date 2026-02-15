@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { MindMap } from '../src/features/core/domain/MindMap';
-import { Node } from '../src/features/core/domain/Node';
-import { MindMapService } from '../src/features/core/application/MindMapService';
-import { CryptoIdGenerator } from '../src/shared/infrastructure/CryptoIdGenerator';
-import { Theme } from '../src/features/core/domain/MindMapData';
+import { MindMap } from '@/features/core/domain/MindMap';
+import { Node } from '@/features/core/domain/Node';
+import { MindMapService } from '@/features/core/application/MindMapService';
+import { CryptoIdGenerator } from '@/shared/infrastructure/CryptoIdGenerator';
+import { Theme } from '@/features/core/domain/MindMapData';
 
 describe('Theme Functionality', () => {
   let service: MindMapService;

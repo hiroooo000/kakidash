@@ -11,38 +11,53 @@ Following the dependency rule, outer layers (Presentation, Infrastructure) depen
 graph TD
     subgraph Presentation ["Presentation Layer"]
         Controller[MindMapController]
-        View[SvgRenderer / StyleEditor]
-        Registry[ThemeRegistry]
-        Command[CommandPalette]
         Interaction[InteractionHandler]
+        Command[CommandPalette]
+        View[SvgRenderer]
     end
 
-    subgraph Infrastructure ["Infrastructure Layer"]
-        IdGenImpl[CryptoIdGenerator]
-        EventBusImpl[EventEmitter]
-        Importer[XMindImporter]
+    subgraph Features ["Features"]
+        subgraph Core ["Core Feature"]
+            Service[MindMapService]
+            DomainEntities[MindMap / Node]
+        end
+
+        subgraph Theme ["Theme Feature"]
+            ThemeReg[ThemeRegistry]
+            StyleEd[StyleEditor]
+            ThemeDef[ThemeDefinition]
+        end
+
+        subgraph Export ["Export/Import Feature"]
+            Importers[XMindImporter]
+            Exporters[Image/Markdown Exporter]
+        end
     end
 
-    subgraph Application ["Application Layer"]
-        Service[MindMapService]
-        History[HistoryManager]
+    subgraph Shared ["Shared Kernel"]
+        Kernel[IdGenerator / FileHandler]
+        Infra[CryptoIdGenerator / EventEmitter]
     end
 
-    subgraph Domain ["Domain Layer"]
-        Entities[MindMap, Node]
-        Interfaces[Repository / Interfaces / ThemeDefinition]
-    end
+    %% Dependencies
+    Presentation --> Core
+    Presentation --> Theme
+    Presentation --> Export
+    
+    %% Feature Inter-dependencies
+    Theme --> Core
+    Export --> Core
 
-    %% Dependency Rules
-    Presentation --> Application
-    Infrastructure --> Application
-    Infrastructure --> Domain
-    Application --> Domain
+    %% Cross-cutting
+    Core --> Shared
+    Theme --> Shared
+    Export --> Shared
+    Presentation --> Shared
 
-    %% Specific Dependencies
+    %% Specific wiring
     Controller --> Service
-    Service --> Entities
-    IdGenImpl -.->|implements| Interfaces
+    Controller --> ThemeReg
+    Controller --> Exporters
 ```
 
 ### 1.2 Module/Class Dependency Diagram
@@ -53,107 +68,54 @@ This diagram shows concrete relations between major classes.
 classDiagram
     direction TB
 
-    class Kakidash {
-        -mindMap: MindMap
-        -controller: MindMapController
-        +addNode()
-        +deleteNode()
-        +updateNode()
-        +undo()
-        +redo()
+    namespace Presentation {
+        class MindMapController
+        class InteractionHandler
+        class SvgRenderer
+        class CommandPalette
     }
 
-    class MindMapController {
-        -mindMap: MindMap
-        -service: MindMapService
-        -renderer: SvgRenderer
-        -styleEditor: StyleEditor
-        -commandPalette: CommandPalette
-        -interactionHandler: InteractionHandler
-        -layoutSwitcher: LayoutSwitcher
-        +init()
-        +render()
-        +selectNode()
-        +updateNode()
-        +toggleCommandPalette()
+    namespace Features_Core {
+        class MindMapService
+        class MindMap
+        class Node
+        class HistoryManager
     }
 
-    class MindMapService {
-        -mindMap: MindMap
-        -historyManager: HistoryManager
-        -idGenerator: IdGenerator
-        +addNode()
-        +removeNode()
-        +updateNodeTopic()
-        +updateNodeStyle()
-        +updateNodeIcon()
-        +undo()
-        +redo()
-        +exportData()
-        +searchNodes()
+    namespace Features_Theme {
+        class ThemeRegistry
+        class StyleEditor
+        class MindMapStyles
     }
 
-    class MindMap {
-        +root: Node
-        +theme: Theme
-        +findNode(id)
-        +moveNode()
+    namespace Features_Export {
+        class XMindImporter
+        class ImageExporter
+        class MarkdownExporter
     }
 
-    class Node {
-        +id: string
-        +topic: string
-        +children: Node[]
-        +style: NodeStyle
-        +icon: string
-        +addChild()
-        +removeChild()
-    }
-
-    class SvgRenderer {
-        +container: HTMLElement
-        +render(mindMap)
-        +updateTransform()
-    }
-
-    class InteractionHandler {
-        -nodeEditor: NodeEditor
-        -nodeDragger: NodeDragger
-        -shortcutManager: ShortcutManager
-        +setReadOnly()
-    }
-
-    class CommandPalette {
-        +container: HTMLElement
-        +toggle()
-        +setResults()
-    }
-
-    class CryptoIdGenerator {
-        +generate()
+    namespace Shared_Kernel {
+        class IdGenerator
+        class CryptoIdGenerator
+        class EventEmitter
     }
 
     %% Relationships
-    Kakidash *-- MindMapController : manages
-    Kakidash *-- MindMap : holds state
+    MindMapController --> MindMapService : delegates
+    MindMapController --> ThemeRegistry : uses
+    MindMapController --> ImageExporter : triggers
+    MindMapController --> SvgRenderer : renders
+    
+    MindMapService --> MindMap : manages
+    MindMapService --> HistoryManager : uses
+    MindMapService --> IdGenerator : uses
 
-    MindMapController o-- MindMap : updates
-    MindMapController o-- MindMapService : delegates logic
-    MindMapController o-- SvgRenderer : triggers draw
-    MindMapController o-- CommandPalette : controls
-    MindMapController o-- InteractionHandler : manages input
+    MindMap *-- Node : root
+    Node *-- Node : children
 
-    MindMapService o-- MindMap : operates on
-    MindMapService *-- HistoryManager : manages history
-    MindMapService o-- IdGenerator : uses
-
-    MindMap *-- Node : root node
-    Node "1" *-- "many" Node : children
-
-    InteractionHandler *-- NodeEditor
-    InteractionHandler *-- NodeDragger
-    InteractionHandler *-- ShortcutManager
-
+    SvgRenderer ..> MindMap : reads
+    StyleEditor ..> MindMapStyles : edits
+    
     CryptoIdGenerator ..|> IdGenerator : implements
 ```
 
@@ -163,87 +125,64 @@ The source code is organized into directories based on layer responsibilities.
 
 ```
 src/
-├── domain/           # Domain Layer (Entities, Interfaces)
-│   ├── entities/     # Core business logic entities
-│   └── interfaces/   # Interfaces for repositories and services
-├── application/      # Application Layer (Use Cases, Services)
-│   └── services/     # Application specific business rules
-├── presentation/     # Presentation Layer (UI, Controller, Handlers)
-│   ├── components/   # UI components (Renderer, Editor)
-│   ├── logic/        # User interaction handling
-│   └── resources/    # Static resources (Icons etc.)
-├── infrastructure/   # Infrastructure Layer (Implementations)
-│   └── impl/         # Implementation of external interfaces
+├── features/         # Vertical slices by feature (Package by Feature)
+│   ├── core/         # Core domain capability
+│   │   ├── domain/       # MindMap, Node, Core Interfaces
+│   │   └── application/  # MindMapService, HistoryManager
+│   ├── theme/        # Theme & Styling capability
+│   │   ├── domain/       # Theme Definition
+│   │   ├── components/   # StyleEditor
+│   │   ├── registry/     # ThemeRegistry
+│   │   └── resources/    # Presets
+│   └── export_import/ # Export/Import capability
+│       ├── ImageExporter
+│       ├── MarkdownExporter
+│       └── XMindImporter
+├── shared/           # Shared Kernel
+│   ├── kernel/       # Pure utilities (IdGenerator, FileHandler)
+│   └── infrastructure/ # Shared infrastructure (CryptoIdGenerator, EventEmitter)
+├── presentation/     # Application-wide UI integration
+│   ├── components/   # Shared UI components (Renderer, CommandPalette)
+│   └── logic/        # Global orchestration (MindMapController, InteractionHandler)
+├── infrastructure/   # Layered infrastructure implementations (if needed)
 └── index.ts          # Entry point (Dependency Injection)
 ```
 
 ## 3. Layer Details
 
-### 3.1 Domain Layer (`src/domain`)
+### 3.1 Features (`src/features`)
 
-The core of business logic. Has no external dependencies.
+Modules sliced vertically by feature.
 
-- **Entities**:
-  - `MindMap`: Root entity managing the entire mind map.
-  - `Node`: Data structure and behavior for each node (parent-child relationship, style, and icon management, etc.).
-- **Interfaces**:
-  - `IdGenerator`: Abstraction interface for ID generation.
-  - `MindMapData`: Type definitions for data export/import.
-  - `MindMapStyles`: Type definitions for style settings.
-  - `ThemeDefinition`: Interface for defining themes.
+#### Core Feature (`src/features/core`)
+Contains the core domain and application logic of the Mind Map.
+- **Domain**: `MindMap`, `Node` Entities, `MindMapData` Interface.
+- **Application**: `MindMapService` (Use Cases), `HistoryManager` (History Management).
 
-### 3.2 Application Layer (`src/application`)
+#### Theme Feature (`src/features/theme`)
+Functionality related to styling and theme management.
+- **Domain**: `ThemeDefinition API`, `MindMapStyles`, `StyleAction`.
+- **Components**: `StyleEditor`.
+- **Registry**: `ThemeRegistry` (Theme application management).
 
-Orchestrates domain entities to implement application use cases.
+#### Export/Import Feature (`src/features/export_import`)
+Input/Output functionality with external formats.
+- `XMindImporter`: Import XMind files.
+- `ImageExporter`: SVG/PNG export.
+- `MarkdownExporter`: Markdown export.
 
-#### Services (`src/application/services`)
+### 3.2 Shared Kernel (`src/shared`)
 
-- **MindMapService**:
-  - Implements major use cases such as adding, deleting, moving, editing nodes, and icon settings.
-  - Coordinates with history management (Undo/Redo).
-- **HistoryManager**:
-  - Manages operation history using the Memento pattern.
+Common components referenced by all features.
+- **Kernel**: `IdGenerator` (Interface), `FileHandler` (Interface).
+- **Infrastructure**: `CryptoIdGenerator` (Impl), `TypedEventEmitter` (Impl).
 
 ### 3.3 Presentation Layer (`src/presentation`)
 
-Handles user interface and user input.
-
-#### Logic (`src/presentation/logic`)
-
-- **MindMapController**:
-  - Receives events from the View and invokes Application Service.
-  - Acts as the Controller in the MVC pattern.
-- **InteractionHandler**:
-  - Handles user inputs such as mouse operations, keyboard shortcuts, and drag-and-drop.
-- **ImageExporter**:
-  - Converts mind map DOM elements to SVG/PNG images and handles file saving.
-- **MarkdownExporter**:
-  - Converts mind map data to Markdown format and handles file saving.
-
-#### Components (`src/presentation/components`)
-
-- **SvgRenderer**:
-  - Responsible for SVG rendering of the mind map.
-- **NodeEditor / StyleEditor**:
-  - Separates complex UI logic for node editing and styling.
-- **ThemeRegistry**:
-  - Manages available themes and applies them via CSS variables.
-- **CommandPalette**:
-  - Command and search palette callable via `m` key.
-  - Provides node search results and navigation.
-
-### 3.4 Infrastructure Layer (`src/infrastructure`)
-
-Provides concrete implementations for interfaces defined in domain and application layers.
-
-#### Implementations (`src/infrastructure/impl`)
-
-- **CryptoIdGenerator**:
-  - Implementation of ID generation using Web Crypto API. Implements `domain/interfaces/IdGenerator`.
-- **EventEmitter**:
-  - Implementation of the event bus.
-- **XMindImporter**:
-  - Implementation of XMind file parsing and importing using `jszip`.
+Integrates features and provides the user interface.
+- **MindMapController**: Main controller orchestrating features (Core, Theme, Export).
+- **InteractionHandler**: Handing user input operations.
+- **Components**: `SvgRenderer` (Rendering), `CommandPalette` (Command UI).
 
 ## 4. Major Processing Sequence
 
@@ -254,11 +193,11 @@ This diagram illustrates the interaction between layers when a user adds a node.
 ```mermaid
 sequenceDiagram
     participant User
-    participant Controller as MindMapController
-    participant Service as MindMapService
-    participant IdGen as IdGenerator
-    participant Entity as MindMap/Node
-    participant Renderer as SvgRenderer
+    participant Controller as Presentation/MindMapController
+    participant Service as Core/MindMapService
+    participant IdGen as Shared/IdGenerator
+    participant Entity as Core/MindMap
+    participant Renderer as Presentation/SvgRenderer
 
     User->>Controller: addChildNode(parentId)
     activate Controller
@@ -287,10 +226,10 @@ This diagram illustrates the history management and state restoration flow using
 ```mermaid
 sequenceDiagram
     participant User
-    participant Controller as MindMapController
-    participant Service as MindMapService
-    participant History as HistoryManager
-    participant Entity as MindMap
+    participant Controller as Presentation/MindMapController
+    participant Service as Core/MindMapService
+    participant History as Core/HistoryManager
+    participant Entity as Core/MindMap
 
     User->>Controller: undo()
     activate Controller
@@ -323,9 +262,9 @@ This diagram shows the validation and execution flow when moving a node.
 ```mermaid
 sequenceDiagram
     participant User
-    participant Controller as MindMapController
-    participant Service as MindMapService
-    participant Entity as MindMap
+    participant Controller as Presentation/MindMapController
+    participant Service as Core/MindMapService
+    participant Entity as Core/MindMap
 
     User->>Controller: moveNode(nodeId, targetId, side)
     activate Controller
@@ -361,9 +300,9 @@ Flow when a user performs a search.
 ```mermaid
 sequenceDiagram
     participant User
-    participant Controller as MindMapController
-    participant Palette as CommandPalette
-    participant Service as MindMapService
+    participant Controller as Presentation/MindMapController
+    participant Palette as Presentation/CommandPalette
+    participant Service as Core/MindMapService
 
     User->>Controller: toggleCommandPalette (m key)
     activate Controller
@@ -402,10 +341,10 @@ Instantiates components and injects dependencies upon application startup.
 
 ```typescript
 // DI Example
-const idGenerator = new CryptoIdGenerator(); // Infrastructure
-const mindMap = new MindMap(rootNode);       // Domain
-const service = new MindMapService(mindMap, idGenerator); // Application <- Domain, Infrastructure
-const controller = new MindMapController(mindMap, service, renderer, ...); // Presentation <- Application
+const idGenerator = new CryptoIdGenerator(); // Shared/Infrastructure
+const mindMap = new MindMap(rootNode);       // Core/Domain
+const service = new MindMapService(mindMap, idGenerator); // Core/Application <- Core/Domain, Shared/Infrastructure
+const controller = new MindMapController(mindMap, service, renderer, ...); // Presentation <- Core/Application
 ```
 
 ## 6. Key Design Principles

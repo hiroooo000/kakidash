@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { MarkdownExporter } from '../../src/features/export_import/MarkdownExporter';
-import { MindMap } from '../../src/features/core/domain/MindMap';
-import { Node } from '../../src/features/core/domain/Node';
+import { MarkdownExporter } from '@/features/export_import/MarkdownExporter';
+import { MindMap } from '@/features/core/domain/MindMap';
+import { Node } from '@/features/core/domain/Node';
 
 describe('MarkdownExporter', () => {
   // Mock window.showSaveFilePicker and URL.createObjectURL/revokeObjectURL
