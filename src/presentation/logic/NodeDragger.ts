@@ -1,4 +1,4 @@
-import { InteractionOptions } from './InteractionHandler';
+import { InteractionOptions } from '../types/InteractionOptions';
 
 export class NodeDragger {
   private container: HTMLElement;

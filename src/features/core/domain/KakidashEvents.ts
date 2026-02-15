@@ -2,7 +2,7 @@ import { MindMapData } from './MindMapData';
 
 export type KakidashCommandArgs = {
   name: string;
-  args?: any;
+  args?: unknown;
 };
 
 export type KakidashEventMap = {
