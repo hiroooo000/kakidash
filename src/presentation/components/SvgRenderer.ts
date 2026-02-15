@@ -3,7 +3,7 @@ import { MindMap } from '../../features/core/domain/MindMap';
 import { ThemeRegistry } from '../../features/theme/registry/ThemeRegistry';
 import { Node } from '../../features/core/domain/Node';
 import { LayoutMode } from '../../features/core/domain/LayoutMode';
-import { SVG_ICONS } from '../resources/Icons';
+import { SVG_ICONS } from '../../features/theme/resources/Icons';
 
 export interface SvgRendererOptions {
   onImageZoom?: (active: boolean) => void;

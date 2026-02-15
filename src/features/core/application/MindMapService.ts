@@ -108,10 +108,7 @@ export class MindMapService {
     return false;
   }
 
-  updateNodeStyle(
-    id: string,
-    style: Partial<import('../domain/Node').NodeStyle>,
-  ): boolean {
+  updateNodeStyle(id: string, style: Partial<import('../domain/Node').NodeStyle>): boolean {
     const node = this.mindMap.findNode(id);
     if (node) {
       this.saveState();
