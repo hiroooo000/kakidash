@@ -1,9 +1,9 @@
 import { Renderer } from './Renderer';
-import { MindMap } from '../../domain/entities/MindMap';
-import { ThemeRegistry } from './ThemeRegistry';
-import { Node } from '../../domain/entities/Node';
-import { LayoutMode } from '../../domain/interfaces/LayoutMode';
-import { SVG_ICONS } from '../resources/Icons';
+import { MindMap } from '../../features/core/domain/MindMap';
+import { ThemeRegistry } from '../../features/theme/registry/ThemeRegistry';
+import { Node } from '../../features/core/domain/Node';
+import { LayoutMode } from '../../features/core/domain/LayoutMode';
+import { SVG_ICONS } from '../../features/theme/resources/Icons';
 
 export interface SvgRendererOptions {
   onImageZoom?: (active: boolean) => void;

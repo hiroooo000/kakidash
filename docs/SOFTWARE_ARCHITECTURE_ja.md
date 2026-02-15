@@ -11,38 +11,53 @@ Kakidashは、メンテナンス性、テスト容易性、拡張性を高める
 graph TD
     subgraph Presentation ["Presentation Layer"]
         Controller[MindMapController]
-        View[SvgRenderer / StyleEditor]
-        Registry[ThemeRegistry]
-        Command[CommandPalette]
         Interaction[InteractionHandler]
+        Command[CommandPalette]
+        View[SvgRenderer]
     end
 
-    subgraph Infrastructure ["Infrastructure Layer"]
-        IdGenImpl[CryptoIdGenerator]
-        EventBusImpl[EventEmitter]
-        Importer[XMindImporter]
+    subgraph Features ["Features"]
+        subgraph Core ["Core Feature"]
+            Service[MindMapService]
+            DomainEntities[MindMap / Node]
+        end
+
+        subgraph Theme ["Theme Feature"]
+            ThemeReg[ThemeRegistry]
+            StyleEd[StyleEditor]
+            ThemeDef[ThemeDefinition]
+        end
+
+        subgraph Export ["Export/Import Feature"]
+            Importers[XMindImporter]
+            Exporters[Image/Markdown Exporter]
+        end
     end
 
-    subgraph Application ["Application Layer"]
-        Service[MindMapService]
-        History[HistoryManager]
+    subgraph Shared ["Shared Kernel"]
+        Kernel[IdGenerator / FileHandler]
+        Infra[CryptoIdGenerator / EventEmitter]
     end
 
-    subgraph Domain ["Domain Layer"]
-        Entities[MindMap, Node]
-        Interfaces[Repository / Interfaces / ThemeDefinition]
-    end
+    %% Dependencies
+    Presentation --> Core
+    Presentation --> Theme
+    Presentation --> Export
+    
+    %% Feature Inter-dependencies
+    Theme --> Core
+    Export --> Core
 
-    %% Dependency Rules
-    Presentation --> Application
-    Infrastructure --> Application
-    Infrastructure --> Domain
-    Application --> Domain
+    %% Cross-cutting
+    Core --> Shared
+    Theme --> Shared
+    Export --> Shared
+    Presentation --> Shared
 
-    %% Specific Dependencies
+    %% Specific wiring
     Controller --> Service
-    Service --> Entities
-    IdGenImpl -.->|implements| Interfaces
+    Controller --> ThemeReg
+    Controller --> Exporters
 ```
 
 ### 1.2 モジュール/クラス依存関係図
@@ -53,113 +68,54 @@ graph TD
 classDiagram
     direction TB
 
-    class Kakidash {
-        -mindMap: MindMap
-        -controller: MindMapController
-        +addNode()
-        +deleteNode()
-        +updateNode()
-        +undo()
-        +redo()
+    namespace Presentation {
+        class MindMapController
+        class InteractionHandler
+        class SvgRenderer
+        class CommandPalette
     }
 
-    class MindMapController {
-        -mindMap: MindMap
-        -service: MindMapService
-        -renderer: Renderer
-        -styleEditor: StyleEditor
-        -commandPalette: CommandPalette
-        -interactionHandler: InteractionHandler
-        -layoutSwitcher: LayoutSwitcher
-        +init()
-        +render()
-        +selectNode()
-        +updateNode()
-        +toggleCommandPalette()
+    namespace Features_Core {
+        class MindMapService
+        class MindMap
+        class Node
+        class HistoryManager
     }
 
-    class MindMapService {
-        -mindMap: MindMap
-        -historyManager: HistoryManager
-        -idGenerator: IdGenerator
-        +addNode()
-        +removeNode()
-        +updateNodeTopic()
-        +updateNodeStyle()
-        +updateNodeIcon()
-        +undo()
-        +redo()
-        +exportData()
-        +searchNodes()
+    namespace Features_Theme {
+        class ThemeRegistry
+        class StyleEditor
+        class MindMapStyles
     }
 
-    class MindMap {
-        +root: Node
-        +theme: Theme
-        +findNode(id)
-        +moveNode()
+    namespace Features_Export {
+        class XMindImporter
+        class ImageExporter
+        class MarkdownExporter
     }
 
-    class Node {
-        +id: string
-        +topic: string
-        +children: Node[]
-        +style: NodeStyle
-        +icon: string
-        +addChild()
-        +removeChild()
-    }
-
-    class SvgRenderer {
-        +container: HTMLElement
-        +render(mindMap)
-        +updateTransform()
-    }
-
-    class Renderer {
-        <<interface>>
-        +render(mindMap)
-    }
-
-    class InteractionHandler {
-        -nodeEditor: NodeEditor
-        -nodeDragger: NodeDragger
-        -shortcutManager: ShortcutManager
-        +setReadOnly()
-    }
-
-    class CommandPalette {
-        +container: HTMLElement
-        +toggle()
-        +setResults()
-    }
-
-    class CryptoIdGenerator {
-        +generate()
+    namespace Shared_Kernel {
+        class IdGenerator
+        class CryptoIdGenerator
+        class EventEmitter
     }
 
     %% Relationships
-    Kakidash *-- MindMapController : manages
-    Kakidash *-- MindMap : holds state
+    MindMapController --> MindMapService : delegates
+    MindMapController --> ThemeRegistry : uses
+    MindMapController --> ImageExporter : triggers
+    MindMapController --> SvgRenderer : renders
+    
+    MindMapService --> MindMap : manages
+    MindMapService --> HistoryManager : uses
+    MindMapService --> IdGenerator : uses
 
-    MindMapController o-- MindMap : updates
-    MindMapController o-- MindMapService : delegates logic
-    MindMapController o-- Renderer : triggers draw
-    SvgRenderer ..|> Renderer : implements
-    MindMapController o-- CommandPalette : controls
-    MindMapController o-- InteractionHandler : manages input
+    MindMap *-- Node : root
+    Node *-- Node : children
 
-    MindMapService o-- MindMap : operates on
-    MindMapService *-- HistoryManager : manages history
-    MindMapService o-- IdGenerator : uses
-
-    MindMap *-- Node : root node
-    Node "1" *-- "many" Node : children
-
-    InteractionHandler *-- NodeEditor
-    InteractionHandler *-- NodeDragger
-    InteractionHandler *-- ShortcutManager
-
+    SvgRenderer ..> MindMap : reads
+    StyleEditor ..> MindMapStyles : edits
+    
     CryptoIdGenerator ..|> IdGenerator : implements
 ```
 
@@ -169,88 +125,64 @@ classDiagram
 
 ```
 src/
-├── domain/           # ドメイン層 (Entities, Interfaces)
-│   ├── entities/     # ビジネスロジックの中核となる実体
-│   └── interfaces/   # リポジトリやサービスのインターフェース定義
-├── application/      # アプリケーション層 (Use Cases)
-│   └── services/     # アプリケーション固有のビジネスルール
-├── presentation/     # プレゼンテーション層 (UI, Controller)
-│   ├── components/   # UIコンポーネント (Renderer, Editor)
-│   ├── logic/        # ユーザー操作ハンドリング
-│   └── resources/    # 静的リソース (Iconsなど)
-├── infrastructure/   # インフラストラクチャ層 (External Interfaces)
-│   └── impl/         # 外部ライブラリやブラウザAPIの実装
+├── features/         # 機能ごとの並置 (Package by Feature)
+│   ├── core/         # コアドメイン機能
+│   │   ├── domain/       # MindMap, Node, Core Interfaces
+│   │   └── application/  # MindMapService, HistoryManager
+│   ├── theme/        # テーマ・スタイリング機能
+│   │   ├── domain/       # Theme Definition
+│   │   ├── components/   # StyleEditor
+│   │   ├── registry/     # ThemeRegistry
+│   │   └── resources/    # Presets
+│   └── export_import/ # エクスポート・インポート機能
+│       ├── ImageExporter
+│       ├── MarkdownExporter
+│       └── XMindImporter
+├── shared/           # 共有カーネル
+│   ├── kernel/       # 純粋なユーティリティ (IdGenerator, FileHandler)
+│   └── infrastructure/ # インフラ共通 (CryptoIdGenerator, EventEmitter)
+├── presentation/     # アプリケーション全体のUI統合
+│   ├── components/   # 共通UIコンポーネント (Renderer, CommandPalette)
+│   └── logic/        # 全体制御 (MindMapController, InteractionHandler)
+├── infrastructure/   # レイヤー化されたインフラ実装 (必要に応じて)
 └── index.ts          # エントリーポイント (Dependency Injection)
 ```
 
 ## 3. レイヤー詳細
 
-### 3.1 Domain Layer (`src/domain`)
+### 3.1 Features (`src/features`)
 
-ビジネスロジックの中核です。外部への依存を持ちません。
+機能ごとに垂直方向にスライスされたモジュール群です。
 
-- **Entities**:
-  - `MindMap`: マインドマップ全体を管理するルートエンティティ。
-  - `Node`: 各ノードのデータ構造と振る舞い（親子関係、スタイル、アイコンの管理など）。
-- **Interfaces**:
-  - `IdGenerator`: ID生成の抽象化インターフェース。
-  - `MindMapData`: データのエクスポート/インポート用の型定義。
-  - `MindMapStyles`: スタイル設定用の型定義。
-  - `ThemeDefinition`: テーマ定義のためのインターフェース。
+#### Core Feature (`src/features/core`)
+マインドマップの核心となるドメインとアプリケーションロジックを含みます。
+- **Domain**: `MindMap`, `Node` エンティティ, `MindMapData` インターフェース。
+- **Application**: `MindMapService` (ユースケース), `HistoryManager` (履歴管理)。
 
-### 3.2 Application Layer (`src/application`)
+#### Theme Feature (`src/features/theme`)
+スタイリングとテーマ管理に関する機能です。
+- **Domain**: `ThemeDefinition API`, `MindMapStyles`, `StyleAction`。
+- **Components**: `StyleEditor`。
+- **Registry**: `ThemeRegistry` (テーマの適用管理)。
 
-ドメイン層のエンティティを調整し、アプリケーションとしてのユースケースを実現します。
+#### Export/Import Feature (`src/features/export_import`)
+外部フォーマットとの入出力機能です。
+- `XMindImporter`: XMindファイルのインポート。
+- `ImageExporter`: SVG/PNGエクスポート。
+- `MarkdownExporter`: Markdownエクスポート。
 
-#### Services (`src/application/services`)
+### 3.2 Shared Kernel (`src/shared`)
 
-- **MindMapService**:
-  - ノードの追加、削除、移動、編集、アイコン設定などの主要なユースケースを実装。
-  - アクションの履歴管理（Undo/Redo）との連携。
-- **HistoryManager**:
-  - Mementoパターンを用いた操作履歴の管理。
+全機能から参照可能な共通コンポーネントです。
+- **Kernel**: `IdGenerator` (Interface), `FileHandler` (Interface)。
+- **Infrastructure**: `CryptoIdGenerator` (Impl), `TypedEventEmitter` (Impl)。
 
 ### 3.3 Presentation Layer (`src/presentation`)
 
-ユーザーインターフェースとユーザー入力を処理します。
-
-#### Logic (`src/presentation/logic`)
-
-- **MindMapController**:
-  - Viewからのイベントを受け取り、Application Serviceを呼び出す。
-  - MVCパターンのControllerの役割。
-- **InteractionHandler**:
-  - マウス操作、キーボードショートカット、ドラッグ＆ドロップなどのユーザー入力をハンドリング。
-- **ImageExporter**:
-  - マインドマップのDOM要像をSVG/PNG画像に変換し、ファイル保存処理を行う。
-- **MarkdownExporter**:
-  - マインドマップのデータをMarkdown形式に変換し、ファイル保存処理を行う。
-
-#### Components (`src/presentation/components`)
-
-- **Renderer (Interface) / SvgRenderer (Implementation)**:
-  - マインドマップの描画を担当。
-  - `MindMapController` は `Renderer` インターフェースに依存し、実装（`SvgRenderer`）はDIされます。
-- **NodeEditor / StyleEditor**:
-  - ノード編集やスタイリングのための複雑なUIロジックを分離。
-- **ThemeRegistry**:
-  - 利用可能なテーマを管理し、CSS変数を介して適用します。
-- **CommandPalette**:
-  - `m`キーなどで呼び出し可能なコマンド兼検索パレット。
-  - ノード検索結果の表示とナビゲーションを提供。
-
-### 3.4 Infrastructure Layer (`src/infrastructure`)
-
-ドメインやアプリケーション層で定義されたインターフェースの具体的な実装を提供します。
-
-#### Implementations (`src/infrastructure/impl`)
-
-- **CryptoIdGenerator**:
-  - Web Crypto APIを使用したID生成の実装。`domain/interfaces/IdGenerator`の実装。
-- **EventEmitter**:
-  - イベントバスの実装。
-- **XMindImporter**:
-  - `jszip`を使用したXMindファイルの解析とインポート処理の実装。
+各機能を統合し、ユーザーインターフェースを提供します。
+- **MindMapController**: 各機能（Core, Theme, Export）をオーケストレーションするメインコントローラー。
+- **InteractionHandler**: ユーザー操作の入力処理。
+- **Components**: `SvgRenderer` (描画), `CommandPalette` (コマンドUI)。
 
 ## 4. 主要な処理シーケンス
 
@@ -265,7 +197,14 @@ sequenceDiagram
     participant Service as MindMapService
     participant IdGen as IdGenerator
     participant Entity as MindMap/Node
-    participant Renderer as SvgRenderer
+```mermaid
+sequenceDiagram
+    participant User
+    participant Controller as Presentation/MindMapController
+    participant Service as Core/MindMapService
+    participant IdGen as Shared/IdGenerator
+    participant Entity as Core/MindMap
+    participant Renderer as Presentation/SvgRenderer
 
     User->>Controller: addChildNode(parentId)
     activate Controller
@@ -294,10 +233,10 @@ Mementoパターンを使用した履歴管理と状態復元の流れを示し�
 ```mermaid
 sequenceDiagram
     participant User
-    participant Controller as MindMapController
-    participant Service as MindMapService
-    participant History as HistoryManager
-    participant Entity as MindMap
+    participant Controller as Presentation/MindMapController
+    participant Service as Core/MindMapService
+    participant History as Core/HistoryManager
+    participant Entity as Core/MindMap
 
     User->>Controller: undo()
     activate Controller
@@ -330,9 +269,9 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant User
-    participant Controller as MindMapController
-    participant Service as MindMapService
-    participant Entity as MindMap
+    participant Controller as Presentation/MindMapController
+    participant Service as Core/MindMapService
+    participant Entity as Core/MindMap
 
     User->>Controller: moveNode(nodeId, targetId, side)
     activate Controller
@@ -368,9 +307,9 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant User
-    participant Controller as MindMapController
-    participant Palette as CommandPalette
-    participant Service as MindMapService
+    participant Controller as Presentation/MindMapController
+    participant Palette as Presentation/CommandPalette
+    participant Service as Core/MindMapService
 
     User->>Controller: toggleCommandPalette (m key)
     activate Controller
@@ -409,10 +348,10 @@ sequenceDiagram
 
 ```typescript
 // DIの例
-const idGenerator = new CryptoIdGenerator(); // Infrastructure
-const mindMap = new MindMap(rootNode);       // Domain
-const service = new MindMapService(mindMap, idGenerator); // Application <- Domain, Infrastructure
-const controller = new MindMapController(mindMap, service, renderer, ...); // Presentation <- Application
+const idGenerator = new CryptoIdGenerator(); // Shared/Infrastructure
+const mindMap = new MindMap(rootNode);       // Core/Domain
+const service = new MindMapService(mindMap, idGenerator); // Core/Application <- Core/Domain, Shared/Infrastructure
+const controller = new MindMapController(mindMap, service, renderer, ...); // Presentation <- Core/Application
 ```
 
 ## 6. 主要な設計原則

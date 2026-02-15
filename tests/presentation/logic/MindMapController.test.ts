@@ -1,20 +1,20 @@
 /* eslint-disable @typescript-eslint/unbound-method */
 import { describe, it, expect, beforeEach, vi, afterEach, Mock } from 'vitest';
 import { MindMapController } from '../../../src/presentation/logic/MindMapController';
-import { MindMap } from '../../../src/domain/entities/MindMap';
-import { Node } from '../../../src/domain/entities/Node';
-import { MindMapService } from '../../../src/application/services/MindMapService';
+import { MindMap } from '../../../src/features/core/domain/MindMap';
+import { Node } from '../../../src/features/core/domain/Node';
+import { MindMapService } from '../../../src/features/core/application/MindMapService';
 import { Renderer } from '../../../src/presentation/components/Renderer';
-import { StyleEditor } from '../../../src/presentation/components/StyleEditor';
+import { StyleEditor } from '../../../src/features/theme/components/StyleEditor';
 import { IMindMapEventBus } from '../../../src/presentation/logic/MindMapController';
-import { FileHandler } from '../../../src/domain/interfaces/FileHandler';
-import { XMindImporter } from '../../../src/infrastructure/impl/XMindImporter';
-import { MarkdownExporter } from '../../../src/presentation/logic/MarkdownExporter';
-import { MindMapData } from '../../../src/domain/interfaces/MindMapData';
-import { ImageExporter } from '../../../src/presentation/logic/ImageExporter';
+import { FileHandler } from '../../../src/shared/kernel/FileHandler';
+import { XMindImporter } from '../../../src/features/export_import/XMindImporter';
+import { MarkdownExporter } from '../../../src/features/export_import/MarkdownExporter';
+import { MindMapData } from '../../../src/features/core/domain/MindMapData';
+import { ImageExporter } from '../../../src/features/export_import/ImageExporter';
 
 // Remove vi.mock and use spyOn instead
-// vi.mock('../../../src/infrastructure/impl/XMindImporter');
+// vi.mock('../../../src/features/export_import/XMindImporter');
 
 describe('MindMapController', () => {
   let controller: MindMapController;

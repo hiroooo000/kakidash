@@ -1,6 +1,6 @@
-import { MindMap } from '../../domain/entities/MindMap';
-import { LayoutMode } from '../../domain/interfaces/LayoutMode';
-import { Node } from '../../domain/entities/Node';
+import { MindMap } from '../../features/core/domain/MindMap';
+import { LayoutMode } from '../../features/core/domain/LayoutMode';
+import { Node } from '../../features/core/domain/Node';
 
 export interface Renderer {
   container: HTMLElement;

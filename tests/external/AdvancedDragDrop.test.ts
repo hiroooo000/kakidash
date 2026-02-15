@@ -6,7 +6,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { Kakidash } from '../../src/index';
 
 // Mock UI components
-vi.mock('../../src/presentation/components/StyleEditor', () => ({
+vi.mock('../../src/features/theme/components/StyleEditor', () => ({
   StyleEditor: vi.fn().mockImplementation(function () {
     return {
       show: vi.fn(),

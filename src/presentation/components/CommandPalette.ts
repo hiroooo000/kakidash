@@ -1,4 +1,4 @@
-import { SVG_ICONS } from '../resources/Icons';
+import { SVG_ICONS } from '../../features/theme/resources/Icons';
 
 export interface CommandPaletteOptions {
   onInput: (query: string) => void;

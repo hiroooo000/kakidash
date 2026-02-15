@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-return */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { ImageExporter } from '../../../src/presentation/logic/ImageExporter';
+import { ImageExporter } from '../../../src/features/export_import/ImageExporter';
 
 // Mock XMLSerializer
 global.XMLSerializer = class {

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { ShortcutManager } from '../../src/presentation/logic/ShortcutManager';
-import { ShortcutConfig } from '../../src/domain/interfaces/ShortcutConfig';
+import { ShortcutConfig } from '../../src/features/core/domain/ShortcutConfig';
 
 describe('ShortcutManager', () => {
   const mockShortcuts: ShortcutConfig = {
