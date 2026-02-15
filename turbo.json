@@ -29,7 +29,8 @@
         "build",
         "lint",
         "typecheck",
-        "format"
+        "format",
+        "dep:check"
       ],
       "inputs": [
         "src/**",
@@ -77,6 +78,14 @@
         "tests/**",
         "package.json",
         ".prettierrc"
+      ]
+    },
+    "dep:check": {
+      "inputs": [
+        "src/**",
+        ".dependency-cruiser.cjs",
+        "package.json",
+        "tsconfig.json"
       ]
     }
   }
