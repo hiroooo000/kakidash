@@ -1,8 +1,8 @@
 import { Renderer } from './Renderer';
-import { MindMap } from '../../domain/entities/MindMap';
+import { MindMap } from '../../features/core/domain/MindMap';
 import { ThemeRegistry } from './ThemeRegistry';
-import { Node } from '../../domain/entities/Node';
-import { LayoutMode } from '../../domain/interfaces/LayoutMode';
+import { Node } from '../../features/core/domain/Node';
+import { LayoutMode } from '../../features/core/domain/LayoutMode';
 import { SVG_ICONS } from '../resources/Icons';
 
 export interface SvgRendererOptions {

@@ -13,8 +13,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call */
 import { describe, it, expect, beforeEach } from 'vitest';
 import { SvgRenderer } from '../../src/presentation/components/SvgRenderer';
-import { Node as MindMapNode } from '../../src/domain/entities/Node';
-import { MindMap } from '../../src/domain/entities/MindMap';
+import { Node as MindMapNode } from '../../src/features/core/domain/Node';
+import { MindMap } from '../../src/features/core/domain/MindMap';
 // import { Window } from 'happy-dom';
 
 // Setup happy-dom environment if not already globally set by vitest config

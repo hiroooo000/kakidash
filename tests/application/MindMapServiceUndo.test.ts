@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { MindMapService } from '../../src/application/services/MindMapService';
-import { MindMap } from '../../src/domain/entities/MindMap';
-import { Node } from '../../src/domain/entities/Node';
-import { CryptoIdGenerator } from '../../src/infrastructure/impl/CryptoIdGenerator';
+import { MindMap } from '../../src/features/core/domain/MindMap';
+import { Node } from '../../src/features/core/domain/Node';
+import { CryptoIdGenerator } from '../../src/shared/infrastructure/CryptoIdGenerator';
 
 describe('MindMapService Undo', () => {
   let service: MindMapService;

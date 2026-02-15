@@ -1,6 +1,6 @@
 /* eslint-disable */
 import { describe, it, expect } from 'vitest';
-import type { KakidashCommandArgs } from '../../src/domain/interfaces/KakidashEvents';
+import type { KakidashCommandArgs } from '../../src/features/core/domain/KakidashEvents';
 
 describe('KakidashEvents Type Verification', () => {
     it('should have a valid command event structure', () => {

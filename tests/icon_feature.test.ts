@@ -1,8 +1,8 @@
 import { describe, test, expect, beforeEach } from 'vitest';
 import { MindMapService } from '../src/application/services/MindMapService';
-import { MindMap } from '../src/domain/entities/MindMap';
-import { Node } from '../src/domain/entities/Node';
-import { IdGenerator } from '../src/domain/interfaces/IdGenerator';
+import { MindMap } from '../src/features/core/domain/MindMap';
+import { Node } from '../src/features/core/domain/Node';
+import { IdGenerator } from '../src/shared/kernel/IdGenerator';
 
 class MockIdGenerator implements IdGenerator {
   private counter = 0;

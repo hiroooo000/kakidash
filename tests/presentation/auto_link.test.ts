@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call */
 import { SvgRenderer } from '../../src/presentation/components/SvgRenderer';
-import { Node } from '../../src/domain/entities/Node';
+import { Node } from '../../src/features/core/domain/Node';
 
 describe('SvgRenderer Auto Link', () => {
   let container: HTMLElement;

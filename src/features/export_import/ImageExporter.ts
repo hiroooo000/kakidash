@@ -1,4 +1,4 @@
-import { FileHandler } from '../../domain/interfaces/FileHandler';
+import { FileHandler } from '../../shared/kernel/FileHandler';
 import { SvgGenerator } from './SvgGenerator';
 
 // Local declaration for File System Access API to avoid compilation errors

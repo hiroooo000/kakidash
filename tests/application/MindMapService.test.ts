@@ -2,10 +2,10 @@
 
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 import { describe, it, expect, beforeEach } from 'vitest';
-import { Node } from '../../src/domain/entities/Node';
-import { MindMap } from '../../src/domain/entities/MindMap';
+import { Node } from '../../src/features/core/domain/Node';
+import { MindMap } from '../../src/features/core/domain/MindMap';
 import { MindMapService } from '../../src/application/services/MindMapService';
-import { CryptoIdGenerator } from '../../src/infrastructure/impl/CryptoIdGenerator';
+import { CryptoIdGenerator } from '../../src/shared/infrastructure/CryptoIdGenerator';
 
 describe('MindMapService', () => {
   let mindMap: MindMap;

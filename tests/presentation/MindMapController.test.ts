@@ -7,13 +7,13 @@
 /* eslint-disable @typescript-eslint/unbound-method */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { MindMapController } from '../../src/presentation/logic/MindMapController';
-import { MindMap } from '../../src/domain/entities/MindMap';
-import { Node } from '../../src/domain/entities/Node';
+import { MindMap } from '../../src/features/core/domain/MindMap';
+import { Node } from '../../src/features/core/domain/Node';
 import { MindMapService } from '../../src/application/services/MindMapService';
 import { Renderer } from '../../src/presentation/components/Renderer';
 import { StyleEditor } from '../../src/presentation/components/StyleEditor';
 import { InteractionHandler } from '../../src/presentation/logic/InteractionHandler';
-import { CryptoIdGenerator } from '../../src/infrastructure/impl/CryptoIdGenerator';
+import { CryptoIdGenerator } from '../../src/shared/infrastructure/CryptoIdGenerator';
 import { ThemeRegistry } from '../../src/presentation/components/ThemeRegistry';
 
 // Mock dependencies

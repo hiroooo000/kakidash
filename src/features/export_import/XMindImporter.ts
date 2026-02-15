@@ -1,6 +1,6 @@
 import JSZip from 'jszip';
-import { MindMapData, MindMapNodeData } from '../../domain/interfaces/MindMapData';
-import { CryptoIdGenerator } from './CryptoIdGenerator';
+import { MindMapData, MindMapNodeData } from '../../features/core/domain/MindMapData';
+import { CryptoIdGenerator } from '../../shared/infrastructure/CryptoIdGenerator';
 
 // XMind JSON Interfaces (Partial, focusing on what we need)
 interface XMindContent {

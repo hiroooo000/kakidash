@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { ThemeRegistry } from '../src/presentation/components/ThemeRegistry';
 import { ThemeDefinition } from '../src/domain/interfaces/Theme';
-import { MindMapStyles } from '../src/domain/interfaces/MindMapStyles';
+import { MindMapStyles } from '../src/features/core/domain/MindMapStyles';
 import { DEFAULT_THEME, SIMPLE_THEME } from '../src/presentation/resources/ThemePresets';
 
 describe('ThemeRegistry', () => {

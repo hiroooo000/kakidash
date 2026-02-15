@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { Node } from '../../src/domain/entities/Node';
-import { MindMap } from '../../src/domain/entities/MindMap';
+import { Node } from '../../src/features/core/domain/Node';
+import { MindMap } from '../../src/features/core/domain/MindMap';
 
 describe('Node Entity', () => {
   it('should create a node with correct properties', () => {

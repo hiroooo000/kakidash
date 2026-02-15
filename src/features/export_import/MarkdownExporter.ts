@@ -1,6 +1,6 @@
-import { MindMap } from '../../domain/entities/MindMap';
-import { Node } from '../../domain/entities/Node';
-import { FileHandler } from '../../domain/interfaces/FileHandler';
+import { MindMap } from '../../features/core/domain/MindMap';
+import { Node } from '../../features/core/domain/Node';
+import { FileHandler } from '../../shared/kernel/FileHandler';
 
 export class MarkdownExporter {
   public async export(mindMap: MindMap, fileHandler?: FileHandler): Promise<void> {

@@ -1,22 +1,22 @@
-import { MindMap } from '../../domain/entities/MindMap';
-import { Node, NodeStyle } from '../../domain/entities/Node';
+import { MindMap } from '../../features/core/domain/MindMap';
+import { Node, NodeStyle } from '../../features/core/domain/Node';
 import { MindMapService } from '../../application/services/MindMapService';
 import { Renderer } from '../components/Renderer';
 import { StyleEditor } from '../components/StyleEditor';
 import { InteractionHandler, Direction } from './InteractionHandler';
-import { LayoutMode } from '../../domain/interfaces/LayoutMode';
+import { LayoutMode } from '../../features/core/domain/LayoutMode';
 import { LayoutSwitcher } from './LayoutSwitcher';
-import { MindMapData, Theme } from '../../domain/interfaces/MindMapData';
-import { KakidashEventMap } from '../../domain/interfaces/KakidashEvents';
-import { ShortcutAction, KeyBinding } from '../../domain/interfaces/ShortcutConfig';
-import { MindMapStyles } from '../../domain/interfaces/MindMapStyles';
+import { MindMapData, Theme } from '../../features/core/domain/MindMapData';
+import { KakidashEventMap } from '../../features/core/domain/KakidashEvents';
+import { ShortcutAction, KeyBinding } from '../../features/core/domain/ShortcutConfig';
+import { MindMapStyles } from '../../features/core/domain/MindMapStyles';
 import { StyleAction } from './StyleAction';
 import { CommandPalette } from '../components/CommandPalette';
 import { ThemeRegistry } from '../components/ThemeRegistry';
-import { XMindImporter } from '../../infrastructure/impl/XMindImporter';
-import { ImageExporter } from './ImageExporter';
-import { MarkdownExporter } from './MarkdownExporter';
-import { FileHandler } from '../../domain/interfaces/FileHandler';
+import { XMindImporter } from '../../features/export_import/XMindImporter';
+import { ImageExporter } from '../../features/export_import/ImageExporter';
+import { MarkdownExporter } from '../../features/export_import/MarkdownExporter';
+import { FileHandler } from '../../shared/kernel/FileHandler';
 
 export interface IMindMapEventBus {
   emit<K extends keyof KakidashEventMap>(event: K, payload: KakidashEventMap[K]): void;

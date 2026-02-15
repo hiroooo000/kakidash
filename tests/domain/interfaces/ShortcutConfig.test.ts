@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { DEFAULT_SHORTCUTS } from '../../../src/domain/interfaces/ShortcutConfig';
+import { DEFAULT_SHORTCUTS } from '../../../src/features/core/domain/ShortcutConfig';
 
 describe('DEFAULT_SHORTCUTS', () => {
   it('should include "d" key for deleteNode', () => {

@@ -1,5 +1,5 @@
 import { Node } from './Node';
-import { Theme } from '../interfaces/MindMapData';
+import { Theme } from './MindMapData';
 
 export class MindMap {
   root: Node;

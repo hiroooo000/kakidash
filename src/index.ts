@@ -1,36 +1,36 @@
-import { MindMap } from './domain/entities/MindMap';
-import { Node, NodeStyle } from './domain/entities/Node';
+import { MindMap } from './features/core/domain/MindMap';
+import { Node, NodeStyle } from './features/core/domain/Node';
 import { MindMapService } from './application/services/MindMapService';
 import { SvgRenderer } from './presentation/components/SvgRenderer';
 import { StyleEditor } from './presentation/components/StyleEditor';
 import { LayoutSwitcher } from './presentation/logic/LayoutSwitcher';
 import { InteractionHandler, type Direction } from './presentation/logic/InteractionHandler';
 import { MindMapController } from './presentation/logic/MindMapController';
-import { type LayoutMode } from './domain/interfaces/LayoutMode';
-import { type MindMapData, type Theme } from './domain/interfaces/MindMapData';
-import { TypedEventEmitter } from './infrastructure/impl/EventEmitter';
-import { CryptoIdGenerator } from './infrastructure/impl/CryptoIdGenerator';
-import { KakidashEventMap } from './domain/interfaces/KakidashEvents';
-import { ShortcutConfig } from './domain/interfaces/ShortcutConfig';
-import { MindMapStyles } from './domain/interfaces/MindMapStyles';
+import { type LayoutMode } from './features/core/domain/LayoutMode';
+import { type MindMapData, type Theme } from './features/core/domain/MindMapData';
+import { TypedEventEmitter } from './shared/infrastructure/EventEmitter';
+import { CryptoIdGenerator } from './shared/infrastructure/CryptoIdGenerator';
+import { KakidashEventMap } from './features/core/domain/KakidashEvents';
+import { ShortcutConfig } from './features/core/domain/ShortcutConfig';
+import { MindMapStyles } from './features/core/domain/MindMapStyles';
 // StyleAction import removed (unused)
 
-export type { MindMapData, Theme, MindMapNodeData } from './domain/interfaces/MindMapData';
-export type { KakidashEventMap } from './domain/interfaces/KakidashEvents';
-export type { LayoutMode } from './domain/interfaces/LayoutMode';
+export type { MindMapData, Theme, MindMapNodeData } from './features/core/domain/MindMapData';
+export type { KakidashEventMap } from './features/core/domain/KakidashEvents';
+export type { LayoutMode } from './features/core/domain/LayoutMode';
 export type {
   ShortcutConfig,
   ShortcutAction,
   KeyBinding,
-} from './domain/interfaces/ShortcutConfig';
-export type { MindMapStyles } from './domain/interfaces/MindMapStyles';
+} from './features/core/domain/ShortcutConfig';
+export type { MindMapStyles } from './features/core/domain/MindMapStyles';
 export type { Direction } from './presentation/logic/InteractionHandler';
-export type { NodeStyle } from './domain/entities/Node';
-export { Node } from './domain/entities/Node';
-import { FileHandler } from './domain/interfaces/FileHandler';
-export type { FileHandler } from './domain/interfaces/FileHandler';
-export { SvgGenerator } from './presentation/logic/SvgGenerator';
-export { XMindImporter } from './infrastructure/impl/XMindImporter';
+export type { NodeStyle } from './features/core/domain/Node';
+export { Node } from './features/core/domain/Node';
+import { FileHandler } from './shared/kernel/FileHandler';
+export type { FileHandler } from './shared/kernel/FileHandler';
+export { SvgGenerator } from './features/export_import/SvgGenerator';
+export { XMindImporter } from './features/export_import/XMindImporter';
 
 export interface KakidashOptions {
   shortcuts?: ShortcutConfig;

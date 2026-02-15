@@ -1,12 +1,12 @@
 import { describe, it, expect, beforeEach, vi, type Mock } from 'vitest';
 import { MindMapController } from '../../src/presentation/logic/MindMapController';
-import { MindMap } from '../../src/domain/entities/MindMap';
-import { Node } from '../../src/domain/entities/Node';
+import { MindMap } from '../../src/features/core/domain/MindMap';
+import { Node } from '../../src/features/core/domain/Node';
 import { MindMapService } from '../../src/application/services/MindMapService';
 import { Renderer } from '../../src/presentation/components/Renderer';
 import { StyleEditor } from '../../src/presentation/components/StyleEditor';
 import { IMindMapEventBus } from '../../src/presentation/logic/MindMapController';
-import { IdGenerator } from '../../src/domain/interfaces/IdGenerator';
+import { IdGenerator } from '../../src/shared/kernel/IdGenerator';
 
 describe('MindMapController Resizing Fix', () => {
   let controller: MindMapController;

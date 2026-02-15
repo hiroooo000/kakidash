@@ -34,7 +34,9 @@
     "ci": "pnpm format && pnpm turbo run typecheck build lint docs && pnpm run test&& pnpm run test:e2e",
     "turbo": "turbo",
     "turbo:ci": "turbo run typecheck build test lint docs test:e2e",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "dep:graph": "depcruise src --include-only \"^src\" --output-type dot --config .dependency-cruiser.cjs | dot -T svg > dependency-graph.svg",
+    "dep:check": "depcruise src --include-only \"^src\" --config .dependency-cruiser.cjs"
   },
   "keywords": [
     "mindmap",
@@ -56,6 +58,7 @@
     "@types/node": "^25.2.1",
     "@types/whatwg-mimetype": "^3.0.2",
     "@types/ws": "^8.18.1",
+    "dependency-cruiser": "^17.3.8",
     "eslint": "^10.0.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.4",

@@ -1,4 +1,4 @@
-import { IdGenerator } from '../../domain/interfaces/IdGenerator';
+import { IdGenerator } from '../kernel/IdGenerator';
 
 export class CryptoIdGenerator implements IdGenerator {
   generate(): string {
