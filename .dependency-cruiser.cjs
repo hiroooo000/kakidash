@@ -57,14 +57,23 @@ module.exports = {
             to: {},
         },
 
-        /* Architectural Rules: Layered Architecture (Current) */
+        /* Architectural Rules: Layered Architecture (Legacy & New Features) */
         {
             name: 'domain-no-dep-on-outer',
             severity: 'error',
-            comment: 'Domain layer must not depend on Application, Infrastructure, or Presentation layers.',
-            from: { path: '^src/domain' },
+            comment: 'Domain layer (including Core Domain) must not depend on Application, Infrastructure, or Presentation layers, or other Features.',
+            from: { path: '^(src/domain|src/features/core/domain)' },
             to: {
-                path: '^(src/application|src/infrastructure|src/presentation)',
+                path: '^(src/application|src/infrastructure|src/presentation|src/features/theme|src/features/export_import)',
+            },
+        },
+        {
+            name: 'feature-core-isolation',
+            severity: 'error',
+            comment: 'Core Feature should not depend on other features (Theme, Export).',
+            from: { path: '^src/features/core' },
+            to: {
+                path: '^(src/features/theme|src/features/export_import)',
             },
         },
         {

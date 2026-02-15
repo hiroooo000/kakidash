@@ -5,7 +5,7 @@ import { MindMap } from '../../../src/features/core/domain/MindMap';
 import { Node } from '../../../src/features/core/domain/Node';
 import { MindMapService } from '../../../src/application/services/MindMapService';
 import { Renderer } from '../../../src/presentation/components/Renderer';
-import { StyleEditor } from '../../../src/presentation/components/StyleEditor';
+import { StyleEditor } from '../../../src/features/theme/components/StyleEditor';
 import { IMindMapEventBus } from '../../../src/presentation/logic/MindMapController';
 import { FileHandler } from '../../../src/shared/kernel/FileHandler';
 import { XMindImporter } from '../../../src/features/export_import/XMindImporter';

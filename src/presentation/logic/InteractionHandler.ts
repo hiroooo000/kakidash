@@ -7,7 +7,7 @@ import { NodeEditor } from '../components/NodeEditor';
 import { NodeDragger } from './NodeDragger';
 import { ShortcutManager } from './ShortcutManager';
 
-import { StyleAction } from './StyleAction';
+import { StyleAction } from '../../features/theme/domain/StyleAction';
 
 export type Direction = 'Up' | 'Down' | 'Left' | 'Right';
 

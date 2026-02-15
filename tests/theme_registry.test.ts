@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { ThemeRegistry } from '../src/presentation/components/ThemeRegistry';
-import { ThemeDefinition } from '../src/domain/interfaces/Theme';
-import { MindMapStyles } from '../src/features/core/domain/MindMapStyles';
-import { DEFAULT_THEME, SIMPLE_THEME } from '../src/presentation/resources/ThemePresets';
+import { ThemeRegistry } from '../src/features/theme/registry/ThemeRegistry';
+import { ThemeDefinition } from '../src/features/theme/domain/Theme';
+import { MindMapStyles } from '../src/features/theme/domain/MindMapStyles';
+import { DEFAULT_THEME, SIMPLE_THEME } from '../src/features/theme/resources/ThemePresets';
 
 describe('ThemeRegistry', () => {
   let registry: ThemeRegistry;

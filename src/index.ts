@@ -2,7 +2,7 @@ import { MindMap } from './features/core/domain/MindMap';
 import { Node, NodeStyle } from './features/core/domain/Node';
 import { MindMapService } from './application/services/MindMapService';
 import { SvgRenderer } from './presentation/components/SvgRenderer';
-import { StyleEditor } from './presentation/components/StyleEditor';
+import { StyleEditor } from './features/theme/components/StyleEditor';
 import { LayoutSwitcher } from './presentation/logic/LayoutSwitcher';
 import { InteractionHandler, type Direction } from './presentation/logic/InteractionHandler';
 import { MindMapController } from './presentation/logic/MindMapController';
@@ -12,7 +12,7 @@ import { TypedEventEmitter } from './shared/infrastructure/EventEmitter';
 import { CryptoIdGenerator } from './shared/infrastructure/CryptoIdGenerator';
 import { KakidashEventMap } from './features/core/domain/KakidashEvents';
 import { ShortcutConfig } from './features/core/domain/ShortcutConfig';
-import { MindMapStyles } from './features/core/domain/MindMapStyles';
+import { MindMapStyles } from './features/theme/domain/MindMapStyles';
 // StyleAction import removed (unused)
 
 export type { MindMapData, Theme, MindMapNodeData } from './features/core/domain/MindMapData';
@@ -23,7 +23,7 @@ export type {
   ShortcutAction,
   KeyBinding,
 } from './features/core/domain/ShortcutConfig';
-export type { MindMapStyles } from './features/core/domain/MindMapStyles';
+export type { MindMapStyles } from './features/theme/domain/MindMapStyles';
 export type { Direction } from './presentation/logic/InteractionHandler';
 export type { NodeStyle } from './features/core/domain/Node';
 export { Node } from './features/core/domain/Node';

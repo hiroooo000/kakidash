@@ -1,4 +1,4 @@
-import { ThemeDefinition } from '../../domain/interfaces/Theme';
+import { ThemeDefinition } from '../domain/Theme';
 
 export const DEFAULT_THEME: ThemeDefinition = {
   name: 'default',

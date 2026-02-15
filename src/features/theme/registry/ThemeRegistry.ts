@@ -1,6 +1,6 @@
-import { ThemeDefinition } from '../../domain/interfaces/Theme';
+import { ThemeDefinition } from '../domain/Theme';
 import { DEFAULT_THEME, SIMPLE_THEME, COLORFUL_THEME, DARK_THEME } from '../resources/ThemePresets';
-import { MindMapStyles } from '../../features/core/domain/MindMapStyles';
+import { MindMapStyles } from '../domain/MindMapStyles';
 
 export class ThemeRegistry {
   private static instance: ThemeRegistry;

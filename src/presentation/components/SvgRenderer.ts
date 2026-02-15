@@ -1,6 +1,6 @@
 import { Renderer } from './Renderer';
 import { MindMap } from '../../features/core/domain/MindMap';
-import { ThemeRegistry } from './ThemeRegistry';
+import { ThemeRegistry } from '../../features/theme/registry/ThemeRegistry';
 import { Node } from '../../features/core/domain/Node';
 import { LayoutMode } from '../../features/core/domain/LayoutMode';
 import { SVG_ICONS } from '../resources/Icons';
