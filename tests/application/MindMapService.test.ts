@@ -4,7 +4,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { Node } from '../../src/features/core/domain/Node';
 import { MindMap } from '../../src/features/core/domain/MindMap';
-import { MindMapService } from '../../src/application/services/MindMapService';
+import { MindMapService } from '../../src/features/core/application/MindMapService';
 import { CryptoIdGenerator } from '../../src/shared/infrastructure/CryptoIdGenerator';
 
 describe('MindMapService', () => {

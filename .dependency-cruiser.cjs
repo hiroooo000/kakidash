@@ -79,8 +79,8 @@ module.exports = {
         {
             name: 'application-no-dep-on-infra-pres',
             severity: 'error',
-            comment: 'Application layer must not depend on Infrastructure or Presentation layers.',
-            from: { path: '^src/application' },
+            comment: 'Application layer (including Core Application) must not depend on Infrastructure or Presentation layers.',
+            from: { path: '^(src/application|src/features/core/application)' },
             to: {
                 path: '^(src/infrastructure|src/presentation)',
             },

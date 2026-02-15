@@ -9,7 +9,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { MindMapController } from '../../src/presentation/logic/MindMapController';
 import { MindMap } from '../../src/features/core/domain/MindMap';
 import { Node } from '../../src/features/core/domain/Node';
-import { MindMapService } from '../../src/application/services/MindMapService';
+import { MindMapService } from '../../src/features/core/application/MindMapService';
 import { Renderer } from '../../src/presentation/components/Renderer';
 import { StyleEditor } from '../../src/features/theme/components/StyleEditor';
 import { InteractionHandler } from '../../src/presentation/logic/InteractionHandler';
@@ -17,7 +17,7 @@ import { CryptoIdGenerator } from '../../src/shared/infrastructure/CryptoIdGener
 import { ThemeRegistry } from '../../src/features/theme/registry/ThemeRegistry';
 
 // Mock dependencies
-vi.mock('../../src/application/services/MindMapService');
+vi.mock('../../src/features/core/application/MindMapService');
 // vi.mock('../../src/presentation/components/SvgRenderer'); // No longer needed as we use interface mock
 vi.mock('../../src/features/theme/components/StyleEditor');
 vi.mock('../../src/presentation/logic/InteractionHandler');

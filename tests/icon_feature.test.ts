@@ -1,5 +1,5 @@
 import { describe, test, expect, beforeEach } from 'vitest';
-import { MindMapService } from '../src/application/services/MindMapService';
+import { MindMapService } from '../src/features/core/application/MindMapService';
 import { MindMap } from '../src/features/core/domain/MindMap';
 import { Node } from '../src/features/core/domain/Node';
 import { IdGenerator } from '../src/shared/kernel/IdGenerator';

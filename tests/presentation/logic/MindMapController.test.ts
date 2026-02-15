@@ -3,7 +3,7 @@ import { describe, it, expect, beforeEach, vi, afterEach, Mock } from 'vitest';
 import { MindMapController } from '../../../src/presentation/logic/MindMapController';
 import { MindMap } from '../../../src/features/core/domain/MindMap';
 import { Node } from '../../../src/features/core/domain/Node';
-import { MindMapService } from '../../../src/application/services/MindMapService';
+import { MindMapService } from '../../../src/features/core/application/MindMapService';
 import { Renderer } from '../../../src/presentation/components/Renderer';
 import { StyleEditor } from '../../../src/features/theme/components/StyleEditor';
 import { IMindMapEventBus } from '../../../src/presentation/logic/MindMapController';

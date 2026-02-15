@@ -1,6 +1,6 @@
 import { MindMap } from './features/core/domain/MindMap';
 import { Node, NodeStyle } from './features/core/domain/Node';
-import { MindMapService } from './application/services/MindMapService';
+import { MindMapService } from './features/core/application/MindMapService';
 import { SvgRenderer } from './presentation/components/SvgRenderer';
 import { StyleEditor } from './features/theme/components/StyleEditor';
 import { LayoutSwitcher } from './presentation/logic/LayoutSwitcher';
