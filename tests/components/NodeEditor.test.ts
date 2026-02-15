@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { NodeEditor } from '../../src/presentation/components/NodeEditor';
-import type { InteractionOptions } from '../../src/presentation/logic/InteractionHandler';
+import { NodeEditor } from '@/presentation/components/NodeEditor';
+import type { InteractionOptions } from '@/presentation/logic/InteractionHandler';
 
 describe('NodeEditor', () => {
   let container: HTMLElement;
