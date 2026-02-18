@@ -34,7 +34,9 @@ export class MindMapController {
   private layoutSwitcher!: LayoutSwitcher;
   private fileHandler?: FileHandler;
 
+  private anchorNodeId: string | null = null;
   private selectedNodeId: string | null = null;
+  private selectedNodeIds: Set<string> = new Set();
   private layoutMode: LayoutMode = 'Right';
 
   private panX: number = 0;
@@ -116,13 +118,16 @@ export class MindMapController {
   getData(): MindMapData {
     const data = this.service.exportData();
     data.selectedId = this.selectedNodeId || undefined;
+    data.selectedIds = Array.from(this.selectedNodeIds);
     return data;
   }
 
   loadData(data: MindMapData): void {
     try {
       this.service.importData(data);
-      if (data.selectedId) {
+      if (data.selectedIds && data.selectedIds.length > 0) {
+        this.selectNodes(data.selectedIds);
+      } else if (data.selectedId) {
         this.selectNode(data.selectedId);
       } else {
         this.selectNode(null);
@@ -152,6 +157,17 @@ export class MindMapController {
   // Accessors
   getSelectedNodeId(): string | null {
     return this.selectedNodeId;
+  }
+
+  getSelectedNodeIds(): string[] {
+    return Array.from(this.selectedNodeIds);
+  }
+
+  private getIdsToActOn(targetId: string): string[] {
+    if (this.selectedNodeIds.has(targetId)) {
+      return Array.from(this.selectedNodeIds);
+    }
+    return [targetId];
   }
 
   // Core API Delegate
@@ -223,11 +239,21 @@ export class MindMapController {
 
   deleteNode(nodeId: string): void {
     this.eventBus.emit('command', { name: 'deleteNode', args: { nodeId } });
-    const result = this.service.removeNode(nodeId);
-    if (result) {
-      this.render();
-      this.eventBus.emit('node:remove', nodeId);
-      this.eventBus.emit('model:change', undefined);
+
+    const ids = this.getIdsToActOn(nodeId);
+    if (ids.length > 1) {
+      if (this.service.removeNodes(ids)) {
+        this.render();
+        ids.forEach((id) => this.eventBus.emit('node:remove', id));
+        this.eventBus.emit('model:change', undefined);
+      }
+    } else {
+      const result = this.service.removeNode(nodeId);
+      if (result) {
+        this.render();
+        this.eventBus.emit('node:remove', nodeId);
+        this.eventBus.emit('model:change', undefined);
+      }
     }
   }
 
@@ -236,17 +262,29 @@ export class MindMapController {
     updates: { topic?: string; style?: Partial<NodeStyle>; icon?: string },
   ): void {
     this.eventBus.emit('command', { name: 'updateNode', args: { nodeId, updates } });
-    let changed = false;
     if (this.interactionHandler && this.interactionHandler.isReadOnly) return;
 
+    let changed = false;
+    const ids = this.getIdsToActOn(nodeId);
+
     if (updates.topic !== undefined) {
+      // Topic update only for the primary node
       if (this.service.updateNodeTopic(nodeId, updates.topic)) changed = true;
     }
+
     if (updates.style !== undefined) {
-      if (this.service.updateNodeStyle(nodeId, updates.style)) changed = true;
+      if (this.service.updateNodesStyle(ids, updates.style)) changed = true;
     }
+
     if (updates.icon !== undefined) {
-      if (this.service.updateNodeIcon(nodeId, updates.icon)) changed = true;
+      // Loop for icon updates as service might not have bulk icon update yet
+      // Or just apply to primary? Usually icons are applied one by one or bulk.
+      // Let's loop.
+      let iconChanged = false;
+      ids.forEach((id) => {
+        if (this.service.updateNodeIcon(id, updates.icon!)) iconChanged = true;
+      });
+      if (iconChanged) changed = true;
     }
 
     if (changed) {
@@ -353,8 +391,38 @@ export class MindMapController {
   }
 
   selectNode(nodeId: string | null): void {
-    if (this.selectedNodeId === nodeId) return;
+    // Reset anchor when normal selection occurs
+    this.anchorNodeId = null;
+
+    if (
+      this.selectedNodeId === nodeId &&
+      this.selectedNodeIds.size === 1 &&
+      nodeId &&
+      this.selectedNodeIds.has(nodeId)
+    )
+      return;
+    if (nodeId === null && this.selectedNodeId === null && this.selectedNodeIds.size === 0) return;
+
     this.selectedNodeId = nodeId;
+    this.selectedNodeIds.clear();
+    if (nodeId) {
+      this.selectedNodeIds.add(nodeId);
+    }
+
+    this.updateSelectionState();
+  }
+
+  selectNodes(nodeIds: string[]): void {
+    this.selectedNodeIds = new Set(nodeIds);
+    // Set primary node to the last selected one
+    this.selectedNodeId = nodeIds.length > 0 ? nodeIds[nodeIds.length - 1] : null;
+
+    this.updateSelectionState();
+  }
+
+  private updateSelectionState(): void {
+    const nodeId = this.selectedNodeId;
+
     if (this.interactionHandler) {
       this.interactionHandler.updateSelection(nodeId);
     }
@@ -374,6 +442,7 @@ export class MindMapController {
 
     this.render();
     this.eventBus.emit('node:select', nodeId);
+    this.eventBus.emit('selection:change', Array.from(this.selectedNodeIds));
   }
 
   moveNode(nodeId: string, targetId: string, position: 'top' | 'bottom' | 'left' | 'right'): void {
@@ -417,7 +486,7 @@ export class MindMapController {
 
   render(): void {
     if (this.isBatching) return;
-    this.renderer.render(this.mindMap, this.selectedNodeId, this.layoutMode);
+    this.renderer.render(this.mindMap, this.selectedNodeIds, this.layoutMode);
     this.renderer.updateTransform(this.panX, this.panY, this.scale);
   }
 
@@ -575,7 +644,7 @@ export class MindMapController {
     }
   }
 
-  navigateNode(nodeId: string, direction: Direction): void {
+  navigateNode(nodeId: string, direction: Direction, extendSelection: boolean = false): void {
     const node = this.mindMap.findNode(nodeId);
     if (!node) return;
 
@@ -596,15 +665,85 @@ export class MindMapController {
         break;
     }
 
-    if (targetId) this.selectNode(targetId);
+    if (targetId) {
+      if (extendSelection) {
+        // Range Selection Logic
+        this.selectRange(nodeId, targetId);
+      } else {
+        this.selectNode(targetId);
+      }
+    }
 
     if (this.selectedNodeId && this.selectedNodeId !== nodeId) {
       setTimeout(() => this.ensureNodeVisible(this.selectedNodeId!, true), 0);
     }
   }
 
+  private selectRange(currentId: string, targetId: string): void {
+    // If no anchor, the current node (before move) is the anchor
+    if (!this.anchorNodeId) {
+      this.anchorNodeId = currentId;
+    }
+
+    const anchor = this.mindMap.findNode(this.anchorNodeId);
+    const target = this.mindMap.findNode(targetId);
+
+    if (!anchor || !target) return;
+
+    // Check if they are siblings
+    if (anchor.parentId && anchor.parentId === target.parentId) {
+      // Siblings scope
+      const parent = this.mindMap.findNode(anchor.parentId);
+      if (parent) {
+        const idx1 = parent.children.findIndex((c) => c.id === anchor.id);
+        const idx2 = parent.children.findIndex((c) => c.id === target.id);
+
+        if (idx1 !== -1 && idx2 !== -1) {
+          const start = Math.min(idx1, idx2);
+          const end = Math.max(idx1, idx2);
+
+          const ids = parent.children.slice(start, end + 1).map((c) => c.id);
+
+          // We want to KEEP the anchor as anchorNodeId, and Update selectedNodeId to targetId (focus)
+          // selectNodes updates selectedNodeId to the last one in the list.
+          // But we want focus on 'targetId'.
+          // So we should order ids such that targetId is last?
+          // selectedNodeIds is a Set, order matters for Array.from?
+          // Our selectNodes implementation: "this.selectedNodeId = nodeIds.length > 0 ? nodeIds[nodeIds.length - 1] : null;"
+
+          // Ideally we pass ids and explicitly set focus.
+          // But selectNodes derives focus.
+          // Let's modify selectNodes or just ensure 'targetId' is passed last in array?
+          // But 'ids' is slice from children array.
+
+          // Let's modify selectNodes to optionally accept a focusId?
+          // Or just update selectedNodeId AFTER selectNodes?
+
+          this.selectNodes(ids);
+
+          // Force focus to targetId
+          this.selectedNodeId = targetId;
+          this.updateSelectionState(); // Re-emit with correct focus
+
+          return;
+        }
+      }
+    }
+
+    // Fallback: If not siblings, or complex navigation, just select target (and maybe clear anchor?)
+    // Or just treat as single select?
+    // For now, clear anchor and select target if range not possible.
+    this.anchorNodeId = null;
+    this.selectNode(targetId);
+  }
+
   copyNode(nodeId: string): void {
-    this.service.copyNode(nodeId);
+    const ids = this.getIdsToActOn(nodeId);
+    if (ids.length > 1) {
+      this.service.copyNodes(ids);
+    } else {
+      this.service.copyNode(nodeId);
+    }
   }
 
   pasteNode(parentId: string): void {
@@ -621,15 +760,24 @@ export class MindMapController {
 
   cutNode(nodeId: string): void {
     this.eventBus.emit('command', { name: 'cutNode', args: { nodeId } });
+    const ids = this.getIdsToActOn(nodeId);
+
+    // For selection after cut, we need to decide where to go.
+    // If single, go to parent.
+    // If multiple, maybe go to parent of primary?
     const node = this.mindMap.findNode(nodeId);
-    if (node) {
-      const parentId = node.parentId;
+    const parentId = node?.parentId;
+
+    if (ids.length > 1) {
+      this.service.cutNodes(ids);
+    } else {
       this.service.cutNode(nodeId);
-      if (parentId) this.selectNode(parentId);
-      this.render();
-      this.eventBus.emit('node:remove', nodeId);
-      this.eventBus.emit('model:change', undefined);
     }
+
+    if (parentId) this.selectNode(parentId);
+    this.render();
+    ids.forEach((id) => this.eventBus.emit('node:remove', id));
+    this.eventBus.emit('model:change', undefined);
   }
 
   pasteImage(parentId: string, imageData: string, width?: number, height?: number): void {
@@ -682,9 +830,15 @@ export class MindMapController {
     }
 
     if (newStyle) {
-      if (this.service.updateNodeStyle(nodeId, newStyle)) {
+      const ids = this.getIdsToActOn(nodeId);
+      // Logic: Update all selected nodes with newStyle.
+      // Note: newStyle is derived from the *primary* node (nodeId).
+      // This is standard behavior (mixed state -> toggle based on focused).
+
+      if (this.service.updateNodesStyle(ids, newStyle)) {
         this.render();
         this.eventBus.emit('model:change', undefined);
+        // Show editor for primary node if selected
         if (this.selectedNodeId === nodeId) {
           this.styleEditor.show(nodeId, { ...currentStyle, ...newStyle });
         }

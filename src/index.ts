@@ -124,7 +124,8 @@ export class Kakidash extends TypedEventEmitter<KakidashEventMap> {
       onDropNode: (draggedId, targetId, side) =>
         this.controller.moveNode(draggedId, targetId, side),
       onUpdateNode: (nodeId, topic) => this.controller.updateNodeTopic(nodeId, topic),
-      onNavigate: (nodeId, direction) => this.controller.navigateNode(nodeId, direction),
+      onNavigate: (nodeId, direction, extendSelection) =>
+        this.controller.navigateNode(nodeId, direction, extendSelection),
       onPan: (dx, dy) => this.controller.panBoard(dx, dy),
       onCopyNode: (nodeId) => this.controller.copyNode(nodeId),
       onPasteNode: (parentId) => this.controller.pasteNode(parentId),

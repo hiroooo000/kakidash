@@ -98,6 +98,39 @@ export class MindMapService {
     return false;
   }
 
+  removeNodes(ids: string[]): boolean {
+    if (ids.length === 0) return false;
+
+    // Validate all nodes can be removed (not root)
+    for (const id of ids) {
+      const node = this.mindMap.findNode(id);
+      if (!node || node.isRoot) return false;
+    }
+
+    this.saveState();
+
+    let removedAny = false;
+    // We sort ids to avoid issues? No, just remove them.
+    // Finding node logic might be affected if we remove parent then child?
+    // User selection typically is siblings.
+    // If selection contains parent AND child, removing parent removes child implicitly.
+    // We should filter out descendants from the list to avoid double removal attempts?
+    // But standard simpler approach: try remove.
+
+    // Better approach: Get all nodes first, then remove.
+    // Even better: Filter to keep only top-level nodes in the selection (if A and A.child are selected, remove A).
+    // But for now, let's just loop. The findNode will return null if already removed.
+
+    ids.forEach((id) => {
+      // Pass false to saveState because we saved once at the start
+      if (this.removeNode(id, false)) {
+        removedAny = true;
+      }
+    });
+
+    return removedAny;
+  }
+
   updateNodeTopic(id: string, topic: string): boolean {
     const node = this.mindMap.findNode(id);
     if (node) {
@@ -116,6 +149,23 @@ export class MindMapService {
       return true;
     }
     return false;
+  }
+
+  updateNodesStyle(ids: string[], style: Partial<import('../domain/Node').NodeStyle>): boolean {
+    if (ids.length === 0) return false;
+
+    this.saveState();
+    let updatedAny = false;
+
+    ids.forEach((id) => {
+      const node = this.mindMap.findNode(id);
+      if (node) {
+        node.style = { ...node.style, ...style };
+        updatedAny = true;
+      }
+    });
+
+    return updatedAny;
   }
 
   toggleNodeFold(id: string): boolean {
@@ -329,48 +379,66 @@ export class MindMapService {
     return null;
   }
 
-  private clipboard: Node | null = null;
+  private clipboard: Node[] = [];
 
   copyNode(nodeId: string): void {
-    const node = this.mindMap.findNode(nodeId);
-    if (node) {
-      this.clipboard = this.deepCloneNode(node);
-      // Write to system clipboard to ensure we clear any previous image data
-      // and to allow pasting text outside the app.
-      if (navigator.clipboard) {
-        navigator.clipboard.writeText(node.topic).catch((err) => {
-          console.error('Failed to write to clipboard', err);
-        });
+    this.copyNodes([nodeId]);
+  }
+
+  copyNodes(nodeIds: string[]): void {
+    this.clipboard = [];
+    const texts: string[] = [];
+
+    nodeIds.forEach((id) => {
+      const node = this.mindMap.findNode(id);
+      if (node) {
+        this.clipboard.push(this.deepCloneNode(node));
+        texts.push(node.topic);
       }
+    });
+
+    if (navigator.clipboard && texts.length > 0) {
+      navigator.clipboard.writeText(texts.join('\n')).catch((err) => {
+        console.error('Failed to write to clipboard', err);
+      });
     }
   }
 
   cutNode(nodeId: string): void {
-    const node = this.mindMap.findNode(nodeId);
-    if (node && !node.isRoot && node.parentId) {
-      this.copyNode(nodeId);
-      // saveState is handled in removeNode if second arg is true (default)
-      // But we want to treat CUT as one atomic operation regarding history?
-      // "Cut" = Copy + Delete.
-      this.removeNode(nodeId);
-    }
+    this.cutNodes([nodeId]);
+  }
+
+  cutNodes(nodeIds: string[]): void {
+    this.copyNodes(nodeIds);
+    this.removeNodes(nodeIds);
   }
 
   pasteNode(parentId: string): Node | null {
-    if (!this.clipboard) return null;
+    const nodes = this.pasteNodes(parentId);
+    return nodes.length > 0 ? nodes[0] : null;
+  }
+
+  pasteNodes(parentId: string): Node[] {
+    if (this.clipboard.length === 0) return [];
 
     const parent = this.mindMap.findNode(parentId);
-    if (!parent) return null;
+    if (!parent) return [];
 
     this.saveState();
 
-    // Clone again from clipboard to create new instance for the tree
-    const newNode = this.deepCloneNode(this.clipboard);
-    // Regenerate IDs for the new node and its children
-    this.regenerateIds(newNode);
+    const newNodes: Node[] = [];
 
-    parent.addChild(newNode);
-    return newNode;
+    this.clipboard.forEach((clipNode) => {
+      // Clone again from clipboard to create new instance for the tree
+      const newNode = this.deepCloneNode(clipNode);
+      // Regenerate IDs for the new node and its children
+      this.regenerateIds(newNode);
+
+      parent.addChild(newNode);
+      newNodes.push(newNode);
+    });
+
+    return newNodes;
   }
 
   private deepCloneNode(node: Node): Node {

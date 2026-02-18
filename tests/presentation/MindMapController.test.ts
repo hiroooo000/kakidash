@@ -89,6 +89,10 @@ describe('MindMapController', () => {
     // Reset service mocks return values
     service.addNode.mockReset();
     service.removeNode.mockReset();
+    service.removeNodes = vi.fn();
+    service.updateNodesStyle = vi.fn();
+    service.copyNodes = vi.fn();
+    service.cutNodes = vi.fn();
   });
 
   it('init should set initial pan and start loop', () => {
@@ -153,5 +157,142 @@ describe('MindMapController', () => {
     expect(service.updateNodeTopic).toHaveBeenCalledWith('root', 'Updated');
     expect(eventBus.emit).toHaveBeenCalledWith('node:update', { id: 'root', topic: 'Updated' });
     expect(eventBus.emit).toHaveBeenCalledWith('model:change', undefined);
+  });
+
+  it('should support multiple node selection', () => {
+    controller.selectNodes(['id1', 'id2']);
+
+    const selectedIds = controller.getSelectedNodeIds();
+    expect(selectedIds).toContain('id1');
+    expect(selectedIds).toContain('id2');
+    expect(selectedIds.length).toBe(2);
+
+    // Legacy support
+    // Expect the last selected or primary to be returned by getSelectedNodeId?
+    // Implementation detail: usually the last one added or the first one.
+    // Let's assume it returns one of them or the "primary" one (last clicked).
+    // For now just check it returns something valid.
+    const validIds = ['id1', 'id2'];
+    expect(validIds).toContain(controller.getSelectedNodeId());
+  });
+
+  it('selectNode should clear previous selection', () => {
+    controller.selectNodes(['id1', 'id2']);
+    controller.selectNode('id3');
+
+    const selectedIds = controller.getSelectedNodeIds();
+    expect(selectedIds).toEqual(['id3']);
+    expect(controller.getSelectedNodeId()).toBe('id3');
+  });
+
+  it('selectNodes should emit selection:change event', () => {
+    controller.selectNodes(['id1', 'id2']);
+    expect(eventBus.emit).toHaveBeenCalledWith('selection:change', ['id1', 'id2']);
+  });
+
+  it('navigateNode with extendSelection should Select Range', () => {
+    // Setup siblings
+    const child1 = new Node('c1', 'Child 1', 'root');
+    const child2 = new Node('c2', 'Child 2', 'root');
+    const child3 = new Node('c3', 'Child 3', 'root');
+    const root = mindMap.root;
+    root.addChild(child1);
+    root.addChild(child2);
+    root.addChild(child3);
+
+    // Mock service to return nodes? Service delegates to MindMap usually for add.
+    // But navigateNode uses MindMap directly.
+    // MindMap references are already set up above.
+
+    // Start at c1
+    controller.selectNode('c1');
+    expect(controller.getSelectedNodeId()).toBe('c1');
+
+    // Navigate Down with Shift (to c2)
+    // We need to mock navigateDown implementation/logic?
+    // navigateNode calls navigateDown(node).
+    // navigateDown uses mindMap structure.
+    // We didn't spy on navigateDown, we test the real logic?
+    // But navigateDown implementation depends on layout logic (getNodeDirection).
+    // Root children direction?
+    // For root children, it depends on layoutMode. Default Right.
+    // c1, c2, c3 are children of root.
+    // navigateDown from c1 should go to c2.
+
+    controller.navigateNode('c1', 'Down', true);
+
+    const selectedIds = controller.getSelectedNodeIds();
+    expect(selectedIds).toContain('c1');
+    expect(selectedIds).toContain('c2');
+    expect(selectedIds.length).toBe(2);
+    expect(controller.getSelectedNodeId()).toBe('c2'); // Focus moved
+
+    // Navigate Down again (to c3)
+    controller.navigateNode('c2', 'Down', true);
+    const selectedIds2 = controller.getSelectedNodeIds();
+    expect(selectedIds2).toContain('c1');
+    expect(selectedIds2).toContain('c2');
+    expect(selectedIds2).toContain('c3');
+    expect(selectedIds2.length).toBe(3);
+    expect(controller.getSelectedNodeId()).toBe('c3');
+  });
+
+  it('navigateNode without extendSelection should reset selection', () => {
+    // Setup siblings
+    const child1 = new Node('c1', 'Child 1', 'root');
+    const child2 = new Node('c2', 'Child 2', 'root');
+
+    mindMap.root.addChild(child1);
+    mindMap.root.addChild(child2);
+
+    controller.selectNodes(['c1', 'c2']);
+    // Focus is c2 (last one)
+
+    // Navigate Up (to c1) without shift
+    controller.navigateNode('c2', 'Up', false);
+
+    const selectedIds = controller.getSelectedNodeIds();
+    expect(selectedIds).toEqual(['c1']);
+    expect(controller.getSelectedNodeId()).toBe('c1');
+  });
+
+  describe('Bulk Operations', () => {
+    it('deleteNode with multiple selection should remove all selected nodes', () => {
+      controller.selectNodes(['id1', 'id2']);
+      service.removeNodes.mockReturnValue(true);
+
+      // Act: delete one of the selected nodes
+      controller.deleteNode('id1');
+
+      expect(service.removeNodes).toHaveBeenCalledWith(expect.arrayContaining(['id1', 'id2']));
+      expect(eventBus.emit).toHaveBeenCalledWith('model:change', undefined);
+    });
+
+    it('updateNode style with multiple selection should update all selected nodes', () => {
+      controller.selectNodes(['id1', 'id2']);
+      service.updateNodesStyle.mockReturnValue(true);
+
+      controller.updateNode('id1', { style: { color: 'red' } });
+
+      expect(service.updateNodesStyle).toHaveBeenCalledWith(
+        expect.arrayContaining(['id1', 'id2']),
+        { color: 'red' },
+      );
+      expect(eventBus.emit).toHaveBeenCalledWith('model:change', undefined);
+    });
+
+    it('copyNode with multiple selection should copy all selected nodes', () => {
+      controller.selectNodes(['id1', 'id2']);
+
+      controller.copyNode('id1');
+      expect(service.copyNodes).toHaveBeenCalledWith(expect.arrayContaining(['id1', 'id2']));
+    });
+
+    it('cutNode with multiple selection should cut all selected nodes', () => {
+      controller.selectNodes(['id1', 'id2']);
+
+      controller.cutNode('id1');
+      expect(service.cutNodes).toHaveBeenCalledWith(expect.arrayContaining(['id1', 'id2']));
+    });
   });
 });

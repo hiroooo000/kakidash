@@ -301,4 +301,66 @@ describe('MindMapService', () => {
       expect(results).toEqual([]);
     });
   });
+
+  describe('Multi-node operations', () => {
+    it('should remove multiple nodes', () => {
+      const child1 = service.addNode('root', 'Child 1');
+      const child2 = service.addNode('root', 'Child 2');
+      const child3 = service.addNode('root', 'Child 3');
+
+      expect(child1).toBeDefined();
+      expect(child2).toBeDefined();
+      expect(child3).toBeDefined();
+      expect(root.children.length).toBe(3);
+
+      const result = service.removeNodes([child1!.id, child3!.id]);
+      expect(result).toBe(true);
+      expect(root.children.length).toBe(1);
+      expect(root.children[0].id).toBe(child2!.id);
+    });
+
+    it('should update style for multiple nodes', () => {
+      const child1 = service.addNode('root', 'Child 1');
+      const child2 = service.addNode('root', 'Child 2');
+
+      const result = service.updateNodesStyle([child1!.id, child2!.id], {
+        color: 'red',
+        fontWeight: 'bold',
+      });
+      expect(result).toBe(true);
+      expect(child1!.style.color).toBe('red');
+      expect(child2!.style.fontWeight).toBe('bold');
+    });
+
+    it('should copy and paste multiple nodes', () => {
+      const child1 = service.addNode('root', 'Child 1');
+      const child2 = service.addNode('root', 'Child 2');
+
+      service.copyNodes([child1!.id, child2!.id]);
+
+      const pasteResult = service.pasteNodes('root');
+      expect(pasteResult).toBeDefined();
+      expect(pasteResult.length).toBe(2);
+      expect(root.children.length).toBe(4);
+
+      const pastedNodes = root.children.filter((n) => n.id !== child1!.id && n.id !== child2!.id);
+      expect(pastedNodes.length).toBe(2);
+      expect(pastedNodes.map((n) => n.topic)).toContain('Child 1');
+      expect(pastedNodes.map((n) => n.topic)).toContain('Child 2');
+    });
+
+    it('should cut multiple nodes', () => {
+      const child1 = service.addNode('root', 'Child 1');
+      const child2 = service.addNode('root', 'Child 2');
+
+      service.cutNodes([child1!.id, child2!.id]);
+
+      expect(root.children.length).toBe(0);
+
+      const pasteResult = service.pasteNodes('root');
+      expect(pasteResult).toBeDefined();
+      expect(pasteResult.length).toBe(2);
+      expect(root.children.length).toBe(2);
+    });
+  });
 });

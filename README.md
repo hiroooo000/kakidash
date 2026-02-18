@@ -312,6 +312,7 @@ Here is the complete default configuration. You can partially override these key
 | ----------------------------------- | ------------------------------------------------- |
 | `m`                                 | Command Palette (Search / Icons)                  |
 | `Arrow Keys`                        | Navigate between nodes                            |
+| `Shift + Arrow Keys`                | Select range of nodes                             |
 | `h` / `j` / `k` / `l`               | Navigate between nodes (Vim-style)                |
 | `F2` / `DblClick` / `Space` / `i`   | Start editing node (Space triggers zoom if image) |
 | `Enter`                             | Add sibling node (below)                          |
@@ -349,7 +350,7 @@ Here is the complete default configuration. You can partially override these key
 | `Shift + i`                 | Toggle Italic                     |
 | `Shift + . (>)` / `.`       | Increase font size                |
 | `Shift + , (<)` / `,`       | Decrease font size                |
-| `Shift + ArrowLeft / Right` | Adjust node width                 |
+| `Shift + Alt + ArrowLeft / Right` | Adjust node width                 |
 | `1` - `7`                   | Change node color (Palette order) |
 
 ## Architecture

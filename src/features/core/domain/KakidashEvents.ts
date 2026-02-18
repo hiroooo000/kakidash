@@ -7,6 +7,7 @@ export type KakidashCommandArgs = {
 
 export type KakidashEventMap = {
   'node:select': string | null; // Node ID or null
+  'selection:change': string[];
   'node:add': { id: string; topic: string };
   'node:remove': string; // Node ID
   'node:update': { id: string; topic: string };

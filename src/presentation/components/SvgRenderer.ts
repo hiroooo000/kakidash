@@ -53,9 +53,20 @@ export class SvgRenderer implements Renderer {
 
   render(
     mindMap: MindMap,
-    selectedNodeId: string | null = null,
+    selectedNodeIds: Set<string> | string[] | string | null = null,
     layoutMode: LayoutMode = 'Right',
   ): void {
+    // Normalize to Set
+    let selectionSet: Set<string>;
+    if (selectedNodeIds instanceof Set) {
+      selectionSet = selectedNodeIds;
+    } else if (Array.isArray(selectedNodeIds)) {
+      selectionSet = new Set(selectedNodeIds);
+    } else if (typeof selectedNodeIds === 'string') {
+      selectionSet = new Set([selectedNodeIds]);
+    } else {
+      selectionSet = new Set();
+    }
     // Clear previous render
     this.svg.innerHTML = '';
     this.nodeContainer.innerHTML = '';
@@ -65,7 +76,7 @@ export class SvgRenderer implements Renderer {
       mindMap.root,
       0,
       this.container.clientHeight / 2,
-      selectedNodeId,
+      selectionSet,
       layoutMode,
       true,
       undefined, // default direction
@@ -116,7 +127,7 @@ export class SvgRenderer implements Renderer {
     node: Node,
     x: number,
     y: number,
-    selectedNodeId: string | null,
+    selectedNodeIds: Set<string>,
     layoutMode: LayoutMode,
     isRoot: boolean,
     direction: 'left' | 'right' = 'right',
@@ -362,7 +373,7 @@ export class SvgRenderer implements Renderer {
     el.style.cursor = 'default';
     el.style.userSelect = 'none';
 
-    if (node.id === selectedNodeId) {
+    if (selectedNodeIds.has(node.id)) {
       // Use outline for selection to preserve theme border
       el.style.outline = '2px solid var(--vscode-focusBorder, #007bff)';
       el.style.boxShadow = '0 0 5px var(--vscode-focusBorder, rgba(0, 123, 255, 0.5))';
@@ -456,7 +467,7 @@ export class SvgRenderer implements Renderer {
         rightChildren,
         x,
         y,
-        selectedNodeId,
+        selectedNodeIds,
         layoutMode,
         'right',
         nodeWidth,
@@ -471,7 +482,7 @@ export class SvgRenderer implements Renderer {
         leftChildren,
         x,
         y,
-        selectedNodeId,
+        selectedNodeIds,
         layoutMode,
         'left',
         nodeWidth,
@@ -485,7 +496,7 @@ export class SvgRenderer implements Renderer {
     children: Node[],
     parentX: number,
     parentY: number,
-    selectedNodeId: string | null,
+    selectedNodeIds: Set<string>,
     layoutMode: LayoutMode,
     direction: 'left' | 'right',
     parentWidth: number,
@@ -532,7 +543,16 @@ export class SvgRenderer implements Renderer {
 
       const childX = direction === 'right' ? parentEdgeX + levelGap : parentEdgeX - levelGap;
 
-      this.renderNode(child, childX, childY, selectedNodeId, layoutMode, false, direction, mindMap);
+      this.renderNode(
+        child,
+        childX,
+        childY,
+        selectedNodeIds,
+        layoutMode,
+        false,
+        direction,
+        mindMap,
+      );
 
       const connectionColor = mindMap ? this.getThemeColor(child, mindMap) : '#ccc';
       this.drawConnection(parentEdgeX, parentY, childX, childY, connectionColor, mindMap?.theme);

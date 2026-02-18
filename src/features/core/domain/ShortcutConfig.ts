@@ -45,10 +45,30 @@ export type ShortcutAction =
 export type ShortcutConfig = Partial<Record<ShortcutAction, KeyBinding[]>>;
 
 export const DEFAULT_SHORTCUTS: ShortcutConfig = {
-  navUp: [{ key: 'ArrowUp' }, { key: 'k', ctrlKey: false, metaKey: false, altKey: false }],
-  navDown: [{ key: 'ArrowDown' }, { key: 'j', ctrlKey: false, metaKey: false, altKey: false }],
-  navLeft: [{ key: 'ArrowLeft' }, { key: 'h', ctrlKey: false, metaKey: false, altKey: false }],
-  navRight: [{ key: 'ArrowRight' }, { key: 'l', ctrlKey: false, metaKey: false, altKey: false }],
+  navUp: [
+    { key: 'ArrowUp' },
+    { key: 'k' },
+    { key: 'ArrowUp', shiftKey: true },
+    { key: 'k', shiftKey: true },
+  ],
+  navDown: [
+    { key: 'ArrowDown' },
+    { key: 'j' },
+    { key: 'ArrowDown', shiftKey: true },
+    { key: 'j', shiftKey: true },
+  ],
+  navLeft: [
+    { key: 'ArrowLeft' },
+    { key: 'h' },
+    { key: 'ArrowLeft', shiftKey: true },
+    { key: 'h', shiftKey: true },
+  ],
+  navRight: [
+    { key: 'ArrowRight' },
+    { key: 'l' },
+    { key: 'ArrowRight', shiftKey: true },
+    { key: 'l', shiftKey: true },
+  ],
   addChild: [{ key: 'Tab' }, { key: 'a' }],
   insertParent: [
     { key: 'Tab', shiftKey: true },
@@ -96,6 +116,6 @@ export const DEFAULT_SHORTCUTS: ShortcutConfig = {
   selectColor6: [{ key: '6' }],
   selectColor7: [{ key: '7' }],
   openCommandPalette: [{ key: 'm' }],
-  increaseNodeWidth: [{ key: 'ArrowRight', shiftKey: true }],
-  decreaseNodeWidth: [{ key: 'ArrowLeft', shiftKey: true }],
+  increaseNodeWidth: [{ key: 'ArrowRight', shiftKey: true, altKey: true }],
+  decreaseNodeWidth: [{ key: 'ArrowLeft', shiftKey: true, altKey: true }],
 };

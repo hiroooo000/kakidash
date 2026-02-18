@@ -317,6 +317,7 @@ const kakidash = new Kakidash(container, {
 | ----------------------------------- | --------------------------------------- |
 | `m`                                 | コマンドパレット (検索 / アイコン)      |
 | `Arrow Keys`                        | ノード間の移動                          |
+| `Shift + Arrow Keys`                | ノードの範囲選択                        |
 | `h` / `j` / `k` / `l`               | ノード間の移動 (Vim風)                  |
 | `F2` / `DblClick` / `Space` / `i`   | ノードの編集を開始 (画像の場合はズーム) |
 | `Enter`                             | 兄弟ノードを追加 (下)                   |
@@ -354,7 +355,7 @@ const kakidash = new Kakidash(container, {
 | `Shift + i`                 | 斜体 (Italic) 切り替え        |
 | `Shift + . (>)` / `.`       | フォントサイズ拡大            |
 | `Shift + , (<)` / `,`       | フォントサイズ縮小            |
-| `Shift + ArrowLeft / Right` | ノード幅の変更                |
+| `Shift + Alt + ArrowLeft / Right` | ノード幅の変更                |
 | `1` - `7`                   | ノードの色を変更 (パレット順) |
 
 ## アーキテクチャ

@@ -400,19 +400,19 @@ export class InteractionHandler {
         return;
       case 'navUp':
         ke.preventDefault();
-        this.options.onNavigate?.(this.selectedNodeId, 'Up');
+        this.options.onNavigate?.(this.selectedNodeId, 'Up', ke.shiftKey);
         return;
       case 'navDown':
         ke.preventDefault();
-        this.options.onNavigate?.(this.selectedNodeId, 'Down');
+        this.options.onNavigate?.(this.selectedNodeId, 'Down', ke.shiftKey);
         return;
       case 'navRight':
         ke.preventDefault();
-        this.options.onNavigate?.(this.selectedNodeId, 'Right');
+        this.options.onNavigate?.(this.selectedNodeId, 'Right', ke.shiftKey);
         return;
       case 'navLeft':
         ke.preventDefault();
-        this.options.onNavigate?.(this.selectedNodeId, 'Left');
+        this.options.onNavigate?.(this.selectedNodeId, 'Left', ke.shiftKey);
         return;
     }
 

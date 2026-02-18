@@ -127,6 +127,7 @@ describe('InteractionHandler Shortcuts', () => {
     const event = new KeyboardEvent('keydown', {
       key: 'ArrowRight',
       shiftKey: true,
+      altKey: true,
       bubbles: true,
     });
     document.body.dispatchEvent(event);
@@ -134,13 +135,14 @@ describe('InteractionHandler Shortcuts', () => {
     expect(options.onUpdateNodeWidth).toHaveBeenCalledWith('root', 20);
   });
 
-  it('should trigger onUpdateNodeWidth with Shift+ArrowLeft', () => {
+  it('should trigger onUpdateNodeWidth with Shift+Alt+ArrowLeft', () => {
     const handler = new InteractionHandler(container, options);
     handler.updateSelection('root');
 
     const event = new KeyboardEvent('keydown', {
       key: 'ArrowLeft',
       shiftKey: true,
+      altKey: true,
       bubbles: true,
     });
     document.body.dispatchEvent(event);

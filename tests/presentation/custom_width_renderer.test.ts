@@ -34,7 +34,7 @@ describe('SvgRenderer Custom Width', () => {
     // Let's create a node with explicit customWidth and verify renderNode sets correct style
     // We can assume renderNode appends to nodeContainer.
 
-    (renderer as any).renderNode(node, 0, 0, null, 'Right', false, 'right');
+    (renderer as any).renderNode(node, 0, 0, new Set(), 'Right', false, 'right');
     const nodeEl = renderer.nodeContainer.querySelector(`[data-id="${node.id}"]`) as HTMLElement;
     expect(nodeEl).toBeTruthy();
     expect(nodeEl.style.maxWidth).toBe('200px');
@@ -45,7 +45,7 @@ describe('SvgRenderer Custom Width', () => {
     const node = new Node('1', 'Long text');
     node.customWidth = 300;
 
-    (renderer as any).renderNode(node, 0, 0, null, 'Right', false, 'right');
+    (renderer as any).renderNode(node, 0, 0, new Set(), 'Right', false, 'right');
     const nodeEl = renderer.nodeContainer.querySelector(`[data-id="${node.id}"]`) as HTMLElement;
 
     expect(nodeEl.style.maxWidth).toBe('300px');
@@ -56,7 +56,7 @@ describe('SvgRenderer Custom Width', () => {
     const node = new Node('1', 'Long text');
     node.customWidth = 150;
 
-    (renderer as any).renderNode(node, 0, 0, null, 'Right', false, 'right');
+    (renderer as any).renderNode(node, 0, 0, new Set(), 'Right', false, 'right');
     const nodeEl = renderer.nodeContainer.querySelector(`[data-id="${node.id}"]`) as HTMLElement;
 
     expect(nodeEl.style.maxWidth).toBe('150px');
