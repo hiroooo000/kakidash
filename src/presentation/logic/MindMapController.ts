@@ -730,11 +730,15 @@ export class MindMapController {
       }
     }
 
-    // Fallback: If not siblings, or complex navigation, just select target (and maybe clear anchor?)
-    // Or just treat as single select?
-    // For now, clear anchor and select target if range not possible.
-    this.anchorNodeId = null;
-    this.selectNode(targetId);
+    // Fallback: If not siblings (e.g. parent-child), add target to selection
+    // Keep anchorNodeId as is (original start of selection)
+    const currentSelection = new Set(this.selectedNodeIds);
+    currentSelection.add(targetId);
+    this.selectNodes(Array.from(currentSelection));
+
+    // Force focus to targetId
+    this.selectedNodeId = targetId;
+    this.updateSelectionState();
   }
 
   copyNode(nodeId: string): void {
