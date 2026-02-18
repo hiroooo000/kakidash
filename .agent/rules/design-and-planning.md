@@ -1,6 +1,5 @@
 ---
 trigger: always_on
-glob: '**/*'
 description: Design and planning rules for the Kakidash project, covering architecture, communication, and coding standards.
 ---
 
@@ -33,6 +32,7 @@ description: Design and planning rules for the Kakidash project, covering archit
 ## 3. Planning Requirements
 
 - **Impact Analysis**: Before implementing changes, identify which layers and components are affected.
+- **TDD-Based Granular Planning**: Implementation plans must follow Test-Driven Development (TDD) principles. Break down the plan into the smallest possible verifiable steps, ensuring each step starts with a test definition.
 - **Interface First**: Define or update interfaces in the Domain/Application layers before implementation in the Infrastructure/Presentation layers.
 - **Visual Documentation**: Use Mermaid diagrams in documentation (`docs/*.md`) to represent complex logic or architectural changes.
 - **Documentation Synchronicity**: Any code addition or modification MUST be accompanied by updates to relevant documentation. This requirement must be explicitly included in the implementation plan.
@@ -50,4 +50,6 @@ description: Design and planning rules for the Kakidash project, covering archit
 
 - **Unit Tests**: Mandatory for Domain and Application layers. Focus on business logic correctness.
 - **Integration/E2E Tests**: Required for Presentation layer components (e.g., `SvgRenderer`) to ensure correct rendering and interaction.
+- **Mandatory Verification Cycle**: After completing individual fixes or tests in each step, you must execute "pnpm run check" and confirm all checks pass.
+- **E2E Gatekeeping**: Under no circumstances should you proceed to the next step if End-to-End (E2E) tests are failing. Passing E2E tests is a hard requirement for progression.
 - **Regression**: All new features must include corresponding tests to prevent regressions.
