@@ -21,7 +21,7 @@ describe('MindMapService Undo', () => {
     expect(mindMap.root.children.length).toBe(1);
 
     const success = service.undo();
-    expect(success).toBe(true);
+    expect(success).toBeTruthy();
     expect(mindMap.root.children.length).toBe(0);
   });
 
@@ -45,17 +45,17 @@ describe('MindMapService Undo', () => {
 
     // Should be able to undo 10 times
     for (let i = 0; i < 10; i++) {
-      expect(service.undo()).toBe(true);
+      expect(service.undo()).toBeTruthy();
     }
     // Only 1 child should remain (Child 0), as the 1st state save (empty -> Child 0) was pushed out
     expect(mindMap.root.children.length).toBe(1);
 
     // Further undo should be false
-    expect(service.undo()).toBe(false);
+    expect(service.undo()).toBeNull();
   });
 
   it('should return false when nothing to undo', () => {
-    expect(service.undo()).toBe(false);
+    expect(service.undo()).toBeNull();
   });
 
   it('should undo multiple steps correctly', () => {

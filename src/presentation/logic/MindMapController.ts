@@ -79,6 +79,13 @@ export class MindMapController {
         if (this.interactionHandler) this.interactionHandler.container.focus();
       },
     });
+
+    this.service.setSelectionProvider(() => {
+      return {
+        selectedId: this.selectedNodeId || undefined,
+        selectedIds: Array.from(this.selectedNodeIds),
+      };
+    });
   }
 
   public setInteractionHandler(handler: InteractionHandler) {
@@ -125,13 +132,7 @@ export class MindMapController {
   loadData(data: MindMapData): void {
     try {
       this.service.importData(data);
-      if (data.selectedIds && data.selectedIds.length > 0) {
-        this.selectNodes(data.selectedIds);
-      } else if (data.selectedId) {
-        this.selectNode(data.selectedId);
-      } else {
-        this.selectNode(null);
-      }
+      this.restoreSelection(data);
       this.render();
       this.eventBus.emit('model:load', data);
       if (data.theme) {
@@ -379,15 +380,12 @@ export class MindMapController {
   }
 
   removeNode(nodeId: string): void {
-    const node = this.mindMap.findNode(nodeId);
-    const parentId = node?.parentId || null;
-    const isSelected = this.selectedNodeId === nodeId;
+    const ids = this.getIdsToActOn(nodeId);
+    const targetSelectId = this.findTargetIdAfterRemoval(nodeId, ids);
 
     this.deleteNode(nodeId);
 
-    if (isSelected && parentId) {
-      this.selectNode(parentId);
-    }
+    this.selectNode(targetSelectId);
   }
 
   selectNode(nodeId: string | null): void {
@@ -443,6 +441,30 @@ export class MindMapController {
     this.render();
     this.eventBus.emit('node:select', nodeId);
     this.eventBus.emit('selection:change', Array.from(this.selectedNodeIds));
+  }
+
+  private restoreSelection(data: MindMapData): void {
+    if (data.selectedIds && data.selectedIds.length > 0) {
+      this.selectNodes(data.selectedIds);
+    } else if (data.selectedId) {
+      this.selectNode(data.selectedId);
+    } else {
+      this.selectNode(null);
+    }
+  }
+
+  private findTargetIdAfterRemoval(nodeId: string, removedIds: string[]): string {
+    const node = this.mindMap.findNode(nodeId);
+    if (node) {
+      let current: Node | null = node;
+      while (current && current.parentId) {
+        if (!removedIds.includes(current.parentId)) {
+          return current.parentId;
+        }
+        current = this.mindMap.findNode(current.parentId);
+      }
+    }
+    return this.mindMap.root.id;
   }
 
   moveNode(nodeId: string, targetId: string, position: 'top' | 'bottom' | 'left' | 'right'): void {
@@ -621,17 +643,19 @@ export class MindMapController {
   }
 
   undo(): void {
-    if (this.service.undo()) {
+    const prevState = this.service.undo();
+    if (prevState) {
       this.eventBus.emit('command', { name: 'undo' });
-      this.render();
+      this.restoreSelection(prevState);
       this.eventBus.emit('model:change', undefined);
     }
   }
 
   redo(): void {
-    if (this.service.redo()) {
+    const nextState = this.service.redo();
+    if (nextState) {
       this.eventBus.emit('command', { name: 'redo' });
-      this.render();
+      this.restoreSelection(nextState);
       this.eventBus.emit('model:change', undefined);
     }
   }
@@ -644,7 +668,17 @@ export class MindMapController {
     }
   }
 
-  navigateNode(nodeId: string, direction: Direction, extendSelection: boolean = false): void {
+  navigateNode(
+    nodeId: string | null,
+    direction: Direction,
+    extendSelection: boolean = false,
+  ): void {
+    if (!nodeId) {
+      // If no node is selected, select root
+      this.selectNode(this.mindMap.root.id);
+      return;
+    }
+
     const node = this.mindMap.findNode(nodeId);
     if (!node) return;
 
@@ -774,11 +808,8 @@ export class MindMapController {
     this.eventBus.emit('command', { name: 'cutNode', args: { nodeId } });
     const ids = this.getIdsToActOn(nodeId);
 
-    // For selection after cut, we need to decide where to go.
-    // If single, go to parent.
-    // If multiple, maybe go to parent of primary?
-    const node = this.mindMap.findNode(nodeId);
-    const parentId = node?.parentId;
+    // For selection after cut, we need to find the nearest ancestor that is NOT being cut.
+    const targetSelectId = this.findTargetIdAfterRemoval(nodeId, ids);
 
     if (ids.length > 1) {
       this.service.cutNodes(ids);
@@ -786,7 +817,7 @@ export class MindMapController {
       this.service.cutNode(nodeId);
     }
 
-    if (parentId) this.selectNode(parentId);
+    this.selectNode(targetSelectId);
     this.render();
     ids.forEach((id) => this.eventBus.emit('node:remove', id));
     this.eventBus.emit('model:change', undefined);
