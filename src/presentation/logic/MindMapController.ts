@@ -814,11 +814,24 @@ export class MindMapController {
     this.eventBus.emit('command', { name: 'cutNode', args: { nodeId } });
     const ids = this.getIdsToActOn(nodeId);
 
-    // For selection after cut, we need to decide where to go.
-    // If single, go to parent.
-    // If multiple, maybe go to parent of primary?
+    // For selection after cut, we need to find the nearest ancestor that is NOT being cut.
+    let targetSelectId: string | null = null;
     const node = this.mindMap.findNode(nodeId);
-    const parentId = node?.parentId;
+    if (node) {
+      let current: Node | null = node;
+      while (current && current.parentId) {
+        if (!ids.includes(current.parentId)) {
+          targetSelectId = current.parentId;
+          break;
+        }
+        current = this.mindMap.findNode(current.parentId);
+      }
+    }
+
+    // Default to root if no suitable parent found (though root itself is never in ids)
+    if (!targetSelectId) {
+      targetSelectId = this.mindMap.root.id;
+    }
 
     if (ids.length > 1) {
       this.service.cutNodes(ids);
@@ -826,7 +839,7 @@ export class MindMapController {
       this.service.cutNode(nodeId);
     }
 
-    if (parentId) this.selectNode(parentId);
+    this.selectNode(targetSelectId);
     this.render();
     ids.forEach((id) => this.eventBus.emit('node:remove', id));
     this.eventBus.emit('model:change', undefined);

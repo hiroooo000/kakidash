@@ -34,14 +34,17 @@
       const kakidash = new Kakidash(app);
       window.kakidash = kakidash;
 
-      // Add some sample nodes
-      const rootId = kakidash.getRootId();
-      const child1 = kakidash.addNode(rootId, 'Child 1');
-      const child2 = kakidash.addNode(rootId, 'Child 2');
+      const urlParams = new URLSearchParams(window.location.search);
+      if (!urlParams.has('nosample')) {
+        // Add some sample nodes
+        const rootId = kakidash.getRootId();
+        const child1 = kakidash.addNode(rootId, 'Child 1');
+        const child2 = kakidash.addNode(rootId, 'Child 2');
 
-      if (child1) {
-        kakidash.addNode(child1.id, 'GrandChild 1.1');
-        kakidash.addNode(child1.id, 'GrandChild 1.2');
+        if (child1) {
+          kakidash.addNode(child1.id, 'GrandChild 1.1');
+          kakidash.addNode(child1.id, 'GrandChild 1.2');
+        }
       }
     } catch (e) {
       console.error('Initialization error:', e);

@@ -4,7 +4,7 @@ test.describe('Undo Paste Focus', () => {
   test.use({ permissions: ['clipboard-read', 'clipboard-write'] });
 
   test.beforeEach(async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/?nosample=1');
     await page.waitForSelector('.mindmap-node');
   });
 
