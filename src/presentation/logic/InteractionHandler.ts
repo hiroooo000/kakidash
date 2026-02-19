@@ -110,7 +110,7 @@ export class InteractionHandler {
       const nodeEl = target.closest('.mindmap-node') as HTMLElement;
 
       if (nodeEl && nodeEl.dataset.id) {
-        this.options.onNodeClick(nodeEl.dataset.id);
+        this.options.onNodeClick(nodeEl.dataset.id, (e as MouseEvent).shiftKey);
       } else {
         // Deselect if clicking background
         this.options.onNodeClick('');

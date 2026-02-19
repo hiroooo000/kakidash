@@ -116,7 +116,13 @@ export class Kakidash extends TypedEventEmitter<KakidashEventMap> {
     };
 
     const interactionHandler = new InteractionHandler(container, {
-      onNodeClick: (nodeId) => this.controller.selectNode(nodeId || null),
+      onNodeClick: (nodeId, shiftKey) => {
+        if (shiftKey && nodeId) {
+          this.controller.selectRangeTo(nodeId);
+        } else {
+          this.controller.selectNode(nodeId || null);
+        }
+      },
       onAddChild: (parentId) => this.controller.addChildNode(parentId),
       onInsertParent: (nodeId) => this.controller.insertParentNode(nodeId),
       onAddSibling: (nodeId, position) => this.controller.addSiblingNode(nodeId, position),

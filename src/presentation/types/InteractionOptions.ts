@@ -4,7 +4,7 @@ import { StyleAction } from '../../features/theme/domain/StyleAction';
 export type Direction = 'Up' | 'Down' | 'Left' | 'Right';
 
 export interface InteractionOptions {
-  onNodeClick: (nodeId: string) => void;
+  onNodeClick: (nodeId: string, shiftKey?: boolean) => void;
   onAddChild: (parentId: string) => void;
   onAddSibling: (nodeId: string, position: 'before' | 'after') => void;
   onInsertParent?: (nodeId: string) => void;

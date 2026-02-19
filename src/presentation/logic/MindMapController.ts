@@ -679,6 +679,14 @@ export class MindMapController {
     }
   }
 
+  public selectRangeTo(targetId: string): void {
+    if (this.selectedNodeId) {
+      this.selectRange(this.selectedNodeId, targetId);
+    } else {
+      this.selectNode(targetId);
+    }
+  }
+
   private selectRange(currentId: string, targetId: string): void {
     // If no anchor, the current node (before move) is the anchor
     if (!this.anchorNodeId) {
