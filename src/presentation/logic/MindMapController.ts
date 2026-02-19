@@ -79,6 +79,13 @@ export class MindMapController {
         if (this.interactionHandler) this.interactionHandler.container.focus();
       },
     });
+
+    this.service.setSelectionProvider(() => {
+      return {
+        selectedId: this.selectedNodeId || undefined,
+        selectedIds: Array.from(this.selectedNodeIds),
+      };
+    });
   }
 
   public setInteractionHandler(handler: InteractionHandler) {
@@ -621,16 +628,39 @@ export class MindMapController {
   }
 
   undo(): void {
-    if (this.service.undo()) {
+    console.log('MindMapController.undo called');
+    const prevState = this.service.undo();
+    if (prevState) {
+      console.log('MindMapController.undo: prevState found', {
+        selectedId: prevState.selectedId,
+        selectedIds: prevState.selectedIds,
+      });
       this.eventBus.emit('command', { name: 'undo' });
-      this.render();
+      if (prevState.selectedIds && prevState.selectedIds.length > 0) {
+        console.log('Restoring selectedIds:', prevState.selectedIds);
+        this.selectNodes(prevState.selectedIds);
+      } else if (prevState.selectedId) {
+        console.log('Restoring selectedId:', prevState.selectedId);
+        this.selectNode(prevState.selectedId);
+      } else {
+        console.log('Clearing selection');
+        this.selectNode(null);
+      }
       this.eventBus.emit('model:change', undefined);
     }
   }
 
   redo(): void {
-    if (this.service.redo()) {
+    const nextState = this.service.redo();
+    if (nextState) {
       this.eventBus.emit('command', { name: 'redo' });
+      if (nextState.selectedIds && nextState.selectedIds.length > 0) {
+        this.selectNodes(nextState.selectedIds);
+      } else if (nextState.selectedId) {
+        this.selectNode(nextState.selectedId);
+      } else {
+        this.selectNode(null);
+      }
       this.render();
       this.eventBus.emit('model:change', undefined);
     }
@@ -644,7 +674,17 @@ export class MindMapController {
     }
   }
 
-  navigateNode(nodeId: string, direction: Direction, extendSelection: boolean = false): void {
+  navigateNode(
+    nodeId: string | null,
+    direction: Direction,
+    extendSelection: boolean = false,
+  ): void {
+    if (!nodeId) {
+      // If no node is selected, select root
+      this.selectNode(this.mindMap.root.id);
+      return;
+    }
+
     const node = this.mindMap.findNode(nodeId);
     if (!node) return;
 

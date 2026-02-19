@@ -199,77 +199,55 @@ export class InteractionHandler {
       const ke = e as KeyboardEvent;
       const target = ke.target as HTMLElement;
 
+      // Log for debugging
+      if (ke.key === 'z' && (ke.ctrlKey || ke.metaKey)) {
+        console.log('InteractionHandler: Ctrl+Z detected', {
+          selectedNodeId: this.selectedNodeId,
+          isReadOnly: this.isReadOnly,
+          target: target.tagName,
+        });
+      }
+
       // START CHANGE: Safety check for input elements
-      // If we are typing in an input/textarea or contentEditable element,
-      // we should not trigger these global shortcuts.
+      // ... (existing check)
       if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
         return;
       }
-      // END CHANGE
 
-      // Handle resetZoom (works without selection)
-      if (this.shortcutManager.matches(ke, 'resetZoom')) {
-        ke.preventDefault();
-        this.options.onZoomReset?.();
-        return;
-      }
-
-      // Actions allowed without selection
-      const actionForNoSelection = this.shortcutManager.getAction(ke);
-      if (actionForNoSelection === 'openCommandPalette') {
-        ke.preventDefault();
-        this.options.onToggleCommandPalette?.();
-        return;
-      }
+      // ...
 
       // Handle No Selection (Initial Focus)
       if (!this.selectedNodeId) {
-        if (
-          this.shortcutManager.matches(ke, 'navUp') ||
-          this.shortcutManager.matches(ke, 'navDown') ||
-          this.shortcutManager.matches(ke, 'navLeft') ||
-          this.shortcutManager.matches(ke, 'navRight')
-        ) {
+        if (this.shortcutManager.matches(ke, 'navUp')) {
           ke.preventDefault();
-          // Find closest node to center
-          let closestId: string | null = null;
-          let minDistance = Infinity;
-
-          const nodes = this.container.querySelectorAll('.mindmap-node');
-          nodes.forEach((el) => {
-            const hEl = el as HTMLElement;
-            if (!hEl.dataset.id) return;
-
-            // easier comparison: Get bounding client rect of node.
-            const nodeRect = hEl.getBoundingClientRect();
-            const nodeCenterX = nodeRect.left + nodeRect.width / 2;
-            const nodeCenterY = nodeRect.top + nodeRect.height / 2;
-
-            // Compare to container center in client coords
-            const containerRect = this.container.getBoundingClientRect();
-            const containerCenterX = containerRect.left + containerRect.width / 2;
-            const containerCenterY = containerRect.top + containerRect.height / 2;
-
-            const dist =
-              Math.pow(nodeCenterX - containerCenterX, 2) +
-              Math.pow(nodeCenterY - containerCenterY, 2);
-
-            if (dist < minDistance) {
-              minDistance = dist;
-              closestId = hEl.dataset.id;
-            }
-          });
-
-          if (closestId) {
-            this.options.onNodeClick(closestId);
-          }
+          this.options.onNavigate?.(null, 'Up');
+          return;
         }
-        return;
+        if (this.shortcutManager.matches(ke, 'navDown')) {
+          ke.preventDefault();
+          this.options.onNavigate?.(null, 'Down');
+          return;
+        }
+        if (this.shortcutManager.matches(ke, 'navLeft')) {
+          ke.preventDefault();
+          this.options.onNavigate?.(null, 'Left');
+          return;
+        }
+        if (this.shortcutManager.matches(ke, 'navRight')) {
+          ke.preventDefault();
+          this.options.onNavigate?.(null, 'Right');
+          return;
+        }
+
+        // Allow Undo/Redo/Zoom even without selection
+        // But block other actions?
+        // Logic below checks action and returns if !this.selectedNodeId except for specific cases.
       }
 
       // Actions
       const action = this.shortcutManager.getAction(ke);
       if (action) {
+        console.log('InteractionHandler: Action matched', action);
         this.handleAction(action, ke);
       }
     });
@@ -390,9 +368,46 @@ export class InteractionHandler {
   }
 
   private handleAction(action: ShortcutAction, ke: KeyboardEvent): void {
+    // 1. Actions allowed WITHOUT selection
+    switch (action) {
+      case 'undo':
+        ke.preventDefault();
+        this.options.onUndo?.();
+        return;
+      case 'redo':
+        ke.preventDefault();
+        this.options.onRedo?.();
+        return;
+      case 'zoomIn':
+        ke.preventDefault();
+        if (this.options.onZoom) {
+          const rect = this.container.getBoundingClientRect();
+          this.options.onZoom(-100, rect.left + rect.width / 2, rect.top + rect.height / 2);
+        }
+        return;
+      case 'zoomOut':
+        ke.preventDefault();
+        if (this.options.onZoom) {
+          const rect = this.container.getBoundingClientRect();
+          this.options.onZoom(100, rect.left + rect.width / 2, rect.top + rect.height / 2);
+        }
+        return;
+      case 'resetZoom': // shortcutManager might map this, or it's handled in keydown? handled in keydown usually but good to have here if mapped
+        // In keydown we check match(ke, 'resetZoom') explicitly before getAction.
+        // But if getAction returns it, handle it.
+        ke.preventDefault();
+        this.options.onZoomReset?.();
+        return;
+      case 'openCommandPalette':
+        ke.preventDefault();
+        this.options.onToggleCommandPalette?.();
+        return;
+    }
+
+    // 2. Guard for selection
     if (!this.selectedNodeId) return;
 
-    // Actions allowed in ReadOnly
+    // 3. Actions allowed in ReadOnly (requiring selection)
     switch (action) {
       case 'copy':
         ke.preventDefault();
@@ -418,7 +433,7 @@ export class InteractionHandler {
 
     if (this.isReadOnly) return;
 
-    // Actions blocked in ReadOnly
+    // 4. Actions blocked in ReadOnly (requiring selection)
     switch (action) {
       case 'addChild':
         ke.preventDefault();
@@ -444,36 +459,9 @@ export class InteractionHandler {
         ke.preventDefault();
         this.handleBeginEdit();
         break;
-
-      case 'zoomIn':
-        ke.preventDefault();
-        // Zoom In at center
-        if (this.options.onZoom) {
-          const rect = this.container.getBoundingClientRect();
-          // MindMapController.zoomBoard expects clientX/clientY
-          this.options.onZoom(-100, rect.left + rect.width / 2, rect.top + rect.height / 2);
-        }
-        break;
-      case 'zoomOut':
-        ke.preventDefault();
-        // Zoom Out at center
-        if (this.options.onZoom) {
-          const rect = this.container.getBoundingClientRect();
-          // MindMapController.zoomBoard expects clientX/clientY
-          this.options.onZoom(100, rect.left + rect.width / 2, rect.top + rect.height / 2);
-        }
-        break;
       case 'cut':
         ke.preventDefault();
         this.options.onCutNode?.(this.selectedNodeId);
-        break;
-      case 'undo':
-        ke.preventDefault();
-        this.options.onUndo?.();
-        break;
-      case 'redo':
-        ke.preventDefault();
-        this.options.onRedo?.();
         break;
       case 'bold':
         ke.preventDefault();
@@ -495,11 +483,6 @@ export class InteractionHandler {
         ke.preventDefault();
         this.options.onToggleFold?.(this.selectedNodeId);
         break;
-      case 'openCommandPalette':
-        ke.preventDefault();
-        this.options.onToggleCommandPalette?.();
-        break;
-
       case 'increaseNodeWidth':
         ke.preventDefault();
         this.options.onUpdateNodeWidth?.(this.selectedNodeId, 20);

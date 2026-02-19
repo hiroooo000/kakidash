@@ -15,7 +15,7 @@ export interface InteractionOptions {
     position: 'top' | 'bottom' | 'left' | 'right',
   ) => void;
   onUpdateNode?: (nodeId: string, topic: string) => void;
-  onNavigate?: (nodeId: string, direction: Direction, extendSelection?: boolean) => void;
+  onNavigate?: (nodeId: string | null, direction: Direction, extendSelection?: boolean) => void;
   onPan?: (dx: number, dy: number) => void;
   onCopyNode?: (nodeId: string) => void;
   onPasteNode?: (parentId: string) => void;

@@ -52,13 +52,14 @@ describe('MindMapController', () => {
       moveNode: vi.fn(),
       insertNodeAsParent: vi.fn(),
       setTheme: vi.fn(),
-      undo: vi.fn().mockReturnValue(true),
-      redo: vi.fn().mockReturnValue(true),
+      undo: vi.fn().mockReturnValue({ nodeData: { id: 'root', topic: 'Root' } }),
+      redo: vi.fn().mockReturnValue({ nodeData: { id: 'root', topic: 'Root' } }),
       toggleNodeFold: vi.fn().mockReturnValue(true),
       pasteNode: vi.fn().mockReturnValue(new Node('pasted-id', 'Topic')),
       cutNode: vi.fn(),
       addImageNode: vi.fn().mockReturnValue(new Node('img-id', 'Topic')),
       searchNodes: vi.fn().mockReturnValue([]),
+      setSelectionProvider: vi.fn(),
     } as unknown as MindMapService;
 
     const container = document.createElement('div');

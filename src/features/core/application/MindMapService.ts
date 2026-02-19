@@ -8,6 +8,7 @@ export class MindMapService {
   mindMap: MindMap;
   private historyManager: HistoryManager<MindMapData>;
   private idGenerator: IdGenerator;
+  private selectionProvider?: () => { selectedId?: string; selectedIds?: string[] };
 
   constructor(mindMap: MindMap, idGenerator: IdGenerator) {
     this.mindMap = mindMap;
@@ -15,26 +16,32 @@ export class MindMapService {
     this.idGenerator = idGenerator;
   }
 
-  private saveState(): void {
-    this.historyManager.push(this.exportData());
+  setSelectionProvider(provider: () => { selectedId?: string; selectedIds?: string[] }): void {
+    this.selectionProvider = provider;
   }
 
-  undo(): boolean {
+  private saveState(): void {
+    const data = this.exportData();
+
+    this.historyManager.push(data);
+  }
+
+  undo(): MindMapData | null {
     const prevState = this.historyManager.undo(this.exportData());
     if (prevState) {
       this.importData(prevState);
-      return true;
+      return prevState;
     }
-    return false;
+    return null;
   }
 
-  redo(): boolean {
+  redo(): MindMapData | null {
     const nextState = this.historyManager.redo(this.exportData());
     if (nextState) {
       this.importData(nextState);
-      return true;
+      return nextState;
     }
-    return false;
+    return null;
   }
 
   get canUndo(): boolean {
@@ -526,10 +533,18 @@ export class MindMapService {
       return data;
     };
 
-    return {
+    const data: MindMapData = {
       nodeData: buildNodeData(this.mindMap.root),
       theme: this.mindMap.theme,
     };
+
+    if (this.selectionProvider) {
+      const selection = this.selectionProvider();
+      if (selection.selectedId) data.selectedId = selection.selectedId;
+      if (selection.selectedIds) data.selectedIds = selection.selectedIds;
+    }
+
+    return data;
   }
 
   searchNodes(query: string): Node[] {

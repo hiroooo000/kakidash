@@ -242,9 +242,9 @@ sequenceDiagram
 
     alt previousState exists
         Service->>Service: importData(previousState)
-        Service-->>Controller: true
+        Service-->>Controller: previousState
     else
-        Service-->>Controller: false
+        Service-->>Controller: null
     end
     deactivate Service
 

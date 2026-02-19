@@ -157,7 +157,7 @@ Modules sliced vertically by feature.
 #### Core Feature (`src/features/core`)
 Contains the core domain and application logic of the Mind Map.
 - **Domain**: `MindMap`, `Node` Entities, `MindMapData` Interface.
-- **Application**: `MindMapService` (Use Cases), `HistoryManager` (History Management).
+- **Application**: `MindMapService` (Use Cases including bulk operations), `HistoryManager` (History Management).
 
 #### Theme Feature (`src/features/theme`)
 Functionality related to styling and theme management.
@@ -180,7 +180,7 @@ Common components referenced by all features.
 ### 3.3 Presentation Layer (`src/presentation`)
 
 Integrates features and provides the user interface.
-- **MindMapController**: Main controller orchestrating features (Core, Theme, Export).
+- **MindMapController**: Main controller orchestrating features (Core, Theme, Export). Manages selection state (single/multi).
 - **InteractionHandler**: Handing user input operations.
 - **Components**: `SvgRenderer` (Rendering), `CommandPalette` (Command UI).
 

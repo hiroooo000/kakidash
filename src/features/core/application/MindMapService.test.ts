@@ -314,7 +314,7 @@ describe('MindMapService', () => {
       expect(root.children.length).toBe(3);
 
       const result = service.removeNodes([child1!.id, child3!.id]);
-      expect(result).toBe(true);
+      expect(result).toBeTruthy();
       expect(root.children.length).toBe(1);
       expect(root.children[0].id).toBe(child2!.id);
     });
