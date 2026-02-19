@@ -389,7 +389,31 @@ export class MindMapService {
     this.clipboard = [];
     const texts: string[] = [];
 
+    // Filter out nodes whose ancestors are also in the selection
+    const selectedIdsSet = new Set(nodeIds);
+    const rootsToCopy: string[] = [];
+
     nodeIds.forEach((id) => {
+      let isDescendantOfSelected = false;
+      const node = this.mindMap.findNode(id);
+
+      if (node) {
+        let current = node.parentId ? this.mindMap.findNode(node.parentId) : null;
+        while (current) {
+          if (selectedIdsSet.has(current.id)) {
+            isDescendantOfSelected = true;
+            break;
+          }
+          current = current.parentId ? this.mindMap.findNode(current.parentId) : null;
+        }
+      }
+
+      if (!isDescendantOfSelected) {
+        rootsToCopy.push(id);
+      }
+    });
+
+    rootsToCopy.forEach((id) => {
       const node = this.mindMap.findNode(id);
       if (node) {
         this.clipboard.push(this.deepCloneNode(node));
