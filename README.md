@@ -25,6 +25,8 @@ Master the shortcuts and expand your mind map at the speed of thought.
 - **Interaction**:
   - Drag and drop for node movement and reordering.
   - Keyboard shortcuts for rapid operation.
+  - **Multi-selection**: Shift + Click or Shift + Arrow Keys to select multiple nodes.
+  - **Bulk Operations**: Delete, Copy, Cut, Paste, and Styling apply to all selected nodes.
   - Zoom, Pan (Screen navigation).
 - **Image Support**: Paste images from the clipboard.
 - **Auto Link**: Automatically detects URLs in node text and converts them to clickable links.
