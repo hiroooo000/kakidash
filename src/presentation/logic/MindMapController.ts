@@ -132,13 +132,7 @@ export class MindMapController {
   loadData(data: MindMapData): void {
     try {
       this.service.importData(data);
-      if (data.selectedIds && data.selectedIds.length > 0) {
-        this.selectNodes(data.selectedIds);
-      } else if (data.selectedId) {
-        this.selectNode(data.selectedId);
-      } else {
-        this.selectNode(null);
-      }
+      this.restoreSelection(data);
       this.render();
       this.eventBus.emit('model:load', data);
       if (data.theme) {
@@ -386,15 +380,12 @@ export class MindMapController {
   }
 
   removeNode(nodeId: string): void {
-    const node = this.mindMap.findNode(nodeId);
-    const parentId = node?.parentId || null;
-    const isSelected = this.selectedNodeId === nodeId;
+    const ids = this.getIdsToActOn(nodeId);
+    const targetSelectId = this.findTargetIdAfterRemoval(nodeId, ids);
 
     this.deleteNode(nodeId);
 
-    if (isSelected && parentId) {
-      this.selectNode(parentId);
-    }
+    this.selectNode(targetSelectId);
   }
 
   selectNode(nodeId: string | null): void {
@@ -450,6 +441,30 @@ export class MindMapController {
     this.render();
     this.eventBus.emit('node:select', nodeId);
     this.eventBus.emit('selection:change', Array.from(this.selectedNodeIds));
+  }
+
+  private restoreSelection(data: MindMapData): void {
+    if (data.selectedIds && data.selectedIds.length > 0) {
+      this.selectNodes(data.selectedIds);
+    } else if (data.selectedId) {
+      this.selectNode(data.selectedId);
+    } else {
+      this.selectNode(null);
+    }
+  }
+
+  private findTargetIdAfterRemoval(nodeId: string, removedIds: string[]): string {
+    const node = this.mindMap.findNode(nodeId);
+    if (node) {
+      let current: Node | null = node;
+      while (current && current.parentId) {
+        if (!removedIds.includes(current.parentId)) {
+          return current.parentId;
+        }
+        current = this.mindMap.findNode(current.parentId);
+      }
+    }
+    return this.mindMap.root.id;
   }
 
   moveNode(nodeId: string, targetId: string, position: 'top' | 'bottom' | 'left' | 'right'): void {
@@ -628,24 +643,10 @@ export class MindMapController {
   }
 
   undo(): void {
-    console.log('MindMapController.undo called');
     const prevState = this.service.undo();
     if (prevState) {
-      console.log('MindMapController.undo: prevState found', {
-        selectedId: prevState.selectedId,
-        selectedIds: prevState.selectedIds,
-      });
       this.eventBus.emit('command', { name: 'undo' });
-      if (prevState.selectedIds && prevState.selectedIds.length > 0) {
-        console.log('Restoring selectedIds:', prevState.selectedIds);
-        this.selectNodes(prevState.selectedIds);
-      } else if (prevState.selectedId) {
-        console.log('Restoring selectedId:', prevState.selectedId);
-        this.selectNode(prevState.selectedId);
-      } else {
-        console.log('Clearing selection');
-        this.selectNode(null);
-      }
+      this.restoreSelection(prevState);
       this.eventBus.emit('model:change', undefined);
     }
   }
@@ -654,14 +655,7 @@ export class MindMapController {
     const nextState = this.service.redo();
     if (nextState) {
       this.eventBus.emit('command', { name: 'redo' });
-      if (nextState.selectedIds && nextState.selectedIds.length > 0) {
-        this.selectNodes(nextState.selectedIds);
-      } else if (nextState.selectedId) {
-        this.selectNode(nextState.selectedId);
-      } else {
-        this.selectNode(null);
-      }
-      this.render();
+      this.restoreSelection(nextState);
       this.eventBus.emit('model:change', undefined);
     }
   }
@@ -815,23 +809,7 @@ export class MindMapController {
     const ids = this.getIdsToActOn(nodeId);
 
     // For selection after cut, we need to find the nearest ancestor that is NOT being cut.
-    let targetSelectId: string | null = null;
-    const node = this.mindMap.findNode(nodeId);
-    if (node) {
-      let current: Node | null = node;
-      while (current && current.parentId) {
-        if (!ids.includes(current.parentId)) {
-          targetSelectId = current.parentId;
-          break;
-        }
-        current = this.mindMap.findNode(current.parentId);
-      }
-    }
-
-    // Default to root if no suitable parent found (though root itself is never in ids)
-    if (!targetSelectId) {
-      targetSelectId = this.mindMap.root.id;
-    }
+    const targetSelectId = this.findTargetIdAfterRemoval(nodeId, ids);
 
     if (ids.length > 1) {
       this.service.cutNodes(ids);
