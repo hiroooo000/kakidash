@@ -4,7 +4,7 @@ import { StyleAction } from '../../features/theme/domain/StyleAction';
 export type Direction = 'Up' | 'Down' | 'Left' | 'Right';
 
 export interface InteractionOptions {
-  onNodeClick: (nodeId: string) => void;
+  onNodeClick: (nodeId: string, shiftKey?: boolean) => void;
   onAddChild: (parentId: string) => void;
   onAddSibling: (nodeId: string, position: 'before' | 'after') => void;
   onInsertParent?: (nodeId: string) => void;
@@ -15,7 +15,7 @@ export interface InteractionOptions {
     position: 'top' | 'bottom' | 'left' | 'right',
   ) => void;
   onUpdateNode?: (nodeId: string, topic: string) => void;
-  onNavigate?: (nodeId: string, direction: Direction) => void;
+  onNavigate?: (nodeId: string, direction: Direction, extendSelection?: boolean) => void;
   onPan?: (dx: number, dy: number) => void;
   onCopyNode?: (nodeId: string) => void;
   onPasteNode?: (parentId: string) => void;

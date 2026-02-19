@@ -25,6 +25,8 @@ Master the shortcuts and expand your mind map at the speed of thought.
 - **Interaction**:
   - Drag and drop for node movement and reordering.
   - Keyboard shortcuts for rapid operation.
+  - **Multi-selection**: Shift + Click or Shift + Arrow Keys to select multiple nodes.
+  - **Bulk Operations**: Delete, Copy, Cut, Paste, and Styling apply to all selected nodes.
   - Zoom, Pan (Screen navigation).
 - **Image Support**: Paste images from the clipboard.
 - **Auto Link**: Automatically detects URLs in node text and converts them to clickable links.
@@ -312,6 +314,7 @@ Here is the complete default configuration. You can partially override these key
 | ----------------------------------- | ------------------------------------------------- |
 | `m`                                 | Command Palette (Search / Icons)                  |
 | `Arrow Keys`                        | Navigate between nodes                            |
+| `Shift + Arrow Keys`                | Select range of nodes                             |
 | `h` / `j` / `k` / `l`               | Navigate between nodes (Vim-style)                |
 | `F2` / `DblClick` / `Space` / `i`   | Start editing node (Space triggers zoom if image) |
 | `Enter`                             | Add sibling node (below)                          |
@@ -349,7 +352,7 @@ Here is the complete default configuration. You can partially override these key
 | `Shift + i`                 | Toggle Italic                     |
 | `Shift + . (>)` / `.`       | Increase font size                |
 | `Shift + , (<)` / `,`       | Decrease font size                |
-| `Shift + ArrowLeft / Right` | Adjust node width                 |
+| `Shift + Alt + ArrowLeft / Right` | Adjust node width                 |
 | `1` - `7`                   | Change node color (Palette order) |
 
 ## Architecture

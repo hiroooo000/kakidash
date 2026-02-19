@@ -157,7 +157,7 @@ src/
 #### Core Feature (`src/features/core`)
 マインドマップの核心となるドメインとアプリケーションロジックを含みます。
 - **Domain**: `MindMap`, `Node` エンティティ, `MindMapData` インターフェース。
-- **Application**: `MindMapService` (ユースケース), `HistoryManager` (履歴管理)。
+- **Application**: `MindMapService` (ユースケース、一括操作処理含む), `HistoryManager` (履歴管理)。
 
 #### Theme Feature (`src/features/theme`)
 スタイリングとテーマ管理に関する機能です。
@@ -180,7 +180,7 @@ src/
 ### 3.3 Presentation Layer (`src/presentation`)
 
 各機能を統合し、ユーザーインターフェースを提供します。
-- **MindMapController**: 各機能（Core, Theme, Export）をオーケストレーションするメインコントローラー。
+- **MindMapController**: 各機能（Core, Theme, Export）をオーケストレーションするメインコントローラー。選択状態（単一・複数）を管理します。
 - **InteractionHandler**: ユーザー操作の入力処理。
 - **Components**: `SvgRenderer` (描画), `CommandPalette` (コマンドUI)。
 
@@ -190,13 +190,6 @@ src/
 
 ユーザーがノードを追加する際の、各レイヤー間の相互作用を示します。
 
-```mermaid
-sequenceDiagram
-    participant User
-    participant Controller as MindMapController
-    participant Service as MindMapService
-    participant IdGen as IdGenerator
-    participant Entity as MindMap/Node
 ```mermaid
 sequenceDiagram
     participant User

@@ -19,7 +19,7 @@ describe('SvgRenderer Auto Link', () => {
     const url = 'https://example.com';
     const node = new Node('1', url);
 
-    (renderer as any).renderNode(node, 0, 0, null, 'Right', false, 'right');
+    (renderer as any).renderNode(node, 0, 0, new Set(), 'Right', false, 'right');
     const nodeEl = renderer.nodeContainer.querySelector(`[data-id="${node.id}"]`) as HTMLElement;
 
     // Find anchor tag
@@ -39,7 +39,7 @@ describe('SvgRenderer Auto Link', () => {
     const textAfter = ' out!';
     const node = new Node('2', textBefore + url + textAfter);
 
-    (renderer as any).renderNode(node, 0, 0, null, 'Right', false, 'right');
+    (renderer as any).renderNode(node, 0, 0, new Set(), 'Right', false, 'right');
     const nodeEl = renderer.nodeContainer.querySelector(`[data-id="${node.id}"]`) as HTMLElement;
 
     const anchor = nodeEl.querySelector('a');
@@ -53,7 +53,7 @@ describe('SvgRenderer Auto Link', () => {
     const malicious = '<script>alert(1)</script>';
     const node = new Node('3', malicious);
 
-    (renderer as any).renderNode(node, 0, 0, null, 'Right', false, 'right');
+    (renderer as any).renderNode(node, 0, 0, new Set(), 'Right', false, 'right');
     const nodeEl = renderer.nodeContainer.querySelector(`[data-id="${node.id}"]`) as HTMLElement;
 
     // Should NOT contain a script tag
@@ -69,7 +69,7 @@ describe('SvgRenderer Auto Link', () => {
     const url2 = 'http://b.org';
     const node = new Node('4', `${url1} and ${url2}`);
 
-    (renderer as any).renderNode(node, 0, 0, null, 'Right', false, 'right');
+    (renderer as any).renderNode(node, 0, 0, new Set(), 'Right', false, 'right');
     const nodeEl = renderer.nodeContainer.querySelector(`[data-id="${node.id}"]`) as HTMLElement;
 
     const anchors = nodeEl.querySelectorAll('a');

@@ -52,7 +52,7 @@ describe('LayoutConsistency', () => {
     // Call render using recursive public API or private if needed.
     // Calling internal `renderNode` directly allows isolating one node.
     // renderNode signature: (node, x, y, selectedId, layoutMode, isRoot, direction, mindMap)
-    (renderer as any).renderNode(node, 0, 0, null, 'Right', node.isRoot, 'right', mm);
+    (renderer as any).renderNode(node, 0, 0, new Set(), 'Right', node.isRoot, 'right', mm);
 
     // The element should now be in nodeContainer
     const el = nodeContainer.firstElementChild as HTMLElement;
