@@ -25,6 +25,7 @@ Master the shortcuts and expand your mind map at the speed of thought.
 - **Interaction**:
   - Drag and drop for node movement and reordering.
   - Keyboard shortcuts for rapid operation.
+  - **Help Modal**: Accessible via the "?" icon in the toolbar, allowing you to check icon meanings and shortcuts.
   - **Multi-selection**: Shift + Click or Shift + Arrow Keys to select multiple nodes.
   - **Bulk Operations**: Delete, Copy, Cut, Paste, and Styling apply to all selected nodes.
   - Zoom, Pan (Screen navigation).
@@ -98,6 +99,7 @@ const container = document.getElementById('mindmap-container');
 // Instantiate
 // Instantiate with optional configuration
 const kakidash = new Kakidash(container, {
+    locale: 'en', // Optional: 'en' | 'ja' (Default: 'en')
     maxNodeWidth: 200, // Optional: Maximum width for nodes
     customStyles: {    // Optional: Initial custom styles
         rootNode: { border: '2px solid red' }
@@ -194,6 +196,7 @@ All values accept standard CSS strings.
 ### Methods
 
 - **`new Kakidash(container: HTMLElement, options?: KakidashOptions)`**: Creates a new instance.
+  - `options.locale`: Language for the help modal and other UI elements ('en' | 'ja').
   - `options.shortcuts`: Custom keyboard shortcuts.
   - `options.maxNodeWidth`: Maximum width for text nodes (pixels).
   - `options.customStyles`: Initial custom styles.

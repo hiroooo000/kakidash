@@ -27,6 +27,7 @@ Kakidashのミッションは、**アウトプット速度の最大化**です�
 - **インタラクション**:
   - ドラッグ＆ドロップによるノード移動・並び替え
   - キーボードショートカットによる高速操作
+  - **ヘルプモーダル**: ツールバーの「？」アイコンからアイコンの意味とショートカットキーの確認が可能
   - **複数選択**: Shift + Click または Shift + 矢印キーによる範囲選択
   - **一括操作**: 削除、コピー、切り取り、貼り付け、スタイル変更は選択された全ノードに適用されます
   - ズーム、パン (画面移動)
@@ -100,6 +101,7 @@ const container = document.getElementById('mindmap-container');
 // インスタンス化
 // インスタンス化 (オプション指定可能)
 const kakidash = new Kakidash(container, {
+    locale: 'ja', // オプション: 'en' | 'ja' (デフォルト: 'en')
     maxNodeWidth: 200, // オプション: ノードの最大幅
     customStyles: {    // オプション: 初期のカスタムスタイル
         rootNode: { border: '2px solid red' }
@@ -199,6 +201,7 @@ kakidash.setTheme('custom');
 ### Methods
 
 - **`new Kakidash(container: HTMLElement, options?: KakidashOptions)`**: インスタンスを生成します。
+  - `options.locale`: ヘルプモーダルなどの表示言語 ('en' | 'ja')。
   - `options.shortcuts`: キーボードショートカットのカスタマイズ。
   - `options.maxNodeWidth`: テキストノードの最大幅 (ピクセル)。
   - `options.customStyles`: 初期のカスタムスタイル。
