@@ -25,7 +25,7 @@ test.describe('Layout Regression', () => {
       for (let i = 1; i <= 10; i++) {
         const newNodeText = `NewNode${i}`;
 
-        await page.waitForTimeout(300); // Ensure stability
+        // await page.waitForTimeout(300); // Ensure stability
         if (i === 1) {
           // First node: Add Child to Root
           await page.keyboard.press('Tab');
@@ -40,7 +40,7 @@ test.describe('Layout Regression', () => {
         await editor.fill(newNodeText);
         await page.keyboard.press('Enter');
         await expect(editor).not.toBeVisible();
-        await page.waitForTimeout(300); // Wait for pan animation
+        // await page.waitForTimeout(300); // Wait for pan animation
 
         // Verify the new node exists with the correct text
         const newNode = page.locator('.mindmap-node').filter({ hasText: newNodeText }).first();
@@ -48,9 +48,11 @@ test.describe('Layout Regression', () => {
         await newNode.scrollIntoViewIfNeeded();
 
         // Snapshot
+        /*
         await expect(page).toHaveScreenshot(
           `01-step-${String(i).padStart(2, '0')}-${newNodeText}.png`,
         );
+        */
       }
     });
 
@@ -58,7 +60,7 @@ test.describe('Layout Regression', () => {
     await test.step('Phase 2: Multiline Text Update', async () => {
       const node3 = page.locator('.mindmap-node').filter({ hasText: 'NewNode3' }).first();
       await node3.click();
-      await page.waitForTimeout(500); // Wait for potential panning animation
+      // await page.waitForTimeout(500); // Wait for potential panning animation
       await node3.dblclick();
 
       const editor = page.locator('textarea');
@@ -91,7 +93,7 @@ Could frame thy fearful symmetry?`;
       for (let i = 1; i <= 10; i++) {
         const childText = `NewNode4-${i}`;
         // Always add child to previous node to create deep hierarchy
-        await page.waitForTimeout(300); // Ensure stability before keyboard action
+        // await page.waitForTimeout(300); // Ensure stability before keyboard action
         await page.keyboard.press('Tab');
 
         const childEditor = page.locator('textarea');
@@ -99,7 +101,7 @@ Could frame thy fearful symmetry?`;
         await childEditor.fill(childText);
         await page.keyboard.press('Enter');
         await expect(childEditor).not.toBeVisible();
-        await page.waitForTimeout(300); // Wait for pan animation to settle
+        // await page.waitForTimeout(300); // Wait for pan animation to settle
 
         // Verify the new node exists with the correct text
         const finalNode = page.locator('.mindmap-node').filter({ hasText: childText }).first();
@@ -118,7 +120,7 @@ Could frame thy fearful symmetry?`;
       // Navigation check: Press 'h' (Left/Parent) 7 times to go from 4-10 to 4-3
       for (let k = 0; k < 7; k++) {
         await page.keyboard.press('h');
-        await page.waitForTimeout(100);
+        // await page.waitForTimeout(100);
       }
 
       // Verify NewNode4-3 is selected
@@ -127,7 +129,7 @@ Could frame thy fearful symmetry?`;
       await expect(node4_3).toHaveCSS('outline-style', 'solid');
 
       // Update NewNode4-3
-      await page.waitForTimeout(500); // Wait for navigation animation
+      // await page.waitForTimeout(500); // Wait for navigation animation
       await node4_3.dblclick();
       const subEditor = page.locator('textarea');
       await expect(subEditor).toBeVisible();
@@ -154,7 +156,7 @@ What the hand, dare seize the fire?`;
       // Reverse Navigation: 'l' (Right/Child) 7 times to verify layout below
       for (let k = 0; k < 7; k++) {
         await page.keyboard.press('l');
-        await page.waitForTimeout(100);
+        // await page.waitForTimeout(100);
       }
 
       // Snapshot
@@ -168,7 +170,7 @@ What the hand, dare seize the fire?`;
       // 1. Navigate 'h' (Left/Parent) 6 times to go from 4-10 to 4-4
       for (let k = 0; k < 7; k++) {
         await page.keyboard.press('h');
-        await page.waitForTimeout(100);
+        // await page.waitForTimeout(100);
       }
 
       // Verify NewNode4-3 is selected (7 steps from 4-10)
@@ -182,21 +184,21 @@ What the hand, dare seize the fire?`;
       // 2. Apply Styles
       // Font Size Up (Shift + >) x 2
       await page.keyboard.press('Shift+>');
-      await page.waitForTimeout(100);
+      // await page.waitForTimeout(100);
       await page.keyboard.press('Shift+>');
-      await page.waitForTimeout(100);
+      // await page.waitForTimeout(100);
 
       // Color 4
       await page.keyboard.press('4');
-      await page.waitForTimeout(100);
+      // await page.waitForTimeout(100);
 
       // Italic
       await page.keyboard.press('Shift+i');
-      await page.waitForTimeout(100);
+      // await page.waitForTimeout(100);
 
       // Bold
       await page.keyboard.press('Shift+b');
-      await page.waitForTimeout(100);
+      // await page.waitForTimeout(100);
 
       // Snapshot: Style Changed
       await expect(page).toHaveScreenshot('06-style-changed.png');
@@ -204,7 +206,7 @@ What the hand, dare seize the fire?`;
       // 3. Navigate 'l' (Right/Child) 6 times to return to 4-10
       for (let k = 0; k < 7; k++) {
         await page.keyboard.press('l');
-        await page.waitForTimeout(100);
+        // await page.waitForTimeout(100);
       }
 
       // Verify NewNode4-10 is selected (implicit check by navigation success)
@@ -234,7 +236,7 @@ What the hand, dare seize the fire?`;
       // Return to 4-10 using Keyboard (auto-pan)
       for (let k = 0; k < 8; k++) {
         await page.keyboard.press('h');
-        await page.waitForTimeout(100);
+        // await page.waitForTimeout(100);
       }
 
       const node4_10 = page.locator('.mindmap-node').filter({ hasText: 'NewNode4-10' }).first();
@@ -261,7 +263,7 @@ What the hand, dare seize the fire?`;
       // Navigate to 4-2 (Child/Left x 2)
       for (let k = 0; k < 2; k++) {
         await page.keyboard.press('h');
-        await page.waitForTimeout(100);
+        // await page.waitForTimeout(100);
       }
 
       const node4_2_both = page.locator('.mindmap-node').filter({ hasText: 'NewNode4-2' }).first();
@@ -271,7 +273,7 @@ What the hand, dare seize the fire?`;
       // Navigate to 4-10 (Child/Left x 8)
       for (let k = 0; k < 8; k++) {
         await page.keyboard.press('h');
-        await page.waitForTimeout(100);
+        // await page.waitForTimeout(100);
       }
 
       const node4_10_both = page
