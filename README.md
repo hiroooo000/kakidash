@@ -25,6 +25,7 @@ Master the shortcuts and expand your mind map at the speed of thought.
 - **Interaction**:
   - Drag and drop for node movement and reordering.
   - Keyboard shortcuts for rapid operation.
+  - **Help Modal**: Accessible via the "?" icon in the toolbar, allowing you to check icon meanings and shortcuts.
   - **Multi-selection**: Shift + Click or Shift + Arrow Keys to select multiple nodes.
   - **Bulk Operations**: Delete, Copy, Cut, Paste, and Styling apply to all selected nodes.
   - Zoom, Pan (Screen navigation).

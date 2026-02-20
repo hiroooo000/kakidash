@@ -5,7 +5,7 @@ export interface LayoutSwitcherOptions {
   onLayoutChange: (mode: LayoutMode) => void;
   onThemeChange: (theme: Theme) => void;
   onZoomReset?: () => void;
-  onShowShortcuts?: () => void;
+  onShowHelp?: () => void;
 }
 
 export class LayoutSwitcher {
@@ -65,8 +65,8 @@ export class LayoutSwitcher {
     this.addSeparator();
 
     // Help Button
-    this.createIconActionButton('Shortcuts Help', this.getHelpIcon(), () => {
-      if (this.options.onShowShortcuts) this.options.onShowShortcuts();
+    this.createIconActionButton('Help', this.getHelpIcon(), () => {
+      if (this.options.onShowHelp) this.options.onShowHelp();
     });
 
     this.container.appendChild(this.element);
@@ -169,7 +169,7 @@ export class LayoutSwitcher {
     }
   }
 
-  private getRightIcon(): string {
+  public getRightIcon(): string {
     return `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
   <circle cx="5" cy="12" r="3"></circle>
   <path d="M8 12h8"></path>
@@ -181,7 +181,7 @@ export class LayoutSwitcher {
 </svg>`;
   }
 
-  private getLeftIcon(): string {
+  public getLeftIcon(): string {
     return `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
   <circle cx="19" cy="12" r="3"></circle>
   <path d="M16 12h-8"></path>
@@ -193,11 +193,11 @@ export class LayoutSwitcher {
 </svg>`;
   }
 
-  private getBothIcon(): string {
+  public getBothIcon(): string {
     return `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M12 9V5"></path><circle cx="12" cy="2" r="2"></circle><path d="M12 15v4"></path><circle cx="12" cy="22" r="2"></circle><path d="M9 12H5"></path><circle cx="2" cy="12" r="2"></circle><path d="M15 12h4"></path><circle cx="22" cy="12" r="2"></circle></svg>`;
   }
 
-  private getThemeDefaultIcon(): string {
+  public getThemeDefaultIcon(): string {
     // Default: Rounded rectangle with a line (modified to look like a node)
     return `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <rect x="3" y="3" width="18" height="18" rx="4" ry="4" top="3" />
@@ -205,7 +205,7 @@ export class LayoutSwitcher {
     </svg>`;
   }
 
-  private getThemeSimpleIcon(): string {
+  public getThemeSimpleIcon(): string {
     // Simple: Text lines only (Hamburger-like but equal length)
     return `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <line x1="4" y1="6" x2="20" y2="6" />
@@ -214,7 +214,7 @@ export class LayoutSwitcher {
     </svg>`;
   }
 
-  private getThemeColorfulIcon(): string {
+  public getThemeColorfulIcon(): string {
     // Colorful: Palette icon
     // Simple palette shape: a circle with a bite, and dots.
     // Using a path for the palette shape.
@@ -226,14 +226,14 @@ export class LayoutSwitcher {
     </svg>`;
   }
 
-  private getThemeCustomIcon(): string {
+  public getThemeCustomIcon(): string {
     // Custom: Sparkles/Star icon
     return `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
     </svg>`;
   }
 
-  private getZoomResetIcon(): string {
+  public getZoomResetIcon(): string {
     return `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
   <circle cx="11" cy="11" r="8"></circle>
   <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
@@ -242,7 +242,7 @@ export class LayoutSwitcher {
 </svg>`;
   }
 
-  private getHelpIcon(): string {
+  public getHelpIcon(): string {
     return `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="12" cy="12" r="10"></circle>
         <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>

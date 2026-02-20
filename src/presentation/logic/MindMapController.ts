@@ -88,6 +88,18 @@ export class MindMapController {
     });
   }
 
+  private readonly TOOLBAR_ICONS = [
+    { id: 'right', desc: '右配置: すべてのノードをルートの右側に配置します。' },
+    { id: 'left', desc: '左配置: すべてのノードをルートの左側に配置します。' },
+    { id: 'both', desc: '左右配置: ノードをルートの両側にバランスよく配置します。' },
+    { id: 'default', desc: 'デフォルトテーマ: 枠線のある標準的なデザインです。' },
+    { id: 'simple', desc: 'シンプルテーマ: 枠線のない、箇条書きのようなシンプルなスタイルです。' },
+    { id: 'colorful', desc: 'カラフルテーマ: 枝ごとに色分けしたデザインです。' },
+    { id: 'custom', desc: 'カスタムテーマ: カスタムスタイルを適用します。' },
+    { id: 'resetZoom', desc: 'ズームリセット: ズームをリセットして中央に移動します。' },
+    { id: 'help', desc: 'ヘルプ: このヘルプ画面を表示します。' },
+  ];
+
   public setInteractionHandler(handler: InteractionHandler) {
     this.interactionHandler = handler;
   }
@@ -1169,7 +1181,7 @@ export class MindMapController {
     }
   }
 
-  public showShortcutModal(): void {
+  public showHelpModal(): void {
     if (!this.interactionHandler) return;
 
     // Check if valid environment (browsers)
@@ -1201,7 +1213,7 @@ export class MindMapController {
     modalContent.style.position = 'relative';
 
     const title = document.createElement('h2');
-    title.textContent = 'Keyboard Shortcuts';
+    title.textContent = 'Help';
     title.style.margin = '0 0 15px 0';
     title.style.fontSize = '1.5em';
     title.style.borderBottom = '1px solid #eee';
@@ -1222,6 +1234,84 @@ export class MindMapController {
       closeModal();
     });
     modalContent.appendChild(closeBtn);
+    if (this.layoutSwitcher) {
+      const iconSectionTitle = document.createElement('h3');
+      iconSectionTitle.textContent = 'Toolbar Icons';
+      iconSectionTitle.style.marginTop = '10px';
+      iconSectionTitle.style.marginBottom = '10px';
+      iconSectionTitle.style.fontSize = '1.2em';
+      iconSectionTitle.style.color = '#333';
+      iconSectionTitle.style.borderBottom = '1px solid #f0f0f0';
+      modalContent.appendChild(iconSectionTitle);
+
+      const iconTable = document.createElement('table');
+      iconTable.style.width = '100%';
+      iconTable.style.borderCollapse = 'collapse';
+      iconTable.style.fontSize = '0.9em';
+      iconTable.style.marginBottom = '20px';
+
+      this.TOOLBAR_ICONS.forEach((item) => {
+        const tr = document.createElement('tr');
+        tr.style.borderBottom = '1px solid #f9f9f9';
+
+        const tdIcon = document.createElement('td');
+        tdIcon.style.padding = '8px';
+        tdIcon.style.width = '40px';
+        tdIcon.style.textAlign = 'center';
+
+        let iconSvg = '';
+        switch (item.id) {
+          case 'right':
+            iconSvg = this.layoutSwitcher.getRightIcon();
+            break;
+          case 'left':
+            iconSvg = this.layoutSwitcher.getLeftIcon();
+            break;
+          case 'both':
+            iconSvg = this.layoutSwitcher.getBothIcon();
+            break;
+          case 'default':
+            iconSvg = this.layoutSwitcher.getThemeDefaultIcon();
+            break;
+          case 'simple':
+            iconSvg = this.layoutSwitcher.getThemeSimpleIcon();
+            break;
+          case 'colorful':
+            iconSvg = this.layoutSwitcher.getThemeColorfulIcon();
+            break;
+          case 'custom':
+            iconSvg = this.layoutSwitcher.getThemeCustomIcon();
+            break;
+          case 'resetZoom':
+            iconSvg = this.layoutSwitcher.getZoomResetIcon();
+            break;
+          case 'help':
+            iconSvg = this.layoutSwitcher.getHelpIcon();
+            break;
+        }
+
+        const iconContainer = document.createElement('div');
+        iconContainer.style.width = '24px';
+        iconContainer.style.height = '24px';
+        iconContainer.style.display = 'flex';
+        iconContainer.style.alignItems = 'center';
+        iconContainer.style.justifyContent = 'center';
+        iconContainer.style.color = '#555';
+        iconContainer.innerHTML = iconSvg;
+        tdIcon.appendChild(iconContainer);
+
+        const tdDesc = document.createElement('td');
+        tdDesc.textContent = item.desc;
+        tdDesc.style.padding = '8px';
+        tdDesc.style.textAlign = 'left';
+        tdDesc.style.color = '#333';
+
+        tr.appendChild(tdIcon);
+        tr.appendChild(tdDesc);
+        iconTable.appendChild(tr);
+      });
+      modalContent.appendChild(iconTable);
+    }
 
     const shortcuts = this.interactionHandler.getShortcuts();
     const sections = [

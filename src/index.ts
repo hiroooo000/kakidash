@@ -156,7 +156,7 @@ export class Kakidash extends TypedEventEmitter<KakidashEventMap> {
       onLayoutChange: (mode) => this.controller.setLayoutMode(mode),
       onThemeChange: (theme) => this.controller.setTheme(theme),
       onZoomReset: () => this.controller.resetZoom(),
-      onShowShortcuts: () => this.controller.showShortcutModal(),
+      onShowHelp: () => this.controller.showHelpModal(),
     });
 
     this.controller.setLayoutSwitcher(layoutSwitcher);
