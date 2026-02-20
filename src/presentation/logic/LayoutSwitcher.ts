@@ -169,6 +169,36 @@ export class LayoutSwitcher {
     }
   }
 
+  public getIconDescriptions(locale: 'en' | 'ja'): Array<{ id: string; desc: string }> {
+    if (locale === 'ja') {
+      return [
+        { id: 'right', desc: '右配置: すべてのノードをルートの右側に配置します。' },
+        { id: 'left', desc: '左配置: すべてのノードをルートの左側に配置します。' },
+        { id: 'both', desc: '左右配置: ノードをルートの両側にバランスよく配置します。' },
+        { id: 'default', desc: 'デフォルトテーマ: 枠線のある標準的なデザインです。' },
+        {
+          id: 'simple',
+          desc: 'シンプルテーマ: 枠線のない、箇条書きのようなシンプルなスタイルです。',
+        },
+        { id: 'colorful', desc: 'カラフルテーマ: 枝ごとに色分けしたデザインです。' },
+        { id: 'custom', desc: 'カスタムテーマ: カスタムスタイルを適用します。' },
+        { id: 'resetZoom', desc: 'ズームリセット: ズームをリセットして中央に移動します。' },
+        { id: 'help', desc: 'ヘルプ: このヘルプ画面を表示します。' },
+      ];
+    }
+    return [
+      { id: 'right', desc: 'Right: All nodes are placed on the right side of the root.' },
+      { id: 'left', desc: 'Left: All nodes are placed on the left side of the root.' },
+      { id: 'both', desc: 'Both: Nodes are balanced on both sides of the root.' },
+      { id: 'default', desc: 'Default Theme: Standard design with borders.' },
+      { id: 'simple', desc: 'Simple Theme: Minimal style without borders, like bullet points.' },
+      { id: 'colorful', desc: 'Colorful Theme: Color-coded design for each branch.' },
+      { id: 'custom', desc: 'Custom Theme: Your custom styles are applied.' },
+      { id: 'resetZoom', desc: 'Reset Zoom: Resets zoom and centers the view.' },
+      { id: 'help', desc: 'Help: Shows this help screen.' },
+    ];
+  }
+
   public getRightIcon(): string {
     return `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
   <circle cx="5" cy="12" r="3"></circle>

@@ -51,6 +51,10 @@ export interface KakidashOptions {
    * for importing and exporting files.
    */
   fileHandler?: FileHandler;
+  /**
+   * Locale for UI text (help modal, etc.). Defaults to 'en'.
+   */
+  locale?: 'en' | 'ja';
 }
 
 // Custom styles definition removed (using imported MindMapStyles)
@@ -100,6 +104,13 @@ export class Kakidash extends TypedEventEmitter<KakidashEventMap> {
       onToggleFold: (nodeId) => this.controller.toggleFold(nodeId),
     });
 
+    let defaultLocale: 'en' | 'ja' = 'en';
+    if (typeof navigator !== 'undefined' && navigator.language) {
+      if (navigator.language.startsWith('ja')) {
+        defaultLocale = 'ja';
+      }
+    }
+
     this.controller = new MindMapController(
       this.mindMap,
       service,
@@ -109,6 +120,7 @@ export class Kakidash extends TypedEventEmitter<KakidashEventMap> {
         emit: (event, payload) => this.emit(event, payload),
       },
       options.fileHandler,
+      options.locale || defaultLocale,
     );
 
     styleEditor.onUpdate = (nodeId, style) => {
