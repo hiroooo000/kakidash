@@ -21,7 +21,7 @@ Master the shortcuts and expand your mind map at the speed of thought.
   - Bold (`Bold`), Italic (`Italic`).
   - Color changes via palette (Style Editor).
   - **Themes**: Switch between multiple built-in themes (Default, Simple, Colorful, Dark).
-  - **Icon Settings**: Add/Remove flat icons via Command Palette (`m` key).
+  - **Icon Settings**: Add/Remove flat icons and numeric icons (0-9) via Command Palette (`m` key).
 - **Interaction**:
   - Drag and drop for node movement and reordering.
   - Keyboard shortcuts for rapid operation.

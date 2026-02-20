@@ -49,4 +49,104 @@ export const SVG_ICONS: Record<string, { path: string; color: string; viewBox: s
     color: '#3498DB',
     viewBox: '0 0 24 24',
   },
+  num_0_blue: {
+    path: '<rect x="2" y="2" width="20" height="20" rx="4" ry="4" fill="#3498DB" /><text x="12" y="16.5" font-family="sans-serif" font-size="14" font-weight="bold" fill="white" text-anchor="middle">0</text>',
+    color: '#3498DB',
+    viewBox: '0 0 24 24',
+  },
+  num_1_blue: {
+    path: '<rect x="2" y="2" width="20" height="20" rx="4" ry="4" fill="#3498DB" /><text x="12" y="16.5" font-family="sans-serif" font-size="14" font-weight="bold" fill="white" text-anchor="middle">1</text>',
+    color: '#3498DB',
+    viewBox: '0 0 24 24',
+  },
+  num_2_blue: {
+    path: '<rect x="2" y="2" width="20" height="20" rx="4" ry="4" fill="#3498DB" /><text x="12" y="16.5" font-family="sans-serif" font-size="14" font-weight="bold" fill="white" text-anchor="middle">2</text>',
+    color: '#3498DB',
+    viewBox: '0 0 24 24',
+  },
+  num_3_blue: {
+    path: '<rect x="2" y="2" width="20" height="20" rx="4" ry="4" fill="#3498DB" /><text x="12" y="16.5" font-family="sans-serif" font-size="14" font-weight="bold" fill="white" text-anchor="middle">3</text>',
+    color: '#3498DB',
+    viewBox: '0 0 24 24',
+  },
+  num_4_blue: {
+    path: '<rect x="2" y="2" width="20" height="20" rx="4" ry="4" fill="#3498DB" /><text x="12" y="16.5" font-family="sans-serif" font-size="14" font-weight="bold" fill="white" text-anchor="middle">4</text>',
+    color: '#3498DB',
+    viewBox: '0 0 24 24',
+  },
+  num_5_blue: {
+    path: '<rect x="2" y="2" width="20" height="20" rx="4" ry="4" fill="#3498DB" /><text x="12" y="16.5" font-family="sans-serif" font-size="14" font-weight="bold" fill="white" text-anchor="middle">5</text>',
+    color: '#3498DB',
+    viewBox: '0 0 24 24',
+  },
+  num_6_blue: {
+    path: '<rect x="2" y="2" width="20" height="20" rx="4" ry="4" fill="#3498DB" /><text x="12" y="16.5" font-family="sans-serif" font-size="14" font-weight="bold" fill="white" text-anchor="middle">6</text>',
+    color: '#3498DB',
+    viewBox: '0 0 24 24',
+  },
+  num_7_blue: {
+    path: '<rect x="2" y="2" width="20" height="20" rx="4" ry="4" fill="#3498DB" /><text x="12" y="16.5" font-family="sans-serif" font-size="14" font-weight="bold" fill="white" text-anchor="middle">7</text>',
+    color: '#3498DB',
+    viewBox: '0 0 24 24',
+  },
+  num_8_blue: {
+    path: '<rect x="2" y="2" width="20" height="20" rx="4" ry="4" fill="#3498DB" /><text x="12" y="16.5" font-family="sans-serif" font-size="14" font-weight="bold" fill="white" text-anchor="middle">8</text>',
+    color: '#3498DB',
+    viewBox: '0 0 24 24',
+  },
+  num_9_blue: {
+    path: '<rect x="2" y="2" width="20" height="20" rx="4" ry="4" fill="#3498DB" /><text x="12" y="16.5" font-family="sans-serif" font-size="14" font-weight="bold" fill="white" text-anchor="middle">9</text>',
+    color: '#3498DB',
+    viewBox: '0 0 24 24',
+  },
+  num_0_red: {
+    path: '<rect x="2" y="2" width="20" height="20" rx="4" ry="4" fill="#E74C3C" /><text x="12" y="16.5" font-family="sans-serif" font-size="14" font-weight="bold" fill="white" text-anchor="middle">0</text>',
+    color: '#E74C3C',
+    viewBox: '0 0 24 24',
+  },
+  num_1_red: {
+    path: '<rect x="2" y="2" width="20" height="20" rx="4" ry="4" fill="#E74C3C" /><text x="12" y="16.5" font-family="sans-serif" font-size="14" font-weight="bold" fill="white" text-anchor="middle">1</text>',
+    color: '#E74C3C',
+    viewBox: '0 0 24 24',
+  },
+  num_2_red: {
+    path: '<rect x="2" y="2" width="20" height="20" rx="4" ry="4" fill="#E74C3C" /><text x="12" y="16.5" font-family="sans-serif" font-size="14" font-weight="bold" fill="white" text-anchor="middle">2</text>',
+    color: '#E74C3C',
+    viewBox: '0 0 24 24',
+  },
+  num_3_red: {
+    path: '<rect x="2" y="2" width="20" height="20" rx="4" ry="4" fill="#E74C3C" /><text x="12" y="16.5" font-family="sans-serif" font-size="14" font-weight="bold" fill="white" text-anchor="middle">3</text>',
+    color: '#E74C3C',
+    viewBox: '0 0 24 24',
+  },
+  num_4_red: {
+    path: '<rect x="2" y="2" width="20" height="20" rx="4" ry="4" fill="#E74C3C" /><text x="12" y="16.5" font-family="sans-serif" font-size="14" font-weight="bold" fill="white" text-anchor="middle">4</text>',
+    color: '#E74C3C',
+    viewBox: '0 0 24 24',
+  },
+  num_5_red: {
+    path: '<rect x="2" y="2" width="20" height="20" rx="4" ry="4" fill="#E74C3C" /><text x="12" y="16.5" font-family="sans-serif" font-size="14" font-weight="bold" fill="white" text-anchor="middle">5</text>',
+    color: '#E74C3C',
+    viewBox: '0 0 24 24',
+  },
+  num_6_red: {
+    path: '<rect x="2" y="2" width="20" height="20" rx="4" ry="4" fill="#E74C3C" /><text x="12" y="16.5" font-family="sans-serif" font-size="14" font-weight="bold" fill="white" text-anchor="middle">6</text>',
+    color: '#E74C3C',
+    viewBox: '0 0 24 24',
+  },
+  num_7_red: {
+    path: '<rect x="2" y="2" width="20" height="20" rx="4" ry="4" fill="#E74C3C" /><text x="12" y="16.5" font-family="sans-serif" font-size="14" font-weight="bold" fill="white" text-anchor="middle">7</text>',
+    color: '#E74C3C',
+    viewBox: '0 0 24 24',
+  },
+  num_8_red: {
+    path: '<rect x="2" y="2" width="20" height="20" rx="4" ry="4" fill="#E74C3C" /><text x="12" y="16.5" font-family="sans-serif" font-size="14" font-weight="bold" fill="white" text-anchor="middle">8</text>',
+    color: '#E74C3C',
+    viewBox: '0 0 24 24',
+  },
+  num_9_red: {
+    path: '<rect x="2" y="2" width="20" height="20" rx="4" ry="4" fill="#E74C3C" /><text x="12" y="16.5" font-family="sans-serif" font-size="14" font-weight="bold" fill="white" text-anchor="middle">9</text>',
+    color: '#E74C3C',
+    viewBox: '0 0 24 24',
+  },
 };
