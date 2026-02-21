@@ -45,4 +45,21 @@ describe('CommandPalette', () => {
     expect(listItems[2].textContent).toContain('> Import');
     expect(listItems[3].textContent).toContain('> Export');
   });
+
+  it('should not render disabled features', () => {
+    options.disabledFeatures = ['icon', 'export'];
+    const palette = new CommandPalette(container, options);
+    palette.show();
+
+    const listItems = container.querySelectorAll('li');
+    // Expected order:
+    // 1. Search Nodes
+    // 2. Import
+
+    expect(listItems.length).toBe(2);
+    expect(listItems[0].textContent).toContain('> Search Nodes');
+    expect(listItems[1].textContent).toContain('> Import');
+    expect(Array.from(listItems).some((li) => li.textContent?.includes('> Icon'))).toBe(false);
+    expect(Array.from(listItems).some((li) => li.textContent?.includes('> Export'))).toBe(false);
+  });
 });

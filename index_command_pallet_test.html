@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>kakidash DEMO - Disabled Import</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            font-family: sans-serif;
+        }
+
+        #mindmap-container {
+            width: 100%;
+            height: 100%;
+            background-color: #f8f9fa;
+        }
+
+        .info-panel {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            z-index: 1000;
+            pointer-events: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="info-panel">
+        <strong>Demo: Disabled Import</strong><br>
+        Press <code>Ctrl + .</code> (or <code>Cmd + .</code>) to open Command Palette.<br>
+        The "Import" feature should be hidden.
+    </div>
+    <div id="mindmap-container"></div>
+    <script type="module">
+
+        import { Kakidash } from '/src/index.ts';
+
+        try {
+            const app = document.getElementById('mindmap-container');
+            const kakidash = new Kakidash(app, {
+                disabledCommandPaletteFeatures: ['import']
+            });
+            window.kakidash = kakidash;
+
+            // Add some sample nodes
+            const rootId = kakidash.getRootId();
+            const child1 = kakidash.addNode(rootId, 'Import feature is disabled');
+            const child2 = kakidash.addNode(rootId, 'Check the command palette');
+
+            if (child1) {
+                kakidash.addNode(child1.id, 'Try Ctrl + .');
+            }
+        } catch (e) {
+            console.error('Initialization error:', e);
+        }
+    </script>
+</body>
+
+</html>
