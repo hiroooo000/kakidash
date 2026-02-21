@@ -55,6 +55,10 @@ export interface KakidashOptions {
    * Locale for UI text (help modal, etc.). Defaults to 'en'.
    */
   locale?: 'en' | 'ja';
+  /**
+   * Features to disable in the command palette.
+   */
+  disabledCommandPaletteFeatures?: ('search' | 'icon' | 'import' | 'export')[];
 }
 
 // Custom styles definition removed (using imported MindMapStyles)
@@ -121,6 +125,7 @@ export class Kakidash extends TypedEventEmitter<KakidashEventMap> {
       },
       options.fileHandler,
       options.locale || defaultLocale,
+      options.disabledCommandPaletteFeatures,
     );
 
     styleEditor.onUpdate = (nodeId, style) => {

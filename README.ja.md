@@ -105,7 +105,8 @@ const kakidash = new Kakidash(container, {
     maxNodeWidth: 200, // オプション: ノードの最大幅
     customStyles: {    // オプション: 初期のカスタムスタイル
         rootNode: { border: '2px solid red' }
-    }
+    },
+    disabledCommandPaletteFeatures: ['import'] // オプション: 特定の機能を無効化
 });
 
 // 必要に応じて初期データをロードしたり、ノードを追加したりします
@@ -205,6 +206,7 @@ kakidash.setTheme('custom');
   - `options.shortcuts`: キーボードショートカットのカスタマイズ。
   - `options.maxNodeWidth`: テキストノードの最大幅 (ピクセル)。
   - `options.customStyles`: 初期のカスタムスタイル。
+  - `options.disabledCommandPaletteFeatures`: コマンドパレットの特定の機能を無効化 ('search' | 'icon' | 'import' | 'export')。
 - **`kakidash.addNode(parentId, topic)`**: 指定した親ノードに新しい子ノードを追加します。
 - **`kakidash.getData()`**: 現在のマインドマップデータをJSONオブジェクトとして取得します。
 - **`kakidash.loadData(data)`**: JSONデータを読み込み、マインドマップを描画します。

@@ -65,6 +65,7 @@ export class MindMapController {
     eventBus: IMindMapEventBus,
     fileHandler?: FileHandler,
     locale: 'en' | 'ja' = 'en',
+    commandPaletteFeatures?: ('search' | 'icon' | 'import' | 'export')[],
   ) {
     this.mindMap = mindMap;
     this.service = service;
@@ -81,6 +82,7 @@ export class MindMapController {
       onClose: () => {
         if (this.interactionHandler) this.interactionHandler.container.focus();
       },
+      disabledFeatures: commandPaletteFeatures,
     });
 
     this.service.setSelectionProvider(() => {

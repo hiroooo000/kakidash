@@ -6,6 +6,7 @@ export interface CommandPaletteOptions {
   onIconSelect: (icon: string) => void;
   onCommandSelect: (command: string) => void;
   onClose: () => void;
+  disabledFeatures?: ('search' | 'icon' | 'import' | 'export')[];
 }
 
 export class CommandPalette {
@@ -20,7 +21,13 @@ export class CommandPalette {
   private selectedIndex: number = -1;
   private mode: 'menu' | 'search' | 'icon' | 'import' | 'export' = 'menu';
 
-  private readonly MENU_COMMANDS: Array<{
+  private menuCommands: Array<{
+    id: string;
+    topic: string;
+    type: 'command' | 'node';
+  }> = [];
+
+  private readonly ALL_MENU_COMMANDS: Array<{
     id: string;
     topic: string;
     type: 'command' | 'node';
@@ -98,6 +105,15 @@ export class CommandPalette {
     this.container = container;
     this.options = options;
 
+    const disabled = options.disabledFeatures || [];
+    this.menuCommands = this.ALL_MENU_COMMANDS.filter((cmd) => {
+      if (cmd.id === 'icon' && disabled.includes('icon')) return false;
+      if (cmd.id === 'search-nodes' && disabled.includes('search')) return false;
+      if (cmd.id === 'import' && disabled.includes('import')) return false;
+      if (cmd.id === 'export' && disabled.includes('export')) return false;
+      return true;
+    });
+
     this.overlay = this.createOverlay();
     this.paletteEl = this.createPalette();
     this.inputEl = this.paletteEl.querySelector('input')!;
@@ -161,7 +177,7 @@ export class CommandPalette {
     input.addEventListener('input', (e) => {
       const val = (e.target as HTMLInputElement).value;
       if (this.mode === 'menu') {
-        const filtered = this.MENU_COMMANDS.filter((c) =>
+        const filtered = this.menuCommands.filter((c) =>
           c.topic.toLowerCase().includes(val.toLowerCase()),
         );
         this.renderList(filtered);
@@ -207,7 +223,7 @@ export class CommandPalette {
         ) {
           this.mode = 'menu';
           this.inputEl.placeholder = 'Type to filter commands...';
-          this.renderList(this.MENU_COMMANDS);
+          this.renderList(this.menuCommands);
         }
       }
     });
@@ -236,7 +252,7 @@ export class CommandPalette {
     this.inputEl.focus();
 
     // Show menu commands initially
-    this.renderList(this.MENU_COMMANDS);
+    this.renderList(this.menuCommands);
   }
 
   public close() {
