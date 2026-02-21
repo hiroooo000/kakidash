@@ -1,0 +1,233 @@
+{
+  "nodeData": {
+    "id": "root",
+    "topic": "Root Topic",
+    "root": true,
+    "children": [
+      {
+        "id": "a1cd109d-d349-4db7-afb7-b9d0184468be",
+        "topic": "Child 1",
+        "children": [
+          {
+            "id": "6b304a74-7802-4513-909a-0e026208f93e",
+            "topic": "GrandChild 1.1",
+            "style": {
+              "fontSize": "16px"
+            },
+            "isFolded": false
+          },
+          {
+            "id": "ca6d82db-967a-4270-afb1-f1eb284b19d8",
+            "topic": "GrandChild 1.2",
+            "style": {
+              "fontSize": "16px"
+            },
+            "isFolded": false
+          }
+        ],
+        "style": {
+          "fontSize": "16px"
+        },
+        "isFolded": false
+      },
+      {
+        "id": "465547e5-868e-4083-ae36-14812b8b722e",
+        "topic": "Child 2",
+        "style": {
+          "fontSize": "16px"
+        },
+        "isFolded": false
+      },
+      {
+        "id": "d9dd9c28-7901-4ebc-9d21-a0ef078441e7",
+        "topic": "NewNode1",
+        "style": {
+          "fontSize": "16px"
+        },
+        "isFolded": false
+      },
+      {
+        "id": "2a9d8e68-e916-4e10-a35e-7b2eaf1f3029",
+        "topic": "NewNode2",
+        "style": {
+          "fontSize": "16px"
+        },
+        "isFolded": false
+      },
+      {
+        "id": "747461c8-0448-4223-b7c5-0d280d9ea9f7",
+        "topic": "Tyger Tyger, burning bright, \nIn the forests of the night; \nWhat immortal hand or eye, \nCould frame thy fearful symmetry?",
+        "style": {
+          "fontSize": "16px"
+        },
+        "isFolded": false
+      },
+      {
+        "id": "1b8d9457-d233-48d4-8f75-88adbf83dcf2",
+        "topic": "NewNode4",
+        "children": [
+          {
+            "id": "6c14e4b2-1409-46f5-a425-10fee621d338",
+            "topic": "NewNode4-1",
+            "children": [
+              {
+                "id": "2d03de2d-7d3f-47ff-91e7-8a8e4860bcdd",
+                "topic": "NewNode4-2",
+                "children": [
+                  {
+                    "id": "3b4bcc38-1400-40f0-b2f3-c678ad0c4637",
+                    "topic": "In what distant deeps or skies. \nBurnt the fire of thine eyes?\nOn what wings dare he aspire?\nWhat the hand, dare seize the fire?",
+                    "children": [
+                      {
+                        "id": "f7cf9fd6-4d26-48e8-8855-7ef74232054b",
+                        "topic": "NewNode4-4",
+                        "children": [
+                          {
+                            "id": "204ba820-b842-4b7b-9fd0-c00334e6c9c3",
+                            "topic": "NewNode4-5",
+                            "children": [
+                              {
+                                "id": "9822d9e9-be6d-4aa4-b779-1cf515a6fa80",
+                                "topic": "NewNode4-6",
+                                "children": [
+                                  {
+                                    "id": "1a8c7b09-7235-4329-ad44-1d7cbddbcac8",
+                                    "topic": "NewNode4-7",
+                                    "children": [
+                                      {
+                                        "id": "df0854d8-a62c-4cde-970f-86d03bd309eb",
+                                        "topic": "NewNode4-8",
+                                        "children": [
+                                          {
+                                            "id": "295c9bd5-a4c8-4627-9c7c-e30d6b5305c3",
+                                            "topic": "NewNode4-9",
+                                            "children": [
+                                              {
+                                                "id": "d6df256b-b704-4491-9574-b6038504db9c",
+                                                "topic": "NewNode4-10",
+                                                "style": {
+                                                  "fontSize": "16px"
+                                                },
+                                                "isFolded": false
+                                              }
+                                            ],
+                                            "style": {
+                                              "fontSize": "16px"
+                                            },
+                                            "isFolded": false
+                                          }
+                                        ],
+                                        "style": {
+                                          "fontSize": "16px"
+                                        },
+                                        "isFolded": false
+                                      }
+                                    ],
+                                    "style": {
+                                      "fontSize": "16px"
+                                    },
+                                    "isFolded": false
+                                  }
+                                ],
+                                "style": {
+                                  "fontSize": "16px"
+                                },
+                                "isFolded": false
+                              }
+                            ],
+                            "style": {
+                              "fontSize": "16px"
+                            },
+                            "isFolded": false
+                          }
+                        ],
+                        "style": {
+                          "fontSize": "16px"
+                        },
+                        "isFolded": false
+                      }
+                    ],
+                    "style": {
+                      "fontSize": "24px",
+                      "color": "#F1C40F",
+                      "fontStyle": "italic",
+                      "fontWeight": "bold"
+                    },
+                    "isFolded": false
+                  }
+                ],
+                "style": {
+                  "fontSize": "16px"
+                },
+                "isFolded": false
+              }
+            ],
+            "style": {
+              "fontSize": "16px"
+            },
+            "isFolded": false
+          }
+        ],
+        "style": {
+          "fontSize": "16px"
+        },
+        "isFolded": false
+      },
+      {
+        "id": "7cb68e7d-3173-40ab-8a7d-a179f0b07605",
+        "topic": "NewNode5",
+        "style": {
+          "fontSize": "16px"
+        },
+        "isFolded": false
+      },
+      {
+        "id": "ba8f099b-73d8-425f-9cc4-e34c3c7e5350",
+        "topic": "NewNode6",
+        "style": {
+          "fontSize": "16px"
+        },
+        "isFolded": false
+      },
+      {
+        "id": "30c55b1a-efe5-4701-b885-7d7ec40c5147",
+        "topic": "NewNode7",
+        "style": {
+          "fontSize": "16px"
+        },
+        "isFolded": false
+      },
+      {
+        "id": "48acd0bb-5176-472f-a6f0-f818934a59fb",
+        "topic": "NewNode8",
+        "style": {
+          "fontSize": "16px"
+        },
+        "isFolded": false
+      },
+      {
+        "id": "afb8e24a-cfa3-404c-814e-fc28795ea26c",
+        "topic": "NewNode9",
+        "style": {
+          "fontSize": "16px"
+        },
+        "isFolded": false
+      },
+      {
+        "id": "b13d8f88-8ab3-491f-927b-0b1094fb831f",
+        "topic": "NewNode10",
+        "style": {
+          "fontSize": "16px"
+        },
+        "isFolded": false
+      }
+    ],
+    "style": {
+      "fontSize": "24px"
+    },
+    "isFolded": false
+  },
+  "theme": "default",
+  "selectedId": "d6df256b-b704-4491-9574-b6038504db9c",
+  "selectedIds": ["d6df256b-b704-4491-9574-b6038504db9c"]
+}
