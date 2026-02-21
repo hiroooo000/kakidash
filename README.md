@@ -103,7 +103,8 @@ const kakidash = new Kakidash(container, {
     maxNodeWidth: 200, // Optional: Maximum width for nodes
     customStyles: {    // Optional: Initial custom styles
         rootNode: { border: '2px solid red' }
-    }
+    },
+    disabledCommandPaletteFeatures: ['import'] // Optional: Disable specific features
 });
 
 // Add initial data or nodes if needed
@@ -200,6 +201,7 @@ All values accept standard CSS strings.
   - `options.shortcuts`: Custom keyboard shortcuts.
   - `options.maxNodeWidth`: Maximum width for text nodes (pixels).
   - `options.customStyles`: Initial custom styles.
+  - `options.disabledCommandPaletteFeatures`: Features to disable in the command palette ('search' | 'icon' | 'import' | 'export').
 - **`kakidash.addNode(parentId, topic)`**: Adds a new child node to the specified parent node.
 - **`kakidash.getData()`**: Retrieves current mindmap data as a JSON object.
 - **`kakidash.loadData(data)`**: Loads JSON data and renders the mindmap.
