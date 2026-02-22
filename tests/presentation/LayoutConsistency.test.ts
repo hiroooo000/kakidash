@@ -82,6 +82,11 @@ describe('LayoutConsistency', () => {
     };
 
     try {
+      // Clear cache to force measurement and DOM element creation for verification
+      const measureCache = (renderer as any).measureCache as Map<string, any> | undefined;
+      if (measureCache) {
+        measureCache.clear();
+      }
       (renderer as any).measureNode(node, mm);
     } finally {
       nodeContainer.appendChild = originalAppend; // Restore

@@ -16,6 +16,8 @@ export class SvgRenderer implements Renderer {
   nodeContainer: HTMLDivElement;
   options: SvgRendererOptions;
   maxWidth: number = -1;
+  private measureCache: Map<string, { width: number; height: number }> = new Map();
+  private heightCache: Map<string, number> = new Map();
 
   constructor(container: HTMLElement, options: SvgRendererOptions = {}) {
     this.container = container;
@@ -70,6 +72,8 @@ export class SvgRenderer implements Renderer {
     // Clear previous render
     this.svg.innerHTML = '';
     this.nodeContainer.innerHTML = '';
+    this.measureCache.clear();
+    this.heightCache.clear();
 
     // Simple recursive render for now
     this.renderNode(
@@ -566,11 +570,17 @@ export class SvgRenderer implements Renderer {
   }
 
   private getNodeHeight(node: Node, mindMap?: MindMap): number {
+    if (this.heightCache.has(node.id)) {
+      return this.heightCache.get(node.id)!;
+    }
+
     const { height } = this.measureNode(node, mindMap);
     const verticalGap = 20;
 
     if (node.children.length === 0 || node.isFolded) {
-      return height + verticalGap;
+      const result = height + verticalGap;
+      this.heightCache.set(node.id, result);
+      return result;
     }
 
     const childrenTotalHeight = this.getChildrenHeight(node, mindMap);
@@ -579,21 +589,33 @@ export class SvgRenderer implements Renderer {
     // If children total height is smaller than parent node height, we might have overlap issues if we don't handle it.
     // But for standard mindmaps, usually we care about the children stack.
     // Let's take the max to be safe if a single child is smaller than parent.
-    return Math.max(height + verticalGap, childrenTotalHeight);
+    const result = Math.max(height + verticalGap, childrenTotalHeight);
+    this.heightCache.set(node.id, result);
+    return result;
   }
 
   public measureNode(node: Node, mindMap?: MindMap): { width: number; height: number } {
+    if (this.measureCache.has(node.id)) {
+      return this.measureCache.get(node.id)!;
+    }
+
     if (node.image) {
       if (node.imageSize) {
         if (node.imageSize.width > 150) {
           const ratio = node.imageSize.height / node.imageSize.width;
-          return { width: 160, height: 150 * ratio + 10 };
+          const result = { width: 160, height: 150 * ratio + 10 };
+          this.measureCache.set(node.id, result);
+          return result;
         }
-        return { width: node.imageSize.width + 10, height: node.imageSize.height + 10 };
+        const result = { width: node.imageSize.width + 10, height: node.imageSize.height + 10 };
+        this.measureCache.set(node.id, result);
+        return result;
       }
       // Return fixed size for images + padding estimate
       // Max 150x150 + padding 10
-      return { width: 160, height: 160 };
+      const result = { width: 160, height: 160 };
+      this.measureCache.set(node.id, result);
+      return result;
     }
 
     const el = document.createElement('div');
@@ -694,7 +716,9 @@ export class SvgRenderer implements Renderer {
     const height = el.offsetHeight;
     this.nodeContainer.removeChild(el);
 
-    return { width: width || 100, height: height || 40 };
+    const result = { width: width || 100, height: height || 40 };
+    this.measureCache.set(node.id, result);
+    return result;
   }
 
   private drawConnection(
