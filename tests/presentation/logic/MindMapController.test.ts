@@ -264,4 +264,22 @@ describe('MindMapController', () => {
     expect(exportSpy).toHaveBeenCalledWith(mindMap, fileHandler);
     exportSpy.mockRestore();
   });
+
+  it('should register custom commands on the command palette', () => {
+    // Arrange
+    const handler = vi.fn();
+    const customCmd = {
+      id: 'custom-1',
+      topic: 'Custom Action',
+      execute: handler,
+    };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
+    const addCustomCommandSpy = vi.spyOn((controller as any).commandPalette, 'addCustomCommand');
+
+    // Act
+    controller.registerCommand(customCmd);
+
+    // Assert
+    expect(addCustomCommandSpy).toHaveBeenCalledWith(customCmd);
+  });
 });

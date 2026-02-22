@@ -62,4 +62,30 @@ describe('CommandPalette', () => {
     expect(Array.from(listItems).some((li) => li.textContent?.includes('> Icon'))).toBe(false);
     expect(Array.from(listItems).some((li) => li.textContent?.includes('> Export'))).toBe(false);
   });
+
+  it('should support custom commands', () => {
+    const handler = vi.fn();
+    const customCmd = {
+      id: 'custom-1',
+      topic: 'Custom Action',
+      execute: handler,
+    };
+
+    // Register custom command
+    commandPalette.addCustomCommand(customCmd);
+    commandPalette.show();
+
+    const listItems = container.querySelectorAll('li');
+    // Default 4 + 1 custom
+    expect(listItems.length).toBe(5);
+    expect(listItems[4].textContent).toContain('Custom Action');
+
+    // Simulate clicking the custom command
+    const customItem = Array.from(listItems).find((li) =>
+      li.textContent?.includes('Custom Action'),
+    );
+    customItem?.click();
+
+    expect(handler).toHaveBeenCalled();
+  });
 });

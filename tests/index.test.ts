@@ -12,4 +12,18 @@ describe('Kakidash', () => {
     const board = new Kakidash(container);
     expect(board).toBeInstanceOf(Kakidash);
   });
+
+  it('should register a custom command', () => {
+    const container = document.createElement('div');
+    const board = new Kakidash(container);
+    const handler = () => {};
+    const command = {
+      id: 'test-command',
+      topic: 'Test Command',
+      execute: handler,
+    };
+
+    // This should not throw and internally call controller.registerCommand
+    expect(() => board.registerCommand(command)).not.toThrow();
+  });
 });

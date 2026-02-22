@@ -1,11 +1,18 @@
 import { SVG_ICONS } from '../../features/theme/resources/Icons';
 
+export interface CustomCommand {
+  id: string;
+  topic: string;
+  execute: (selectedNodeId: string | null) => void;
+}
+
 export interface CommandPaletteOptions {
   onInput: (query: string) => void;
   onSelect: (nodeId: string) => void;
   onIconSelect: (icon: string) => void;
   onCommandSelect: (command: string) => void;
   onClose: () => void;
+  getSelectedNodeId?: () => string | null;
   disabledFeatures?: ('search' | 'icon' | 'import' | 'export')[];
 }
 
@@ -16,8 +23,13 @@ export class CommandPalette {
   private inputEl: HTMLInputElement;
   private resultListEl: HTMLElement;
   private options: CommandPaletteOptions;
+  private customCommands: CustomCommand[] = [];
 
-  private results: Array<{ id: string; topic: string; type?: 'command' | 'node' | 'icon' }> = [];
+  private results: Array<{
+    id: string;
+    topic: string;
+    type?: 'command' | 'node' | 'icon' | 'custom';
+  }> = [];
   private selectedIndex: number = -1;
   private mode: 'menu' | 'search' | 'icon' | 'import' | 'export' = 'menu';
 
@@ -177,10 +189,7 @@ export class CommandPalette {
     input.addEventListener('input', (e) => {
       const val = (e.target as HTMLInputElement).value;
       if (this.mode === 'menu') {
-        const filtered = this.menuCommands.filter((c) =>
-          c.topic.toLowerCase().includes(val.toLowerCase()),
-        );
-        this.renderList(filtered);
+        this.renderList(this.getMenuResults(val));
       } else if (this.mode === 'import') {
         const filtered = this.IMPORT_COMMANDS.filter((c) =>
           c.topic.toLowerCase().includes(val.toLowerCase()),
@@ -223,7 +232,7 @@ export class CommandPalette {
         ) {
           this.mode = 'menu';
           this.inputEl.placeholder = 'Type to filter commands...';
-          this.renderList(this.menuCommands);
+          this.renderList(this.getMenuResults());
         }
       }
     });
@@ -252,7 +261,11 @@ export class CommandPalette {
     this.inputEl.focus();
 
     // Show menu commands initially
-    this.renderList(this.menuCommands);
+    this.renderList(this.getMenuResults());
+  }
+
+  public addCustomCommand(command: CustomCommand) {
+    this.customCommands.push(command);
   }
 
   public close() {
@@ -276,8 +289,19 @@ export class CommandPalette {
     }
   }
 
+  private getMenuResults(val: string = ''): Array<{
+    id: string;
+    topic: string;
+    type?: 'command' | 'node' | 'icon' | 'custom';
+  }> {
+    const q = val.toLowerCase().trim();
+    const filteredMain = this.menuCommands.filter((c) => c.topic.toLowerCase().includes(q));
+    const filteredCustom = this.customCommands.filter((c) => c.topic.toLowerCase().includes(q));
+    return [...filteredMain, ...filteredCustom.map((c) => ({ ...c, type: 'custom' as const }))];
+  }
+
   private renderList(
-    items: Array<{ id: string; topic: string; type?: 'command' | 'node' | 'icon' }>,
+    items: Array<{ id: string; topic: string; type?: 'command' | 'node' | 'icon' | 'custom' }>,
   ) {
     this.results = items;
     this.resultListEl.innerHTML = '';
@@ -351,7 +375,11 @@ export class CommandPalette {
     }
   }
 
-  private selectItem(item: { id: string; topic: string; type?: 'command' | 'node' | 'icon' }) {
+  private selectItem(item: {
+    id: string;
+    topic: string;
+    type?: 'command' | 'node' | 'icon' | 'custom';
+  }) {
     if (item.type === 'command') {
       if (item.id === 'search-nodes') {
         this.switchToSearchMode();
@@ -374,6 +402,13 @@ export class CommandPalette {
         this.options.onCommandSelect('export-markdown');
         this.close();
       }
+    } else if (item.type === 'custom') {
+      const custom = this.customCommands.find((c) => c.id === item.id);
+      if (custom) {
+        const selectedId = this.options.getSelectedNodeId ? this.options.getSelectedNodeId() : null;
+        custom.execute(selectedId);
+      }
+      this.close();
     } else if (item.type === 'icon') {
       this.options.onIconSelect(item.id);
       this.close();
