@@ -182,12 +182,12 @@ export class MindMapService {
     const node = this.mindMap.findNode(id);
     if (node) {
       // Prevent folding if no children (but allow unfolding)
-      if (node.children.length === 0 && !node.isFolded) {
+      if (node.children.length === 0 && !node.presentation.isFolded) {
         return false;
       }
 
       this.saveState();
-      node.isFolded = !node.isFolded;
+      node.presentation.isFolded = !node.presentation.isFolded;
       return true;
     }
     return false;
@@ -204,7 +204,7 @@ export class MindMapService {
     const node = this.mindMap.findNode(id);
     if (node) {
       this.saveState();
-      node.customWidth = width;
+      node.presentation.customWidth = width;
       return true;
     }
     return false;
@@ -214,9 +214,9 @@ export class MindMapService {
     // Handle side update for same parent (re-layout)
     const node = this.mindMap.findNode(nodeId);
     if (node && node.parentId === newParentId) {
-      if (layoutSide && node.layoutSide !== layoutSide) {
+      if (layoutSide && node.presentation.layoutSide !== layoutSide) {
         this.saveState();
-        node.layoutSide = layoutSide;
+        node.presentation.layoutSide = layoutSide;
         return true;
       }
       return false; // No change
@@ -233,7 +233,7 @@ export class MindMapService {
     if (this.mindMap.moveNode(nodeId, newParentId)) {
       if (layoutSide) {
         const movedNode = this.mindMap.findNode(nodeId);
-        if (movedNode) movedNode.layoutSide = layoutSide;
+        if (movedNode) movedNode.presentation.layoutSide = layoutSide;
       }
       return true;
     } else {
@@ -327,8 +327,8 @@ export class MindMapService {
       // Inherit side from target if possible?
       // If dragging Top/Bottom of a sibling, we generally want to stay on that side.
       // Target has a side.
-      if (target.layoutSide) {
-        node.layoutSide = target.layoutSide;
+      if (target.presentation.layoutSide) {
+        node.presentation.layoutSide = target.presentation.layoutSide;
       }
     }
 
@@ -369,8 +369,8 @@ export class MindMapService {
     if (index === -1) return false;
 
     // Inherit layoutSide if replacing a node (especially under Root)
-    if (targetParent.isRoot && target.layoutSide) {
-      node.layoutSide = target.layoutSide;
+    if (targetParent.isRoot && target.presentation.layoutSide) {
+      node.presentation.layoutSide = target.presentation.layoutSide;
     }
 
     targetParent.removeChild(targetId);
@@ -495,8 +495,8 @@ export class MindMapService {
       null,
       false,
       node.image,
-      node.layoutSide,
-      node.isFolded,
+      node.presentation.layoutSide,
+      node.presentation.isFolded,
       node.icon,
       node.imageSize && { ...node.imageSize },
     );
@@ -539,12 +539,12 @@ export class MindMapService {
         children: node.children.length > 0 ? node.children.map(buildNodeData) : undefined,
         style: Object.keys(node.style).length > 0 ? node.style : undefined,
         image: node.image,
-        layoutSide: node.layoutSide,
-        isFolded: node.isFolded,
+        layoutSide: node.presentation.layoutSide,
+        isFolded: node.presentation.isFolded,
 
         icon: node.icon,
         imageSize: node.imageSize,
-        customWidth: node.customWidth,
+        customWidth: node.presentation.customWidth,
       };
       return data;
     };

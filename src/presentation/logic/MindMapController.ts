@@ -215,8 +215,9 @@ export class MindMapController {
     if (newNode) {
       if (parent && parent.isRoot && this.layoutMode === 'Both') {
         const currentSide =
-          node.layoutSide || (parent.children.indexOf(node) % 2 === 0 ? 'right' : 'left');
-        newNode.layoutSide = currentSide;
+          node.presentation.layoutSide ||
+          (parent.children.indexOf(node) % 2 === 0 ? 'right' : 'left');
+        newNode.presentation.layoutSide = currentSide;
       }
       this.render();
       this.eventBus.emit('node:add', { id: newNode.id, topic: newNode.topic });
@@ -315,7 +316,7 @@ export class MindMapController {
     if (!node) return;
 
     // Determine current effective width
-    let currentWidth = node.customWidth;
+    let currentWidth = node.presentation.customWidth;
 
     if (currentWidth === undefined) {
       // Use renderer's measurement logic to get the current natural width
@@ -348,7 +349,7 @@ export class MindMapController {
         let leftCount = 0;
         let rightCount = 0;
         parent.children.forEach((child: Node, index: number) => {
-          const dir = child.layoutSide || (index % 2 === 0 ? 'right' : 'left');
+          const dir = child.presentation.layoutSide || (index % 2 === 0 ? 'right' : 'left');
           if (dir === 'left') leftCount++;
           else rightCount++;
         });
@@ -1029,8 +1030,8 @@ export class MindMapController {
   private ensureExplicitLayoutSides(parent: Node): void {
     if (!parent.isRoot || this.layoutMode !== 'Both') return;
     parent.children.forEach((child: Node, index: number) => {
-      if (!child.layoutSide) {
-        child.layoutSide = index % 2 === 0 ? 'right' : 'left';
+      if (!child.presentation.layoutSide) {
+        child.presentation.layoutSide = index % 2 === 0 ? 'right' : 'left';
       }
     });
   }
@@ -1045,7 +1046,7 @@ export class MindMapController {
       const parent = this.mindMap.findNode(current.parentId);
       if (!parent) break;
       if (parent.isRoot) {
-        if (current.layoutSide) return current.layoutSide;
+        if (current.presentation.layoutSide) return current.presentation.layoutSide;
         const index = parent.children.findIndex((c: Node) => c.id === current.id);
         return index % 2 === 0 ? 'right' : 'left';
       }
@@ -1138,7 +1139,7 @@ export class MindMapController {
         return node.children.length > 0 ? node.children[0].id : undefined;
       if (this.layoutMode === 'Both') {
         const target = node.children.find(
-          (c, i) => (c.layoutSide || (i % 2 !== 0 ? 'left' : 'right')) === 'left',
+          (c, i) => (c.presentation.layoutSide || (i % 2 !== 0 ? 'left' : 'right')) === 'left',
         );
         return target ? target.id : undefined;
       }
@@ -1155,7 +1156,7 @@ export class MindMapController {
         return node.children.length > 0 ? node.children[0].id : undefined;
       if (this.layoutMode === 'Both') {
         const target = node.children.find(
-          (c, i) => (c.layoutSide || (i % 2 === 0 ? 'right' : 'left')) === 'right',
+          (c, i) => (c.presentation.layoutSide || (i % 2 === 0 ? 'right' : 'left')) === 'right',
         );
         return target ? target.id : undefined;
       }

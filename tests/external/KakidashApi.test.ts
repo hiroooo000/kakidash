@@ -400,13 +400,13 @@ describe('Kakidash External API', () => {
         board.addNode(child!.id, 'GrandChild');
 
         // Initial state
-        expect(child!.isFolded).toBe(false);
+        expect(child!.presentation.isFolded).toBe(false);
 
         board.toggleFold(child!.id);
-        expect(board.getNode(child!.id)!.isFolded).toBe(true);
+        expect(board.getNode(child!.id)!.presentation.isFolded).toBe(true);
 
         board.toggleFold(child!.id);
-        expect(board.getNode(child!.id)!.isFolded).toBe(false);
+        expect(board.getNode(child!.id)!.presentation.isFolded).toBe(false);
       });
 
       it('should get selected node ID', () => {

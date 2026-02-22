@@ -254,7 +254,7 @@ export class SvgRenderer implements Renderer {
       el.appendChild(textSpan);
 
       const effectiveMaxWidth =
-        node.customWidth ?? (this.maxWidth !== -1 ? this.maxWidth : undefined);
+        node.presentation.customWidth ?? (this.maxWidth !== -1 ? this.maxWidth : undefined);
 
       if (effectiveMaxWidth !== undefined) {
         textSpan.style.whiteSpace = 'pre-wrap';
@@ -418,7 +418,7 @@ export class SvgRenderer implements Renderer {
       positions.forEach((btnX) => {
         const toggleBtn = document.createElement('div');
         toggleBtn.className = 'mindmap-toggle-btn';
-        toggleBtn.innerHTML = node.isFolded ? '+' : '-';
+        toggleBtn.innerHTML = node.presentation.isFolded ? '+' : '-';
         toggleBtn.style.position = 'absolute';
         toggleBtn.style.width = '16px';
         toggleBtn.style.height = '16px';
@@ -448,7 +448,7 @@ export class SvgRenderer implements Renderer {
       });
     }
 
-    if (node.isFolded) return;
+    if (node.presentation.isFolded) return;
 
     // Calculate layout
     // For Both mode at Root: Split children.
@@ -459,7 +459,7 @@ export class SvgRenderer implements Renderer {
 
     if (isRoot && layoutMode === 'Both') {
       node.children.forEach((child, index) => {
-        const side = child.layoutSide || (index % 2 === 0 ? 'right' : 'left');
+        const side = child.presentation.layoutSide || (index % 2 === 0 ? 'right' : 'left');
         if (side === 'right') rightChildren.push(child);
         else leftChildren.push(child);
       });
@@ -586,7 +586,7 @@ export class SvgRenderer implements Renderer {
     const { height } = this.measureNode(node, mindMap);
     const verticalGap = 20;
 
-    if (node.children.length === 0 || node.isFolded) {
+    if (node.children.length === 0 || node.presentation.isFolded) {
       const result = height + verticalGap;
       this.heightCache.set(node.id, result);
       return result;
@@ -661,7 +661,7 @@ export class SvgRenderer implements Renderer {
     el.appendChild(textSpan);
 
     const effectiveMaxWidth =
-      node.customWidth ?? (this.maxWidth !== -1 ? this.maxWidth : undefined);
+      node.presentation.customWidth ?? (this.maxWidth !== -1 ? this.maxWidth : undefined);
 
     if (effectiveMaxWidth !== undefined) {
       textSpan.style.whiteSpace = 'pre-wrap';
