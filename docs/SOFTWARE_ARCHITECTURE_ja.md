@@ -79,6 +79,7 @@ classDiagram
         class MindMapService
         class MindMap
         class Node
+        class NodePresentationData
         class HistoryManager
     }
 
@@ -112,6 +113,7 @@ classDiagram
 
     MindMap *-- Node : root
     Node *-- Node : children
+    Node *-- NodePresentationData : presentation
 
     SvgRenderer ..> MindMap : reads
     StyleEditor ..> MindMapStyles : edits
@@ -156,7 +158,7 @@ src/
 
 #### Core Feature (`src/features/core`)
 マインドマップの核心となるドメインとアプリケーションロジックを含みます。
-- **Domain**: `MindMap`, `Node` エンティティ, `MindMapData` インターフェース。
+- **Domain**: `MindMap`, `Node` エンティティ, `MindMapData` 及び `NodePresentationData` インターフェース（ドメイン状態とビジュアルバージョン状態の厳格な分離）。
 - **Application**: `MindMapService` (ユースケース、一括操作処理含む), `HistoryManager` (履歴管理)。
 
 #### Theme Feature (`src/features/theme`)
