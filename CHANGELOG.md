@@ -5,6 +5,38 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.3] - 2026-02-22
+
+### Added
+
+- Implement differential rendering for selection updates and fix selection style persistence bug.
+- Implement CustomCommand registration API and CommandPalette integration.
+- Allow disabling command palette features via constructor options.
+- Implement help modal with icon explanations and keyboard shortcuts.
+- Add blue and red numeric icons (0-9) to command palette.
+- Implement Shift+Click multi-selection logic.
+
+### Fixed
+
+- Execute postCreateCommand.sh with bash in devcontainer.
+- Export TypedEventEmitter to expose event handling methods in d.ts.
+- Prevent duplicate nodes when copying parent-child hierarchy.
+- Restore focus after cut operation and undoing paste.
+- Resolve typecheck and lint errors.
+
+### Performance
+
+- Implement node ID index (HashMap) for O(1) findNode lookups.
+- Implement measureNode and getNodeHeight cache.
+
+### Refactoring
+
+- Split layout_regression E2E test into 5 independent phase tests and optimize performance.
+- Extract help modal logic to dedicated component and add dynamic i18n support.
+- Consolidate selection restoration and ancestor discovery logic.
+- Separate logic tests to `src/features` and ui tests to `tests/components` (Package by Feature transition).
+- General architectural refactoring including Shared Kernel, Core Domain, and Application Services.
+
 ## [0.2.2] - 2026-02-14
 
 ### Added
