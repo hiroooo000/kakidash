@@ -41,5 +41,5 @@
   },
   "remoteUser": "node",
   "privileged": true,
-  "postCreateCommand": ".devcontainer/postCreateCommand.sh | tee .devcontainer/postCreateCommand.log"
+  "postCreateCommand": "bash .devcontainer/postCreateCommand.sh | tee .devcontainer/postCreateCommand.log"
 }
