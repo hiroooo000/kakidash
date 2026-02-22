@@ -36,6 +36,7 @@ describe('MindMapController Navigation Integration', () => {
       render: vi.fn(),
       measureNode: vi.fn().mockReturnValue({ width: 100, height: 40 }),
       updateTransform: vi.fn(),
+      updateSelection: vi.fn(),
       maxWidth: 200,
     } as unknown as Renderer;
 

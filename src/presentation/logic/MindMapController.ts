@@ -138,8 +138,8 @@ export class MindMapController {
   loadData(data: MindMapData): void {
     try {
       this.service.importData(data);
+      this.render(); // Full render needed after model change
       this.restoreSelection(data);
-      this.render();
       this.eventBus.emit('model:load', data);
       if (data.theme) {
         this.setTheme(data.theme);
@@ -444,7 +444,7 @@ export class MindMapController {
       this.styleEditor.hide();
     }
 
-    this.render();
+    this.renderSelection();
     this.eventBus.emit('node:select', nodeId);
     this.eventBus.emit('selection:change', Array.from(this.selectedNodeIds));
   }
@@ -515,6 +515,15 @@ export class MindMapController {
   render(): void {
     if (this.isBatching) return;
     this.renderer.render(this.mindMap, this.selectedNodeIds, this.layoutMode);
+    this.renderer.updateTransform(this.panX, this.panY, this.scale);
+  }
+
+  /**
+   * Fast path: update selection styles without full DOM rebuild.
+   */
+  private renderSelection(): void {
+    if (this.isBatching) return;
+    this.renderer.updateSelection(this.selectedNodeIds);
     this.renderer.updateTransform(this.panX, this.panY, this.scale);
   }
 
@@ -652,6 +661,7 @@ export class MindMapController {
     const prevState = this.service.undo();
     if (prevState) {
       this.eventBus.emit('command', { name: 'undo' });
+      this.render(); // Full render needed after model change
       this.restoreSelection(prevState);
       this.eventBus.emit('model:change', undefined);
     }
@@ -661,6 +671,7 @@ export class MindMapController {
     const nextState = this.service.redo();
     if (nextState) {
       this.eventBus.emit('command', { name: 'redo' });
+      this.render(); // Full render needed after model change
       this.restoreSelection(nextState);
       this.eventBus.emit('model:change', undefined);
     }

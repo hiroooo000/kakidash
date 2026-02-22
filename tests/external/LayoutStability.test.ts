@@ -29,6 +29,7 @@ vi.mock('../../src/presentation/components/SvgRenderer', () => ({
     return {
       render: vi.fn(),
       updateTransform: vi.fn(),
+      updateSelection: vi.fn(),
       container: container,
     };
   }),

@@ -65,6 +65,7 @@ export class MindMapService {
     const id = this.idGenerator.generate();
     const newNode = new Node(id, topic, null, false, undefined, layoutSide, false);
     parent.addChild(newNode);
+    this.mindMap.registerNode(newNode);
     return newNode;
   }
 
@@ -89,6 +90,7 @@ export class MindMapService {
       imageSize,
     );
     parent.addChild(newNode);
+    this.mindMap.registerNode(newNode);
     return newNode;
   }
 
@@ -100,6 +102,7 @@ export class MindMapService {
     if (parent) {
       if (saveState) this.saveState();
       parent.removeChild(id);
+      this.mindMap.unregisterNode(node);
       return true;
     }
     return false;
@@ -295,11 +298,15 @@ export class MindMapService {
     // Remove from old parent if different
     if (node.parentId && node.parentId !== parent.id) {
       const oldParent = this.mindMap.findNode(node.parentId);
-      if (oldParent) oldParent.removeChild(node.id);
+      if (oldParent) {
+        oldParent.removeChild(node.id);
+        this.mindMap.unregisterNode(node);
+      }
       node.parentId = parent.id; // Update parent ID immediately so it acts as child
     } else if (node.parentId === parent.id) {
       // Remove from current position to re-insert
       parent.removeChild(node.id);
+      this.mindMap.unregisterNode(node);
     }
 
     // Check if target is still in children? Yes.
@@ -307,11 +314,13 @@ export class MindMapService {
     if (targetIndex === -1) {
       // Fallback: append
       parent.addChild(node);
+      this.mindMap.registerNode(node);
       return true;
     }
 
     const insertIndex = position === 'before' ? targetIndex : targetIndex + 1;
     parent.insertChild(node, insertIndex);
+    this.mindMap.registerNode(node);
 
     // Propagate potential side change if moving under Root
     if (parent.isRoot) {
@@ -349,7 +358,10 @@ export class MindMapService {
     // Remove node from its old parent
     if (node.parentId) {
       const oldParent = this.mindMap.findNode(node.parentId);
-      if (oldParent) oldParent.removeChild(node.id);
+      if (oldParent) {
+        oldParent.removeChild(node.id);
+        this.mindMap.unregisterNode(node);
+      }
     }
 
     // Insert node into target's parent at target's index
@@ -362,11 +374,14 @@ export class MindMapService {
     }
 
     targetParent.removeChild(targetId);
+    this.mindMap.unregisterNode(target);
     targetParent.insertChild(node, index);
+    this.mindMap.registerNode(node);
     node.parentId = targetParent.id;
 
     // Add target as child of node
     node.addChild(target);
+    this.mindMap.registerNode(target);
 
     return true;
   }
@@ -466,6 +481,7 @@ export class MindMapService {
       this.regenerateIds(newNode);
 
       parent.addChild(newNode);
+      this.mindMap.registerNode(newNode);
       newNodes.push(newNode);
     });
 
@@ -594,6 +610,7 @@ export class MindMapService {
     };
 
     this.mindMap.root = buildNodeFromData(data.nodeData);
+    this.mindMap.rebuildIndex();
     if (data.theme) {
       this.mindMap.theme = data.theme;
     }
