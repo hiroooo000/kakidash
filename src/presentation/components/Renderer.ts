@@ -12,4 +12,5 @@ export interface Renderer {
   ): void;
   updateTransform(x: number, y: number, scale: number): void;
   measureNode(node: Node, mindMap?: MindMap): { width: number; height: number };
+  updateSelection(selectedNodeIds: Set<string>): void;
 }

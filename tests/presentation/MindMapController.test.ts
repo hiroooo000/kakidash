@@ -46,6 +46,7 @@ describe('MindMapController', () => {
       render: vi.fn(),
       updateTransform: vi.fn(),
       measureNode: vi.fn(),
+      updateSelection: vi.fn(),
     };
     styleEditor = new StyleEditor(document.createElement('div'));
     interactionHandler = new InteractionHandler(document.createElement('div'), {} as any);

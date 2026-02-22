@@ -28,6 +28,7 @@ describe('MindMapController Resizing Fix', () => {
       render: vi.fn(),
       updateTransform: vi.fn(),
       measureNode: vi.fn(),
+      updateSelection: vi.fn(),
     } as unknown as Renderer;
 
     const uiLayer = document.createElement('div');

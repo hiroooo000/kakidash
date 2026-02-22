@@ -18,6 +18,8 @@ export class SvgRenderer implements Renderer {
   maxWidth: number = -1;
   private measureCache: Map<string, { width: number; height: number }> = new Map();
   private heightCache: Map<string, number> = new Map();
+  private nodeElementMap: Map<string, HTMLElement> = new Map();
+  private previousSelectedIds: Set<string> = new Set();
 
   constructor(container: HTMLElement, options: SvgRendererOptions = {}) {
     this.container = container;
@@ -74,6 +76,8 @@ export class SvgRenderer implements Renderer {
     this.nodeContainer.innerHTML = '';
     this.measureCache.clear();
     this.heightCache.clear();
+    this.nodeElementMap.clear();
+    this.previousSelectedIds.clear();
 
     // Simple recursive render for now
     this.renderNode(
@@ -89,6 +93,9 @@ export class SvgRenderer implements Renderer {
 
     // Center root logic if needed, but for now pan handles it.
     // 0, center-y is a good start.
+
+    // Sync previous selection state for future delta updates (Bug Fix)
+    this.previousSelectedIds = new Set(selectionSet);
   }
 
   updateTransform(panX: number, panY: number, scale: number = 1): void {
@@ -381,10 +388,12 @@ export class SvgRenderer implements Renderer {
       // Use outline for selection to preserve theme border
       el.style.outline = '2px solid var(--vscode-focusBorder, #007bff)';
       el.style.boxShadow = '0 0 5px var(--vscode-focusBorder, rgba(0, 123, 255, 0.5))';
+      el.dataset.selected = 'true';
       // Do not overwrite border
     }
 
     this.nodeContainer.appendChild(el);
+    this.nodeElementMap.set(node.id, el);
 
     if (node.children.length === 0) return;
 
@@ -819,5 +828,42 @@ export class SvgRenderer implements Renderer {
     modal.addEventListener('click', () => {
       closeModal();
     });
+  }
+
+  /**
+   * Get the cached DOM element for a given node ID.
+   */
+  getNodeElement(nodeId: string): HTMLElement | undefined {
+    return this.nodeElementMap.get(nodeId);
+  }
+
+  /**
+   * Update selection styles without full DOM rebuild.
+   * Only modifies outline and boxShadow on existing DOM elements.
+   */
+  updateSelection(selectedNodeIds: Set<string>): void {
+    // Clear previous selection styles
+    for (const prevId of this.previousSelectedIds) {
+      if (!selectedNodeIds.has(prevId)) {
+        const el = this.nodeElementMap.get(prevId);
+        if (el) {
+          el.style.outline = '';
+          el.style.boxShadow = '';
+          delete el.dataset.selected;
+        }
+      }
+    }
+
+    // Apply new selection styles
+    for (const id of selectedNodeIds) {
+      const el = this.nodeElementMap.get(id);
+      if (el) {
+        el.style.outline = '2px solid var(--vscode-focusBorder, #007bff)';
+        el.style.boxShadow = '0 0 5px var(--vscode-focusBorder, rgba(0, 123, 255, 0.5))';
+        el.dataset.selected = 'true';
+      }
+    }
+
+    this.previousSelectedIds = new Set(selectedNodeIds);
   }
 }
