@@ -199,6 +199,7 @@ describe('MindMapController', () => {
     root.addChild(child1);
     root.addChild(child2);
     root.addChild(child3);
+    mindMap.rebuildIndex();
 
     // Mock service to return nodes? Service delegates to MindMap usually for add.
     // But navigateNode uses MindMap directly.
@@ -244,6 +245,7 @@ describe('MindMapController', () => {
 
     mindMap.root.addChild(child1);
     mindMap.root.addChild(child2);
+    mindMap.rebuildIndex();
 
     controller.selectNodes(['c1', 'c2']);
     // Focus is c2 (last one)

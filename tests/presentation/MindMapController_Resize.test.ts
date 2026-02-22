@@ -44,6 +44,7 @@ describe('MindMapController Resizing Fix', () => {
     // But controller looks up via mindMap.findNode
     mindMap.root.children.push(node);
     node.parentId = mindMap.root.id;
+    mindMap.rebuildIndex();
 
     // Mock measurement with width 120
     (renderer.measureNode as Mock).mockReturnValue({ width: 120, height: 40 });

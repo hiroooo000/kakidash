@@ -4,26 +4,54 @@ import { Theme } from './MindMapData';
 export class MindMap {
   root: Node;
   theme: Theme = 'default';
+  private nodeIndex: Map<string, Node> = new Map();
 
   constructor(rootNode: Node) {
     this.root = rootNode;
+    this.rebuildIndex();
+  }
+
+  /**
+   * Rebuild the entire node index from the current root tree.
+   * Should be called after root replacement (e.g., importData).
+   */
+  rebuildIndex(): void {
+    this.nodeIndex.clear();
+    this.indexSubtree(this.root);
+  }
+
+  private indexSubtree(node: Node): void {
+    this.nodeIndex.set(node.id, node);
+    for (const child of node.children) {
+      this.indexSubtree(child);
+    }
+  }
+
+  /**
+   * Register a node and its entire subtree into the index.
+   * Call after adding a node (or subtree) to the tree.
+   */
+  registerNode(node: Node): void {
+    this.indexSubtree(node);
+  }
+
+  /**
+   * Unregister a node and its entire subtree from the index.
+   * Call after removing a node (or subtree) from the tree.
+   */
+  unregisterNode(node: Node): void {
+    this.removeFromIndex(node);
+  }
+
+  private removeFromIndex(node: Node): void {
+    this.nodeIndex.delete(node.id);
+    for (const child of node.children) {
+      this.removeFromIndex(child);
+    }
   }
 
   findNode(id: string): Node | null {
-    return this.findNodeRecursive(this.root, id);
-  }
-
-  private findNodeRecursive(current: Node, id: string): Node | null {
-    if (current.id === id) {
-      return current;
-    }
-    for (const child of current.children) {
-      const found = this.findNodeRecursive(child, id);
-      if (found) {
-        return found;
-      }
-    }
-    return null;
+    return this.nodeIndex.get(id) ?? null;
   }
 
   moveNode(nodeId: string, newParentId: string): boolean {
@@ -45,7 +73,7 @@ export class MindMap {
       }
     }
 
-    // Add to new parent
+    // Add to new parent (index already has the node, no re-register needed)
     newParent.addChild(node);
     return true;
   }
@@ -62,6 +90,9 @@ export class MindMap {
 
     const insertIndex = position === 'before' ? index : index + 1;
     parent.insertChild(newNode, insertIndex);
+
+    // Register new node in index
+    this.registerNode(newNode);
     return true;
   }
 
@@ -77,7 +108,6 @@ export class MindMap {
     if (index === -1) return false;
 
     // 2. Remove target node from current parent
-    // We use splice to remove it but we need to reference the node instance, which we already have in 'targetNode'
     currentParent.removeChild(targetId);
 
     // 3. Insert the new parent node at the same position
@@ -86,6 +116,8 @@ export class MindMap {
     // 4. Add the target node as a child of the new parent
     newParentNode.addChild(targetNode);
 
+    // Register new parent node in index
+    this.registerNode(newParentNode);
     return true;
   }
 
