@@ -33,6 +33,7 @@ import { FileHandler } from './shared/kernel/FileHandler';
 export type { FileHandler } from './shared/kernel/FileHandler';
 export { SvgGenerator } from './features/export_import/SvgGenerator';
 export { XMindImporter } from './features/export_import/XMindImporter';
+export type { CustomCommand } from './presentation/components/CommandPalette';
 
 export interface KakidashOptions {
   shortcuts?: ShortcutConfig;
@@ -247,6 +248,16 @@ export class Kakidash extends TypedEventEmitter<KakidashEventMap> {
    */
   public toggleCommandPalette(): void {
     this.controller.toggleCommandPalette();
+  }
+
+  /**
+   * Registers a custom command to be displayed in the command palette.
+   * @param command The custom command definition.
+   */
+  public registerCommand(
+    command: import('./presentation/components/CommandPalette').CustomCommand,
+  ): void {
+    this.controller.registerCommand(command);
   }
 
   /**

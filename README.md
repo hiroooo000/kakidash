@@ -214,6 +214,11 @@ All values accept standard CSS strings.
 - **`kakidash.redo()`**: Redo the last undone change.
 - **`kakidash.toggleFold(nodeId)`**: Toggle fold state of a node.
 - **`kakidash.getSelectedNodeId()`**: Get the ID of the currently selected node.
+- **`kakidash.setSelectedNodeId(nodeId)`**: Selects a node by its ID.
+- **`kakidash.registerCommand(command)`**: Registers a custom command to the command palette.
+  - `command.id`: Unique ID for the command.
+  - `command.topic`: Display name in the palette.
+  - `command.execute`: Callback function `(selectedNodeId: string | null) => void`.
 - **`kakidash.updateNode(nodeId, { topic?, style?, icon? })`**: Updates a node property. `icon` accepts an icon ID (e.g., 'check').
 - **`kakidash.on(event, listener)`**: Register an event listener.
 - **`kakidash.off(event, listener)`**: Remove an event listener.
@@ -359,6 +364,26 @@ Here is the complete default configuration. You can partially override these key
 | `Shift + , (<)` / `,`       | Decrease font size                |
 | `Shift + Alt + ArrowLeft / Right` | Adjust node width                 |
 | `1` - `7`                   | Change node color (Palette order) |
+
+## Custom Commands
+
+You can extend the command palette with your own functions using `registerCommand`.
+
+```typescript
+board.registerCommand({
+    id: 'rocket-launch',
+    topic: '🚀 Rocket Launch',
+    execute: (selectedNodeId) => {
+        console.log('Action on node:', selectedNodeId);
+        // Your logic here
+        if (selectedNodeId) {
+            board.updateNodeTopic(selectedNodeId, '🚀 LAUNCHED!');
+        }
+    }
+});
+```
+
+Registered commands will appear in the Command Palette (default key: `m`). Clicking or pressing Enter on the item will execute the handler.
 
 ## Architecture
 

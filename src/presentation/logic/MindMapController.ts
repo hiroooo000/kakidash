@@ -11,7 +11,7 @@ import { MindMapData, Theme } from '../../features/core/domain/MindMapData';
 import { KakidashEventMap } from '../../features/core/domain/KakidashEvents';
 import { MindMapStyles } from '../../features/theme/domain/MindMapStyles';
 import { StyleAction } from '../../features/theme/domain/StyleAction';
-import { CommandPalette } from '../components/CommandPalette';
+import { CommandPalette, CustomCommand } from '../components/CommandPalette';
 import { ThemeRegistry } from '../../features/theme/registry/ThemeRegistry';
 import { XMindImporter } from '../../features/export_import/XMindImporter';
 import { ImageExporter } from '../../features/export_import/ImageExporter';
@@ -82,6 +82,7 @@ export class MindMapController {
       onClose: () => {
         if (this.interactionHandler) this.interactionHandler.container.focus();
       },
+      getSelectedNodeId: () => this.selectedNodeId,
       disabledFeatures: commandPaletteFeatures,
     });
 
@@ -897,6 +898,10 @@ export class MindMapController {
   public toggleCommandPalette(): void {
     if (this.interactionHandler && this.interactionHandler.isReadOnly) return;
     this.commandPalette.toggle();
+  }
+
+  public registerCommand(command: CustomCommand): void {
+    this.commandPalette.addCustomCommand(command);
   }
 
   public searchNodes(query: string): Node[] {
