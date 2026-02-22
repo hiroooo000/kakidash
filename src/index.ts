@@ -31,6 +31,7 @@ export type { NodeStyle } from './features/core/domain/Node';
 export { Node } from './features/core/domain/Node';
 import { FileHandler } from './shared/kernel/FileHandler';
 export type { FileHandler } from './shared/kernel/FileHandler';
+export { TypedEventEmitter } from './shared/infrastructure/EventEmitter';
 export { SvgGenerator } from './features/export_import/SvgGenerator';
 export { XMindImporter } from './features/export_import/XMindImporter';
 export type { CustomCommand } from './presentation/components/CommandPalette';
