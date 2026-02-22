@@ -182,7 +182,11 @@ Common components referenced by all features.
 Integrates features and provides the user interface.
 - **MindMapController**: Main controller orchestrating features (Core, Theme, Export). Manages selection state (single/multi).
 - **InteractionHandler**: Handing user input operations.
-- **Components**: `SvgRenderer` (Rendering), `CommandPalette` (Command UI).
+- **Components**:
+  - **SvgRenderer**: Responsible for rendering the mind map using SVG and HTML. Implements **Differential Rendering** for high performance:
+    - **DOM Caching**: Uses `nodeElementMap` to cache node DOM elements for O(1) access.
+    - **Delta Updates**: Separates full re-renders from selection updates. Selection changes only modify the styles/attributes of affected elements without rebuilding the DOM.
+  - **CommandPalette**: Command user interface.
 
 ## 4. Major Processing Sequence
 
@@ -332,6 +336,33 @@ sequenceDiagram
     Controller->>Controller: selectNode(nodeId)
     Controller->>Controller: ensureNodeVisible(nodeId)
     Controller-->>User: Focus Node
+    deactivate Controller
+```
+
+### 4.5 Selection Update Flow (Optimized Path)
+
+This diagram shows the fast-path selection update that avoids a full re-render.
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Controller as Presentation/MindMapController
+    participant Renderer as Presentation/SvgRenderer
+
+    User->>Controller: selectNode(nodeId)
+    activate Controller
+
+    Controller->>Controller: Update selectedNodeIds (Set)
+    
+    Controller->>Renderer: updateSelection(selectedNodeIds)
+    activate Renderer
+    Note over Renderer: Use nodeElementMap & previousSelectedIds
+    Renderer->>Renderer: Remove styles from previous selected elements
+    Renderer->>Renderer: Apply styles to new selected elements
+    Renderer-->>Controller: 
+    deactivate Renderer
+
+    Controller-->>User: Fast Visual Response (O(1))
     deactivate Controller
 ```
 

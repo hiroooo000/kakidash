@@ -182,7 +182,11 @@ src/
 各機能を統合し、ユーザーインターフェースを提供します。
 - **MindMapController**: 各機能（Core, Theme, Export）をオーケストレーションするメインコントローラー。選択状態（単一・複数）を管理します。
 - **InteractionHandler**: ユーザー操作の入力処理。
-- **Components**: `SvgRenderer` (描画), `CommandPalette` (コマンドUI)。
+- **Components**:
+  - **SvgRenderer**: SVGとHTMLを使用してマインドマップを描画します。高パフォーマンス維持のため **差分レンダリング（Differential Rendering）** を実装しています。
+    - **DOMキャッシュ**: `nodeElementMap` を使用して各ノードのDOM要素をキャッシュし、O(1) でのアクセスを可能にします。
+    - **差分更新**: フルレンダリングと選択状態の更新を分離。選択変更時にはDOMを再構築せず、対象要素のスタイル/属性のみを変更します。
+  - **CommandPalette**: コマンドUI。
 
 ## 4. 主要な処理シーケンス
 
@@ -332,6 +336,33 @@ sequenceDiagram
     Controller->>Controller: selectNode(nodeId)
     Controller->>Controller: ensureNodeVisible(nodeId)
     Controller-->>User: Focus Node
+    deactivate Controller
+```
+
+### 4.5 選択更新フロー（最適化パス）
+
+フルレンダリングを回避する、選択更新の高速パスを示します。
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Controller as Presentation/MindMapController
+    participant Renderer as Presentation/SvgRenderer
+
+    User->>Controller: selectNode(nodeId)
+    activate Controller
+
+    Controller->>Controller: internal selectedNodeIds (Set) の更新
+    
+    Controller->>Renderer: updateSelection(selectedNodeIds)
+    activate Renderer
+    Note over Renderer: nodeElementMap と previousSelectedIds を利用
+    Renderer->>Renderer: 以前の選択要素からスタイルを除去
+    Renderer->>Renderer: 新しい選択要素にスタイルを適用
+    Renderer-->>Controller: 
+    deactivate Renderer
+
+    Controller-->>User: 高速な視覚フィードバック (O(1))
     deactivate Controller
 ```
 
