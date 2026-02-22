@@ -219,6 +219,11 @@ kakidash.setTheme('custom');
 - **`kakidash.redo()`**: 元に戻した変更をやり直します。
 - **`kakidash.toggleFold(nodeId)`**: ノードの折り畳み/展開を切り替えます。
 - **`kakidash.getSelectedNodeId()`**: 現在選択されているノードのIDを取得します。
+- **`kakidash.setSelectedNodeId(nodeId)`**: 指定したIDのノードを選択状態にします。
+- **`kakidash.registerCommand(command)`**: コマンドパレットにカスタムコマンドを登録します。
+  - `command.id`: コマンドの一意なID。
+  - `command.topic`: パレットに表示される名前。
+  - `command.execute`: 実行時に呼ばれるコールバック `(selectedNodeId: string | null) => void`。
 - **`kakidash.updateNode(nodeId, { topic?, style?, icon? })`**: ノードを更新します。`icon` にはアイコンID ('check', 'star' など) を指定します。
 - **`kakidash.on(event, listener)`**: イベントリスナーを登録します。
 - **`kakidash.off(event, listener)`**: イベントリスナーを削除します。
@@ -364,6 +369,26 @@ const kakidash = new Kakidash(container, {
 | `Shift + , (<)` / `,`       | フォントサイズ縮小            |
 | `Shift + Alt + ArrowLeft / Right` | ノード幅の変更                |
 | `1` - `7`                   | ノードの色を変更 (パレット順) |
+
+## カスタムコマンドの登録
+
+`registerCommand` を使用して、自身の関数をコマンドパレットに追加できます。
+
+```typescript
+board.registerCommand({
+    id: 'rocket-launch',
+    topic: '🚀 Rocket Launch',
+    execute: (selectedNodeId) => {
+        console.log('選択中のノード:', selectedNodeId);
+        // ここに独自のロジックを記述します
+        if (selectedNodeId) {
+            board.updateNodeTopic(selectedNodeId, '🚀 LAUNCHED!');
+        }
+    }
+});
+```
+
+登録されたコマンドはコマンドパレット（デフォルト：`m` キー）の一覧に表示されます。項目をクリックするか Enter キーを押すことで実行されます。
 
 ## アーキテクチャ
 
