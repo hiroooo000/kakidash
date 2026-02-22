@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/unbound-method */
 import { describe, it, expect, beforeEach, vi, afterEach, Mock } from 'vitest';
 import { MindMapController } from '../../../src/presentation/logic/MindMapController';
 import { MindMap } from '../../../src/features/core/domain/MindMap';
@@ -23,6 +22,10 @@ describe('MindMapController', () => {
   let renderer: Renderer;
   let styleEditor: StyleEditor;
   let eventBus: IMindMapEventBus;
+  let mockEmit: Mock;
+  let mockOnImportFile: Mock;
+  let mockOnExportFile: Mock;
+  let mockImportData: Mock;
   let fileHandler: FileHandler;
 
   beforeEach(() => {
@@ -37,8 +40,9 @@ describe('MindMapController', () => {
       vi.fn(() => true),
     );
 
+    mockImportData = vi.fn();
     service = {
-      importData: vi.fn(),
+      importData: mockImportData,
       exportData: vi.fn(),
       addNode: vi.fn().mockReturnValue(new Node('new-id', 'Topic')),
       addSibling: vi.fn().mockReturnValue(new Node('sib-id', 'Topic')),
@@ -76,13 +80,16 @@ describe('MindMapController', () => {
       hide: vi.fn(),
     } as unknown as StyleEditor;
 
+    mockEmit = vi.fn();
     eventBus = {
-      emit: vi.fn(),
+      emit: mockEmit,
     };
 
+    mockOnImportFile = vi.fn();
+    mockOnExportFile = vi.fn();
     fileHandler = {
-      onImportFile: vi.fn(),
-      onExportFile: vi.fn(),
+      onImportFile: mockOnImportFile,
+      onExportFile: mockOnExportFile,
     };
 
     controller = new MindMapController(
@@ -102,40 +109,25 @@ describe('MindMapController', () => {
   it('should emit command events for various operations', () => {
     // Arrange & Act
     controller.addNode('root', 'Child');
-    expect(eventBus.emit).toHaveBeenCalledWith(
-      'command',
-      expect.objectContaining({ name: 'addNode' }),
-    );
+    expect(mockEmit).toHaveBeenCalledWith('command', expect.objectContaining({ name: 'addNode' }));
 
     controller.undo();
-    expect(eventBus.emit).toHaveBeenCalledWith(
-      'command',
-      expect.objectContaining({ name: 'undo' }),
-    );
+    expect(mockEmit).toHaveBeenCalledWith('command', expect.objectContaining({ name: 'undo' }));
 
     controller.redo();
-    expect(eventBus.emit).toHaveBeenCalledWith(
-      'command',
-      expect.objectContaining({ name: 'redo' }),
-    );
+    expect(mockEmit).toHaveBeenCalledWith('command', expect.objectContaining({ name: 'redo' }));
 
     controller.setTheme('simple');
-    expect(eventBus.emit).toHaveBeenCalledWith(
-      'command',
-      expect.objectContaining({ name: 'setTheme' }),
-    );
+    expect(mockEmit).toHaveBeenCalledWith('command', expect.objectContaining({ name: 'setTheme' }));
 
     controller.setLayoutMode('Left');
-    expect(eventBus.emit).toHaveBeenCalledWith(
+    expect(mockEmit).toHaveBeenCalledWith(
       'command',
       expect.objectContaining({ name: 'setLayoutMode' }),
     );
 
     controller.moveNode('node-id', 'target-id', 'right');
-    expect(eventBus.emit).toHaveBeenCalledWith(
-      'command',
-      expect.objectContaining({ name: 'moveNode' }),
-    );
+    expect(mockEmit).toHaveBeenCalledWith('command', expect.objectContaining({ name: 'moveNode' }));
   });
 
   it('should use fileHandler for importXMind when provided', async () => {
@@ -156,19 +148,19 @@ describe('MindMapController', () => {
     await controller.importXMind();
 
     // Assert
-    expect(eventBus.emit).toHaveBeenCalledWith(
+    expect(mockEmit).toHaveBeenCalledWith(
       'command',
       expect.objectContaining({ name: 'importXMind' }),
     );
-    expect(fileHandler.onImportFile).toHaveBeenCalledWith('xmind');
+    expect(mockOnImportFile).toHaveBeenCalledWith('xmind');
     expect(extractSpy).toHaveBeenCalled();
     // Verify that the argument passed to extractMindMapData is a File
     const callArgs = extractSpy.mock.calls[0];
     expect(callArgs[0]).toBeInstanceOf(File);
     expect((callArgs[0] as File).name).toBe('imported.xmind');
 
-    expect(service.importData).toHaveBeenCalledWith(mockData);
-    expect(eventBus.emit).toHaveBeenCalledWith('model:load', mockData);
+    expect(mockImportData).toHaveBeenCalledWith(mockData);
+    expect(mockEmit).toHaveBeenCalledWith('model:load', mockData);
 
     extractSpy.mockRestore();
   });
@@ -186,12 +178,12 @@ describe('MindMapController', () => {
     await controller.importXMind();
 
     // Assert
-    expect(eventBus.emit).toHaveBeenCalledWith(
+    expect(mockEmit).toHaveBeenCalledWith(
       'command',
       expect.objectContaining({ name: 'importXMind' }),
     );
-    expect(window.confirm).toHaveBeenCalled();
-    expect(fileHandler.onImportFile).not.toHaveBeenCalled();
+    expect(vi.mocked(window.confirm)).toHaveBeenCalled();
+    expect(mockOnImportFile).not.toHaveBeenCalled();
   });
 
   it('should fallback to DOM input if fileHandler is NOT provided', async () => {
@@ -226,7 +218,7 @@ describe('MindMapController', () => {
     await controller.exportPng();
 
     // Assert
-    expect(eventBus.emit).toHaveBeenCalledWith(
+    expect(mockEmit).toHaveBeenCalledWith(
       'command',
       expect.objectContaining({ name: 'exportPng' }),
     );
@@ -242,7 +234,7 @@ describe('MindMapController', () => {
     await controller.exportSvg();
 
     // Assert
-    expect(eventBus.emit).toHaveBeenCalledWith(
+    expect(mockEmit).toHaveBeenCalledWith(
       'command',
       expect.objectContaining({ name: 'exportSvg' }),
     );
@@ -258,7 +250,7 @@ describe('MindMapController', () => {
     await controller.exportMarkdown();
 
     // Assert
-    expect(eventBus.emit).toHaveBeenCalledWith(
+    expect(mockEmit).toHaveBeenCalledWith(
       'command',
       expect.objectContaining({ name: 'exportMarkdown' }),
     );
@@ -274,8 +266,7 @@ describe('MindMapController', () => {
       topic: 'Custom Action',
       execute: handler,
     };
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
-    const addCustomCommandSpy = vi.spyOn((controller as any).commandPalette, 'addCustomCommand');
+    const addCustomCommandSpy = vi.spyOn(controller['commandPalette'], 'addCustomCommand');
 
     // Act
     controller.registerCommand(customCmd);
