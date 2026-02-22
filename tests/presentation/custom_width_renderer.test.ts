@@ -43,7 +43,7 @@ describe('SvgRenderer Custom Width', () => {
   it('should apply customWidth over global maxWidth', () => {
     renderer.maxWidth = 200;
     const node = new Node('1', 'Long text');
-    node.customWidth = 300;
+    node.presentation.customWidth = 300;
 
     (renderer as any).renderNode(node, 0, 0, new Set(), 'Right', false, 'right');
     const nodeEl = renderer.nodeContainer.querySelector(`[data-id="${node.id}"]`) as HTMLElement;
@@ -54,7 +54,7 @@ describe('SvgRenderer Custom Width', () => {
   it('should apply customWidth even if global maxWidth is disabled (-1)', () => {
     renderer.maxWidth = -1;
     const node = new Node('1', 'Long text');
-    node.customWidth = 150;
+    node.presentation.customWidth = 150;
 
     (renderer as any).renderNode(node, 0, 0, new Set(), 'Right', false, 'right');
     const nodeEl = renderer.nodeContainer.querySelector(`[data-id="${node.id}"]`) as HTMLElement;

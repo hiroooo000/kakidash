@@ -6,6 +6,12 @@ export interface NodeStyle {
   fontStyle?: string;
 }
 
+export interface NodePresentationData {
+  layoutSide?: 'left' | 'right';
+  isFolded: boolean;
+  customWidth?: number;
+}
+
 export class Node {
   id: string;
   topic: string;
@@ -15,10 +21,8 @@ export class Node {
   isRoot: boolean;
   image?: string;
   imageSize?: { width: number; height: number };
-  layoutSide?: 'left' | 'right';
-  isFolded: boolean;
   icon?: string;
-  customWidth?: number;
+  presentation: NodePresentationData;
 
   constructor(
     id: string,
@@ -40,10 +44,12 @@ export class Node {
     this.isRoot = isRoot;
     this.image = image;
     this.imageSize = imageSize;
-    this.layoutSide = layoutSide;
-    this.isFolded = isFolded;
     this.icon = icon;
-    this.customWidth = customWidth;
+    this.presentation = {
+      isFolded,
+      layoutSide,
+      customWidth,
+    };
   }
 
   addChild(node: Node): void {

@@ -79,6 +79,7 @@ classDiagram
         class MindMapService
         class MindMap
         class Node
+        class NodePresentationData
         class HistoryManager
     }
 
@@ -112,6 +113,7 @@ classDiagram
 
     MindMap *-- Node : root
     Node *-- Node : children
+    Node *-- NodePresentationData : presentation
 
     SvgRenderer ..> MindMap : reads
     StyleEditor ..> MindMapStyles : edits
@@ -156,7 +158,7 @@ Modules sliced vertically by feature.
 
 #### Core Feature (`src/features/core`)
 Contains the core domain and application logic of the Mind Map.
-- **Domain**: `MindMap`, `Node` Entities, `MindMapData` Interface.
+- **Domain**: `MindMap`, `Node` Entities, `MindMapData` and `NodePresentationData` Interfaces (Strict separation of Domain and View state).
 - **Application**: `MindMapService` (Use Cases including bulk operations), `HistoryManager` (History Management).
 
 #### Theme Feature (`src/features/theme`)

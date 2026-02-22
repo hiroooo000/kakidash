@@ -156,12 +156,12 @@ describe('MindMapService', () => {
     const child1 = service.addNode('root', 'Child 1', 'right');
     expect(child1).toBeDefined();
     if (child1) {
-      expect(child1.layoutSide).toBe('right');
+      expect(child1.presentation.layoutSide).toBe('right');
 
       // Move to same parent but change side
       const result = service.moveNode(child1.id, 'root', 'left');
       expect(result).toBe(true);
-      expect(child1.layoutSide).toBe('left');
+      expect(child1.presentation.layoutSide).toBe('left');
     }
   });
 
@@ -237,7 +237,7 @@ describe('MindMapService', () => {
         service.addNode(child1.id, 'GrandChild'); // Add child to allow fold
 
         service.toggleNodeFold(child1.id);
-        expect(child1.isFolded).toBe(true);
+        expect(child1.presentation.isFolded).toBe(true);
 
         const data = service.exportData();
         const childData = data.nodeData.children?.find((c) => c.id === child1.id);
@@ -247,7 +247,7 @@ describe('MindMapService', () => {
         service.importData(data);
         const importedChild = service.mindMap.findNode(child1.id);
         expect(importedChild).toBeDefined();
-        expect(importedChild?.isFolded).toBe(true);
+        expect(importedChild?.presentation.isFolded).toBe(true);
       }
     });
 
@@ -258,13 +258,13 @@ describe('MindMapService', () => {
         // Must add a child for fold to work
         service.addNode(child1.id, 'GrandChild');
 
-        expect(child1.isFolded).toBe(false);
+        expect(child1.presentation.isFolded).toBe(false);
         const result = service.toggleNodeFold(child1.id);
         expect(result).toBe(true);
-        expect(child1.isFolded).toBe(true);
+        expect(child1.presentation.isFolded).toBe(true);
 
         service.toggleNodeFold(child1.id);
-        expect(child1.isFolded).toBe(false);
+        expect(child1.presentation.isFolded).toBe(false);
       }
     });
   });
