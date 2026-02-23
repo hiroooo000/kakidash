@@ -1,55 +1,15 @@
 import { MindMap } from '../domain/MindMap';
 import { Node } from '../domain/Node';
 import { MindMapData, MindMapNodeData } from '../domain/MindMapData';
-import { HistoryManager } from './HistoryManager';
 import { IdGenerator } from '../../../shared/kernel/IdGenerator';
 
 export class MindMapService {
   mindMap: MindMap;
-  private historyManager: HistoryManager<MindMapData>;
   private idGenerator: IdGenerator;
-  private selectionProvider?: () => { selectedId?: string; selectedIds?: string[] };
 
   constructor(mindMap: MindMap, idGenerator: IdGenerator) {
     this.mindMap = mindMap;
-    this.historyManager = new HistoryManager<MindMapData>(10);
     this.idGenerator = idGenerator;
-  }
-
-  setSelectionProvider(provider: () => { selectedId?: string; selectedIds?: string[] }): void {
-    this.selectionProvider = provider;
-  }
-
-  private saveState(): void {
-    const data = this.exportData();
-
-    this.historyManager.push(data);
-  }
-
-  undo(): MindMapData | null {
-    const prevState = this.historyManager.undo(this.exportData());
-    if (prevState) {
-      this.importData(prevState);
-      return prevState;
-    }
-    return null;
-  }
-
-  redo(): MindMapData | null {
-    const nextState = this.historyManager.redo(this.exportData());
-    if (nextState) {
-      this.importData(nextState);
-      return nextState;
-    }
-    return null;
-  }
-
-  get canUndo(): boolean {
-    return this.historyManager.canUndo;
-  }
-
-  get canRedo(): boolean {
-    return this.historyManager.canRedo;
   }
 
   addNode(
@@ -59,8 +19,6 @@ export class MindMapService {
   ): Node | null {
     const parent = this.mindMap.findNode(parentId);
     if (!parent) return null;
-
-    this.saveState();
 
     const id = this.idGenerator.generate();
     const newNode = new Node(id, topic, null, false, undefined, layoutSide, false);
@@ -72,8 +30,6 @@ export class MindMapService {
   addImageNode(parentId: string, imageData: string, width?: number, height?: number): Node | null {
     const parent = this.mindMap.findNode(parentId);
     if (!parent) return null;
-
-    this.saveState();
 
     const id = this.idGenerator.generate();
     // Image nodes have empty topic
@@ -94,13 +50,12 @@ export class MindMapService {
     return newNode;
   }
 
-  removeNode(id: string, saveState: boolean = true): boolean {
+  removeNode(id: string): boolean {
     const node = this.mindMap.findNode(id);
     if (!node || node.isRoot || !node.parentId) return false;
 
     const parent = this.mindMap.findNode(node.parentId);
     if (parent) {
-      if (saveState) this.saveState();
       parent.removeChild(id);
       this.mindMap.unregisterNode(node);
       return true;
@@ -117,8 +72,6 @@ export class MindMapService {
       if (!node || node.isRoot) return false;
     }
 
-    this.saveState();
-
     let removedAny = false;
     // We sort ids to avoid issues? No, just remove them.
     // Finding node logic might be affected if we remove parent then child?
@@ -133,7 +86,7 @@ export class MindMapService {
 
     ids.forEach((id) => {
       // Pass false to saveState because we saved once at the start
-      if (this.removeNode(id, false)) {
+      if (this.removeNode(id)) {
         removedAny = true;
       }
     });
@@ -144,7 +97,6 @@ export class MindMapService {
   updateNodeTopic(id: string, topic: string): boolean {
     const node = this.mindMap.findNode(id);
     if (node) {
-      this.saveState();
       node.updateTopic(topic);
       return true;
     }
@@ -154,7 +106,6 @@ export class MindMapService {
   updateNodeStyle(id: string, style: Partial<import('../domain/Node').NodeStyle>): boolean {
     const node = this.mindMap.findNode(id);
     if (node) {
-      this.saveState();
       node.style = { ...node.style, ...style };
       return true;
     }
@@ -164,7 +115,6 @@ export class MindMapService {
   updateNodesStyle(ids: string[], style: Partial<import('../domain/Node').NodeStyle>): boolean {
     if (ids.length === 0) return false;
 
-    this.saveState();
     let updatedAny = false;
 
     ids.forEach((id) => {
@@ -186,7 +136,6 @@ export class MindMapService {
         return false;
       }
 
-      this.saveState();
       node.presentation.isFolded = !node.presentation.isFolded;
       return true;
     }
@@ -195,7 +144,6 @@ export class MindMapService {
 
   setTheme(theme: import('../domain/MindMapData').Theme): void {
     if (this.mindMap.theme !== theme) {
-      this.saveState();
       this.mindMap.theme = theme;
     }
   }
@@ -203,7 +151,6 @@ export class MindMapService {
   updateNodeCustomWidth(id: string, width: number | undefined): boolean {
     const node = this.mindMap.findNode(id);
     if (node) {
-      this.saveState();
       node.presentation.customWidth = width;
       return true;
     }
@@ -215,7 +162,6 @@ export class MindMapService {
     const node = this.mindMap.findNode(nodeId);
     if (node && node.parentId === newParentId) {
       if (layoutSide && node.presentation.layoutSide !== layoutSide) {
-        this.saveState();
         node.presentation.layoutSide = layoutSide;
         return true;
       }
@@ -227,8 +173,6 @@ export class MindMapService {
     // However, if move fails, we added a redundant state.
     // Let's check finding node first to be sure it exists.
     if (!node) return false;
-
-    this.saveState();
 
     if (this.mindMap.moveNode(nodeId, newParentId)) {
       if (layoutSide) {
@@ -256,8 +200,6 @@ export class MindMapService {
     const referenceNode = this.mindMap.findNode(referenceId);
     if (!referenceNode || !referenceNode.parentId) return null;
 
-    this.saveState();
-
     const id = this.idGenerator.generate();
     const newNode = new Node(id, topic);
 
@@ -279,8 +221,6 @@ export class MindMapService {
 
     const parent = this.mindMap.findNode(target.parentId);
     if (!parent) return false;
-
-    this.saveState();
 
     // Cycle detection if moving to new parent
     if (node.parentId !== parent.id) {
@@ -353,8 +293,6 @@ export class MindMapService {
       current = this.mindMap.findNode(current.parentId) as Node;
     }
 
-    this.saveState();
-
     // Remove node from its old parent
     if (node.parentId) {
       const oldParent = this.mindMap.findNode(node.parentId);
@@ -390,8 +328,6 @@ export class MindMapService {
     const targetNode = this.mindMap.findNode(targetId);
     if (!targetNode || !targetNode.parentId) return null;
 
-    this.saveState();
-
     const id = this.idGenerator.generate();
     const newParentNode = new Node(id, topic);
 
@@ -401,117 +337,9 @@ export class MindMapService {
     return null;
   }
 
-  private clipboard: Node[] = [];
-
-  copyNode(nodeId: string): void {
-    this.copyNodes([nodeId]);
-  }
-
-  copyNodes(nodeIds: string[]): void {
-    this.clipboard = [];
-    const texts: string[] = [];
-
-    // Filter out nodes whose ancestors are also in the selection
-    const selectedIdsSet = new Set(nodeIds);
-    const rootsToCopy: string[] = [];
-
-    nodeIds.forEach((id) => {
-      let isDescendantOfSelected = false;
-      const node = this.mindMap.findNode(id);
-
-      if (node) {
-        let current = node.parentId ? this.mindMap.findNode(node.parentId) : null;
-        while (current) {
-          if (selectedIdsSet.has(current.id)) {
-            isDescendantOfSelected = true;
-            break;
-          }
-          current = current.parentId ? this.mindMap.findNode(current.parentId) : null;
-        }
-      }
-
-      if (!isDescendantOfSelected) {
-        rootsToCopy.push(id);
-      }
-    });
-
-    rootsToCopy.forEach((id) => {
-      const node = this.mindMap.findNode(id);
-      if (node) {
-        this.clipboard.push(this.deepCloneNode(node));
-        texts.push(node.topic);
-      }
-    });
-
-    if (navigator.clipboard && texts.length > 0) {
-      navigator.clipboard.writeText(texts.join('\n')).catch((err) => {
-        console.error('Failed to write to clipboard', err);
-      });
-    }
-  }
-
-  cutNode(nodeId: string): void {
-    this.cutNodes([nodeId]);
-  }
-
-  cutNodes(nodeIds: string[]): void {
-    this.copyNodes(nodeIds);
-    this.removeNodes(nodeIds);
-  }
-
-  pasteNode(parentId: string): Node | null {
-    const nodes = this.pasteNodes(parentId);
-    return nodes.length > 0 ? nodes[0] : null;
-  }
-
-  pasteNodes(parentId: string): Node[] {
-    if (this.clipboard.length === 0) return [];
-
-    const parent = this.mindMap.findNode(parentId);
-    if (!parent) return [];
-
-    this.saveState();
-
-    const newNodes: Node[] = [];
-
-    this.clipboard.forEach((clipNode) => {
-      // Clone again from clipboard to create new instance for the tree
-      const newNode = this.deepCloneNode(clipNode);
-      // Regenerate IDs for the new node and its children
-      this.regenerateIds(newNode);
-
-      parent.addChild(newNode);
-      this.mindMap.registerNode(newNode);
-      newNodes.push(newNode);
-    });
-
-    return newNodes;
-  }
-
-  private deepCloneNode(node: Node): Node {
-    const clone = new Node(
-      node.id,
-      node.topic,
-      null,
-      false,
-      node.image,
-      node.presentation.layoutSide,
-      node.presentation.isFolded,
-      node.icon,
-      node.imageSize && { ...node.imageSize },
-    );
-    clone.style = { ...node.style };
-    // Determine how to handle children. Recursively clone them.
-    clone.children = node.children.map((child) => this.deepCloneNode(child));
-    // Fix parent relations for children after cloning
-    clone.children.forEach((child) => (child.parentId = clone.id));
-    return clone;
-  }
-
   updateNodeIcon(id: string, icon: string): boolean {
     const node = this.mindMap.findNode(id);
     if (node) {
-      this.saveState();
       if (icon === 'delete') {
         node.icon = undefined;
       } else {
@@ -522,12 +350,15 @@ export class MindMapService {
     return false;
   }
 
-  private regenerateIds(node: Node): void {
-    node.id = this.idGenerator.generate();
-    node.children.forEach((child) => {
-      child.parentId = node.id;
-      this.regenerateIds(child);
+  addExistingNodes(parentId: string, nodes: Node[]): boolean {
+    const parent = this.mindMap.findNode(parentId);
+    if (!parent) return false;
+
+    nodes.forEach((node) => {
+      parent.addChild(node);
+      this.mindMap.registerNode(node);
     });
+    return true;
   }
 
   exportData(): MindMapData {
@@ -554,29 +385,7 @@ export class MindMapService {
       theme: this.mindMap.theme,
     };
 
-    if (this.selectionProvider) {
-      const selection = this.selectionProvider();
-      if (selection.selectedId) data.selectedId = selection.selectedId;
-      if (selection.selectedIds) data.selectedIds = selection.selectedIds;
-    }
-
     return data;
-  }
-
-  searchNodes(query: string): Node[] {
-    if (!query) return [];
-    const results: Node[] = [];
-    const lowerQuery = query.toLowerCase();
-
-    const traverse = (node: Node) => {
-      if (node.topic.toLowerCase().includes(lowerQuery)) {
-        results.push(node);
-      }
-      node.children.forEach(traverse);
-    };
-
-    traverse(this.mindMap.root);
-    return results;
   }
 
   importData(data: MindMapData): void {

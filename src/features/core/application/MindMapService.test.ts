@@ -269,39 +269,6 @@ describe('MindMapService', () => {
     });
   });
 
-  describe('Search', () => {
-    it('should find nodes matching query', () => {
-      service.addNode('root', 'Alpha');
-      const beta = service.addNode('root', 'Beta');
-      service.addNode(beta!.id, 'Charlie');
-
-      // "Alpha" (contains 'a'), "Charlie" (contains 'a'), "Beta" (contains 'a') -> All match?
-      // "Alpha" -> a, "Beta" -> a, "Charlie" -> a.
-
-      const alResults = service.searchNodes('al');
-      expect(alResults.length).toBe(1);
-      expect(alResults[0].topic).toBe('Alpha');
-    });
-
-    it('should be case insensitive', () => {
-      service.addNode('root', 'Alpha');
-      const results = service.searchNodes('ALPHA');
-      expect(results.length).toBe(1);
-      expect(results[0].topic).toBe('Alpha');
-    });
-
-    it('should return empty array for empty query', () => {
-      const results = service.searchNodes('');
-      expect(results).toEqual([]);
-    });
-
-    it('should return empty array for no matches', () => {
-      service.addNode('root', 'Alpha');
-      const results = service.searchNodes('Omega');
-      expect(results).toEqual([]);
-    });
-  });
-
   describe('Multi-node operations', () => {
     it('should remove multiple nodes', () => {
       const child1 = service.addNode('root', 'Child 1');
@@ -330,37 +297,6 @@ describe('MindMapService', () => {
       expect(result).toBe(true);
       expect(child1!.style.color).toBe('red');
       expect(child2!.style.fontWeight).toBe('bold');
-    });
-
-    it('should copy and paste multiple nodes', () => {
-      const child1 = service.addNode('root', 'Child 1');
-      const child2 = service.addNode('root', 'Child 2');
-
-      service.copyNodes([child1!.id, child2!.id]);
-
-      const pasteResult = service.pasteNodes('root');
-      expect(pasteResult).toBeDefined();
-      expect(pasteResult.length).toBe(2);
-      expect(root.children.length).toBe(4);
-
-      const pastedNodes = root.children.filter((n) => n.id !== child1!.id && n.id !== child2!.id);
-      expect(pastedNodes.length).toBe(2);
-      expect(pastedNodes.map((n) => n.topic)).toContain('Child 1');
-      expect(pastedNodes.map((n) => n.topic)).toContain('Child 2');
-    });
-
-    it('should cut multiple nodes', () => {
-      const child1 = service.addNode('root', 'Child 1');
-      const child2 = service.addNode('root', 'Child 2');
-
-      service.cutNodes([child1!.id, child2!.id]);
-
-      expect(root.children.length).toBe(0);
-
-      const pasteResult = service.pasteNodes('root');
-      expect(pasteResult).toBeDefined();
-      expect(pasteResult.length).toBe(2);
-      expect(root.children.length).toBe(2);
     });
   });
 });

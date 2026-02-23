@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, beforeEach, vi, type Mock } from 'vitest';
 import { MindMapController } from '../../src/presentation/logic/MindMapController';
 import { MindMap } from '../../src/features/core/domain/MindMap';
@@ -36,7 +38,22 @@ describe('MindMapController Resizing Fix', () => {
 
     eventBus = { emit: vi.fn() };
 
-    controller = new MindMapController(mindMap, service, renderer, styleEditor, eventBus);
+    controller = new MindMapController(
+      mindMap,
+      service,
+      renderer,
+      styleEditor,
+      eventBus,
+
+      { saveState: vi.fn(), undo: vi.fn(), redo: vi.fn(), canUndo: false, canRedo: false } as any,
+      {
+        copyNodes: vi.fn(),
+        getClipboardNodes: vi.fn(),
+        createPastedNodes: vi.fn().mockImplementation(() => []),
+      } as any,
+      { searchNodes: vi.fn().mockReturnValue([]) } as any,
+      undefined,
+    );
   });
 
   it('should use measureNode width as starting width if customWidth is undefined', () => {

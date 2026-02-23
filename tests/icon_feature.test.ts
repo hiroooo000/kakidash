@@ -62,17 +62,6 @@ describe('Icon Feature', () => {
     expect(child.icon).toBe('check');
   });
 
-  test('should copy icon when copying node', () => {
-    const node = service.addNode('root', 'Child');
-    service.updateNodeIcon(node!.id, 'warning');
-
-    service.copyNode(node!.id);
-    const pastedNode = service.pasteNode('root');
-
-    expect(pastedNode).not.toBeNull();
-    expect(pastedNode!.icon).toBe('warning');
-  });
-
   test('should delete icon', () => {
     const node = service.addNode('root', 'Child');
     service.updateNodeIcon(node!.id, 'blue_circle');

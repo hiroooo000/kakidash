@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, beforeEach, vi, afterEach, Mock } from 'vitest';
 import { MindMapController } from '../../../src/presentation/logic/MindMapController';
 import { MindMap } from '../../../src/features/core/domain/MindMap';
@@ -10,6 +12,9 @@ import { FileHandler } from '../../../src/shared/kernel/FileHandler';
 import { XMindImporter } from '../../../src/features/export_import/XMindImporter';
 import { MarkdownExporter } from '../../../src/features/export_import/MarkdownExporter';
 import { MindMapData } from '../../../src/features/core/domain/MindMapData';
+import { HistoryService } from '../../../src/features/core/application/HistoryService';
+import { ClipboardService } from '../../../src/features/core/application/ClipboardService';
+import { SearchService } from '../../../src/features/core/application/SearchService';
 import { ImageExporter } from '../../../src/features/export_import/ImageExporter';
 
 // Remove vi.mock and use spyOn instead
@@ -27,6 +32,9 @@ describe('MindMapController', () => {
   let mockOnExportFile: Mock;
   let mockImportData: Mock;
   let fileHandler: FileHandler;
+  let historyService: HistoryService;
+  let clipboardService: ClipboardService;
+  let searchService: SearchService;
 
   beforeEach(() => {
     // Setup Mocks
@@ -40,30 +48,47 @@ describe('MindMapController', () => {
       vi.fn(() => true),
     );
 
+    historyService = {
+      saveState: vi.fn(),
+      undo: vi.fn().mockReturnValue({ nodeData: { id: 'root', topic: 'Root' } }),
+      redo: vi.fn().mockReturnValue({ nodeData: { id: 'root', topic: 'Root' } }),
+    } as any;
+    clipboardService = {
+      copyNodes: vi.fn(),
+      createPastedNodes: vi.fn().mockReturnValue([new Node('pasted', 'Pasted')]),
+    } as any;
+    searchService = {
+      searchNodes: vi.fn().mockReturnValue([]),
+    } as any;
+
     mockImportData = vi.fn();
     service = {
       importData: mockImportData,
-      exportData: vi.fn(),
+      exportData: vi.fn().mockImplementation(() => ({
+        nodeData: { id: 'root', topic: 'Root' },
+        theme: {
+          name: 'default',
+          background: '#ffffff',
+          node: { color: '#000000', backgroundColor: '#ffffff', border: '#000000' },
+          connection: { color: '#000000', width: 2 },
+        },
+      })),
       addNode: vi.fn().mockReturnValue(new Node('new-id', 'Topic')),
       addSibling: vi.fn().mockReturnValue(new Node('sib-id', 'Topic')),
       insertParent: vi.fn().mockReturnValue(new Node('par-id', 'Topic')),
       removeNode: vi.fn().mockReturnValue(true),
+      removeNodes: vi.fn().mockReturnValue(true),
       updateNodeTopic: vi.fn().mockReturnValue(true),
-      updateNodeStyle: vi.fn().mockReturnValue(true),
+      updateNodesStyle: vi.fn().mockReturnValue(true),
       updateNodeIcon: vi.fn().mockReturnValue(true),
       updateNodeCustomWidth: vi.fn().mockReturnValue(true),
       reorderNode: vi.fn(),
       moveNode: vi.fn(),
       insertNodeAsParent: vi.fn(),
       setTheme: vi.fn(),
-      undo: vi.fn().mockReturnValue({ nodeData: { id: 'root', topic: 'Root' } }),
-      redo: vi.fn().mockReturnValue({ nodeData: { id: 'root', topic: 'Root' } }),
       toggleNodeFold: vi.fn().mockReturnValue(true),
-      pasteNode: vi.fn().mockReturnValue(new Node('pasted-id', 'Topic')),
-      cutNode: vi.fn(),
       addImageNode: vi.fn().mockReturnValue(new Node('img-id', 'Topic')),
-      searchNodes: vi.fn().mockReturnValue([]),
-      setSelectionProvider: vi.fn(),
+      addExistingNodes: vi.fn().mockReturnValue(true),
     } as unknown as MindMapService;
 
     const container = document.createElement('div');
@@ -98,6 +123,9 @@ describe('MindMapController', () => {
       renderer,
       styleEditor,
       eventBus,
+      historyService,
+      clipboardService,
+      searchService,
       fileHandler,
     );
   });
@@ -194,7 +222,10 @@ describe('MindMapController', () => {
       renderer,
       styleEditor,
       eventBus,
-      undefined, // No fileHandler
+      historyService,
+      clipboardService,
+      searchService,
+      undefined,
     );
 
     const createElementSpy = vi.spyOn(document, 'createElement');

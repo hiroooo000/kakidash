@@ -17,6 +17,9 @@ import { XMindImporter } from '../../features/export_import/XMindImporter';
 import { ImageExporter } from '../../features/export_import/ImageExporter';
 import { MarkdownExporter } from '../../features/export_import/MarkdownExporter';
 import { HelpModal } from '../components/HelpModal';
+import { HistoryService } from '../../features/core/application/HistoryService';
+import { ClipboardService } from '../../features/core/application/ClipboardService';
+import { SearchService } from '../../features/core/application/SearchService';
 import { FileHandler } from '../../shared/kernel/FileHandler';
 
 export interface IMindMapEventBus {
@@ -34,6 +37,10 @@ export class MindMapController {
   private interactionHandler!: InteractionHandler;
   private layoutSwitcher!: LayoutSwitcher;
   private fileHandler?: FileHandler;
+
+  private historyService: HistoryService;
+  private clipboardService: ClipboardService;
+  private searchService: SearchService;
 
   private anchorNodeId: string | null = null;
   private selectedNodeId: string | null = null;
@@ -63,6 +70,9 @@ export class MindMapController {
     renderer: Renderer,
     styleEditor: StyleEditor,
     eventBus: IMindMapEventBus,
+    historyService: HistoryService,
+    clipboardService: ClipboardService,
+    searchService: SearchService,
     fileHandler?: FileHandler,
     locale: 'en' | 'ja' = 'en',
     commandPaletteFeatures?: ('search' | 'icon' | 'import' | 'export')[],
@@ -73,6 +83,11 @@ export class MindMapController {
     this.styleEditor = styleEditor;
     this.eventBus = eventBus;
     this.fileHandler = fileHandler;
+
+    this.historyService = historyService;
+    this.clipboardService = clipboardService;
+    this.searchService = searchService;
+
     this.locale = locale;
     this.commandPalette = new CommandPalette(this.renderer.container, {
       onInput: (query) => this.handleSearchInput(query),
@@ -84,13 +99,6 @@ export class MindMapController {
       },
       getSelectedNodeId: () => this.selectedNodeId,
       disabledFeatures: commandPaletteFeatures,
-    });
-
-    this.service.setSelectionProvider(() => {
-      return {
-        selectedId: this.selectedNodeId || undefined,
-        selectedIds: Array.from(this.selectedNodeIds),
-      };
     });
   }
 
@@ -142,7 +150,7 @@ export class MindMapController {
       this.restoreSelection(data);
       this.eventBus.emit('model:load', data);
       if (data.theme) {
-        this.setTheme(data.theme);
+        this.setTheme(data.theme, { saveState: false, emitChange: false });
       }
       this.eventBus.emit('model:change', undefined);
     } catch (e) {
@@ -177,6 +185,12 @@ export class MindMapController {
     return [targetId];
   }
 
+  private saveState(): void {
+    if (this.isBatching) return;
+    const data = this.getData();
+    this.historyService.saveState(data);
+  }
+
   // Core API Delegate
   addNode(
     parentId: string,
@@ -184,6 +198,7 @@ export class MindMapController {
     layoutSide?: 'left' | 'right',
     options: { emitChange?: boolean } = { emitChange: true },
   ): Node | null {
+    if (options.emitChange) this.saveState();
     this.eventBus.emit('command', { name: 'addNode', args: { parentId, topic, layoutSide } });
     const node = this.service.addNode(parentId, topic, layoutSide);
     if (node) {
@@ -202,6 +217,7 @@ export class MindMapController {
     topic: string = 'New topic',
     options: { emitChange?: boolean } = { emitChange: true },
   ): Node | null {
+    if (options.emitChange) this.saveState();
     this.eventBus.emit('command', { name: 'addSibling', args: { referenceId, position, topic } });
     const node = this.mindMap.findNode(referenceId);
     if (!node || !node.parentId) return null;
@@ -233,6 +249,7 @@ export class MindMapController {
     topic: string = 'New topic',
     options: { emitChange?: boolean } = { emitChange: true },
   ): Node | null {
+    if (options.emitChange) this.saveState();
     this.eventBus.emit('command', { name: 'insertParent', args: { targetId, topic } });
     const newNode = this.service.insertParent(targetId, topic);
     if (newNode) {
@@ -246,6 +263,7 @@ export class MindMapController {
   }
 
   deleteNode(nodeId: string): void {
+    this.saveState();
     this.eventBus.emit('command', { name: 'deleteNode', args: { nodeId } });
 
     const ids = this.getIdsToActOn(nodeId);
@@ -269,6 +287,7 @@ export class MindMapController {
     nodeId: string,
     updates: { topic?: string; style?: Partial<NodeStyle>; icon?: string },
   ): void {
+    this.saveState();
     this.eventBus.emit('command', { name: 'updateNode', args: { nodeId, updates } });
     if (this.interactionHandler && this.interactionHandler.isReadOnly) return;
 
@@ -309,6 +328,7 @@ export class MindMapController {
 
   // Interaction Handlers
   updateNodeWidth(nodeId: string, increment: number): void {
+    this.saveState();
     this.eventBus.emit('command', { name: 'updateNodeWidth', args: { nodeId, increment } });
     if (this.interactionHandler && this.interactionHandler.isReadOnly) return;
 
@@ -475,6 +495,7 @@ export class MindMapController {
   }
 
   moveNode(nodeId: string, targetId: string, position: 'top' | 'bottom' | 'left' | 'right'): void {
+    this.saveState();
     this.eventBus.emit('command', { name: 'moveNode', args: { nodeId, targetId, position } });
     const target = this.mindMap.findNode(targetId);
     if (!target) return;
@@ -588,7 +609,11 @@ export class MindMapController {
     }
   }
 
-  setTheme(theme: Theme): void {
+  setTheme(
+    theme: Theme,
+    options: { saveState?: boolean; emitChange?: boolean } = { saveState: true, emitChange: true },
+  ): void {
+    if (options.saveState !== false) this.saveState();
     this.eventBus.emit('command', { name: 'setTheme', args: { theme } });
     this.service.setTheme(theme);
     if (this.layoutSwitcher) this.layoutSwitcher.setTheme(theme);
@@ -659,26 +684,29 @@ export class MindMapController {
   }
 
   undo(): void {
-    const prevState = this.service.undo();
+    const currentState = this.getData();
+    const prevState = this.historyService.undo(currentState);
     if (prevState) {
       this.eventBus.emit('command', { name: 'undo' });
+      this.loadData(prevState);
       this.render(); // Full render needed after model change
-      this.restoreSelection(prevState);
       this.eventBus.emit('model:change', undefined);
     }
   }
 
   redo(): void {
-    const nextState = this.service.redo();
+    const currentState = this.getData();
+    const nextState = this.historyService.redo(currentState);
     if (nextState) {
       this.eventBus.emit('command', { name: 'redo' });
+      this.loadData(nextState);
       this.render(); // Full render needed after model change
-      this.restoreSelection(nextState);
       this.eventBus.emit('model:change', undefined);
     }
   }
 
   toggleFold(nodeId: string): void {
+    this.saveState();
     if (this.service.toggleNodeFold(nodeId)) {
       this.eventBus.emit('command', { name: 'toggleFold', args: { nodeId } });
       this.render();
@@ -804,15 +832,18 @@ export class MindMapController {
   copyNode(nodeId: string): void {
     const ids = this.getIdsToActOn(nodeId);
     if (ids.length > 1) {
-      this.service.copyNodes(ids);
+      this.clipboardService.copyNodes(ids);
     } else {
-      this.service.copyNode(nodeId);
+      this.clipboardService.copyNodes([nodeId]);
     }
   }
 
   pasteNode(parentId: string): void {
+    this.saveState();
     this.eventBus.emit('command', { name: 'pasteNode', args: { parentId } });
-    const newNode = this.service.pasteNode(parentId);
+    const newNodes = this.clipboardService.createPastedNodes(parentId);
+    const newNode = newNodes.length > 0 ? newNodes[0] : null;
+    if (newNodes.length > 0) this.service.addExistingNodes(parentId, newNodes);
     if (newNode) {
       this.render();
       this.selectNode(newNode.id);
@@ -823,6 +854,7 @@ export class MindMapController {
   }
 
   cutNode(nodeId: string): void {
+    this.saveState();
     this.eventBus.emit('command', { name: 'cutNode', args: { nodeId } });
     const ids = this.getIdsToActOn(nodeId);
 
@@ -830,9 +862,11 @@ export class MindMapController {
     const targetSelectId = this.findTargetIdAfterRemoval(nodeId, ids);
 
     if (ids.length > 1) {
-      this.service.cutNodes(ids);
+      this.clipboardService.copyNodes(ids);
+      this.service.removeNodes(ids);
     } else {
-      this.service.cutNode(nodeId);
+      this.clipboardService.copyNodes([nodeId]);
+      this.service.removeNode(nodeId);
     }
 
     this.selectNode(targetSelectId);
@@ -842,6 +876,7 @@ export class MindMapController {
   }
 
   pasteImage(parentId: string, imageData: string, width?: number, height?: number): void {
+    this.saveState();
     this.eventBus.emit('command', { name: 'pasteImage', args: { parentId, width, height } });
     const newNode = this.service.addImageNode(parentId, imageData, width, height);
     if (newNode) {
@@ -861,6 +896,7 @@ export class MindMapController {
   }
 
   onStyleAction(nodeId: string, action: StyleAction): void {
+    this.saveState();
     if (this.interactionHandler && this.interactionHandler.isReadOnly) return;
     const node = this.mindMap.findNode(nodeId);
     if (!node) return;
@@ -917,11 +953,11 @@ export class MindMapController {
   }
 
   public searchNodes(query: string): Node[] {
-    return this.service.searchNodes(query);
+    return this.searchService.searchNodes(query);
   }
 
   private handleSearchInput(query: string): void {
-    const results = this.service.searchNodes(query);
+    const results = this.searchService.searchNodes(query);
     this.commandPalette.setResults(results.map((n) => ({ id: n.id, topic: n.topic })));
   }
 

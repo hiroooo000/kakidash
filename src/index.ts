@@ -1,6 +1,9 @@
 import { MindMap } from './features/core/domain/MindMap';
 import { Node, NodeStyle } from './features/core/domain/Node';
 import { MindMapService } from './features/core/application/MindMapService';
+import { HistoryService } from './features/core/application/HistoryService';
+import { ClipboardService } from './features/core/application/ClipboardService';
+import { SearchService } from './features/core/application/SearchService';
 import { SvgRenderer } from './presentation/components/SvgRenderer';
 import { StyleEditor } from './features/theme/components/StyleEditor';
 import { LayoutSwitcher } from './presentation/logic/LayoutSwitcher';
@@ -81,6 +84,10 @@ export class Kakidash extends TypedEventEmitter<KakidashEventMap> {
     const idGenerator = new CryptoIdGenerator();
     const service = new MindMapService(this.mindMap, idGenerator);
 
+    const historyService = new HistoryService(10);
+    const clipboardService = new ClipboardService(this.mindMap, idGenerator);
+    const searchService = new SearchService(this.mindMap);
+
     // dedicated UI layer to ensure z-index separation and stability
     const uiLayer = document.createElement('div');
     uiLayer.style.position = 'absolute';
@@ -125,6 +132,9 @@ export class Kakidash extends TypedEventEmitter<KakidashEventMap> {
       {
         emit: (event, payload) => this.emit(event, payload),
       },
+      historyService,
+      clipboardService,
+      searchService,
       options.fileHandler,
       options.locale || defaultLocale,
       options.disabledCommandPaletteFeatures,
