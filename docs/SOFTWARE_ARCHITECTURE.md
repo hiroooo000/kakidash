@@ -70,6 +70,8 @@ classDiagram
 
     namespace Presentation {
         class MindMapController
+        class ViewportService
+        class NavigationService
         class InteractionHandler
         class SvgRenderer
         class CommandPalette
@@ -105,6 +107,8 @@ classDiagram
     MindMapController --> MindMapService : delegates
     MindMapController --> ThemeRegistry : uses
     MindMapController --> ImageExporter : triggers
+    MindMapController --> ViewportService : manages viewport
+    MindMapController --> NavigationService : handles navigation
     MindMapController --> SvgRenderer : renders
     
     MindMapService --> MindMap : manages
@@ -182,8 +186,10 @@ Common components referenced by all features.
 ### 3.3 Presentation Layer (`src/presentation`)
 
 Integrates features and provides the user interface.
-- **MindMapController**: Main controller orchestrating features (Core, Theme, Export). Manages selection state (single/multi).
-- **InteractionHandler**: Handing user input operations.
+- **MindMapController**: Main controller orchestrating features (Core, Theme, Export). Manages selection state (single/multi) and delegates viewport and navigation operations to dedicated services.
+- **ViewportService**: Handles viewport control such as zoom, pan, and animation loop.
+- **NavigationService**: Handles navigation logic between nodes based on direction.
+- **InteractionHandler**: Captures Mouse/Touch/Keyboard events and maps them to the controller.
 - **Components**:
   - **SvgRenderer**: Responsible for rendering the mind map using SVG and HTML. Implements **Differential Rendering** for high performance:
     - **DOM Caching**: Uses `nodeElementMap` to cache node DOM elements for O(1) access.

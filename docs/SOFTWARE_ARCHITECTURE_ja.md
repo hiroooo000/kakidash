@@ -70,6 +70,8 @@ classDiagram
 
     namespace Presentation {
         class MindMapController
+        class ViewportService
+        class NavigationService
         class InteractionHandler
         class SvgRenderer
         class CommandPalette
@@ -105,6 +107,8 @@ classDiagram
     MindMapController --> MindMapService : delegates
     MindMapController --> ThemeRegistry : uses
     MindMapController --> ImageExporter : triggers
+    MindMapController --> ViewportService : manages viewport
+    MindMapController --> NavigationService : handles navigation
     MindMapController --> SvgRenderer : renders
     
     MindMapService --> MindMap : manages
@@ -182,7 +186,9 @@ src/
 ### 3.3 Presentation Layer (`src/presentation`)
 
 各機能を統合し、ユーザーインターフェースを提供します。
-- **MindMapController**: 各機能（Core, Theme, Export）をオーケストレーションするメインコントローラー。選択状態（単一・複数）を管理します。
+- **MindMapController**: 各機能（Core, Theme, Export）をオーケストレーションするメインコントローラー。選択状態（単一・複数）を管理し、ビューポートやナビゲーションの操作は専用サービスに委譲します。
+- **ViewportService**: ズームやパン操作、アニメーションループなどのビューポート制御を担当します。
+- **NavigationService**: 方向に応じたノード間のナビゲーションロジックを担当します。
 - **InteractionHandler**: ユーザー操作の入力処理。
 - **Components**:
   - **SvgRenderer**: SVGとHTMLを使用してマインドマップを描画します。高パフォーマンス維持のため **差分レンダリング（Differential Rendering）** を実装しています。

@@ -15,6 +15,8 @@ import { MindMapData } from '../../../src/features/core/domain/MindMapData';
 import { HistoryService } from '../../../src/features/core/application/HistoryService';
 import { ClipboardService } from '../../../src/features/core/application/ClipboardService';
 import { SearchService } from '../../../src/features/core/application/SearchService';
+import { ViewportService } from '../../../src/presentation/logic/ViewportService';
+import { NavigationService } from '../../../src/presentation/logic/NavigationService';
 import { ImageExporter } from '../../../src/features/export_import/ImageExporter';
 
 // Remove vi.mock and use spyOn instead
@@ -108,6 +110,8 @@ describe('MindMapController', () => {
     mockEmit = vi.fn();
     eventBus = {
       emit: mockEmit,
+      on: vi.fn(),
+      off: vi.fn(),
     };
 
     mockOnImportFile = vi.fn();
@@ -117,7 +121,28 @@ describe('MindMapController', () => {
       onExportFile: mockOnExportFile,
     };
 
-    controller = new MindMapController(
+    const viewportService = {
+      pan: vi.fn(),
+      zoom: vi.fn(),
+      resetZoom: vi.fn(),
+      setInitialPan: vi.fn(),
+      applyTransform: vi.fn(),
+      ensureNodeVisible: vi.fn(),
+      startAnimationLoop: vi.fn(),
+      destroy: vi.fn(),
+      getScale: vi.fn().mockReturnValue(1),
+      getPan: vi.fn().mockReturnValue({ x: 0, y: 0 }),
+    } as unknown as ViewportService;
+
+    const navigationService = {
+      navigate: vi.fn(),
+      getNodeDirection: vi.fn().mockReturnValue('right'),
+      ensureExplicitLayoutSides: vi.fn(),
+      setLayoutMode: vi.fn(),
+      getLayoutMode: vi.fn().mockReturnValue('Right'),
+    } as unknown as NavigationService;
+
+    controller = new MindMapController({
       mindMap,
       service,
       renderer,
@@ -126,8 +151,10 @@ describe('MindMapController', () => {
       historyService,
       clipboardService,
       searchService,
+      viewportService,
+      navigationService,
       fileHandler,
-    );
+    });
   });
 
   afterEach(() => {
@@ -216,7 +243,7 @@ describe('MindMapController', () => {
 
   it('should fallback to DOM input if fileHandler is NOT provided', async () => {
     // Arrange
-    const controllerNoHandler = new MindMapController(
+    const controllerNoHandler = new MindMapController({
       mindMap,
       service,
       renderer,
@@ -225,8 +252,26 @@ describe('MindMapController', () => {
       historyService,
       clipboardService,
       searchService,
-      undefined,
-    );
+      viewportService: {
+        pan: vi.fn(),
+        zoom: vi.fn(),
+        resetZoom: vi.fn(),
+        setInitialPan: vi.fn(),
+        applyTransform: vi.fn(),
+        ensureNodeVisible: vi.fn(),
+        startAnimationLoop: vi.fn(),
+        destroy: vi.fn(),
+        getScale: vi.fn().mockReturnValue(1),
+        getPan: vi.fn().mockReturnValue({ x: 0, y: 0 }),
+      } as unknown as ViewportService,
+      navigationService: {
+        navigate: vi.fn(),
+        getNodeDirection: vi.fn().mockReturnValue('right'),
+        ensureExplicitLayoutSides: vi.fn(),
+        setLayoutMode: vi.fn(),
+        getLayoutMode: vi.fn().mockReturnValue('Right'),
+      } as unknown as NavigationService,
+    });
 
     const createElementSpy = vi.spyOn(document, 'createElement');
     // bodyAppendSpy removed to fix warning

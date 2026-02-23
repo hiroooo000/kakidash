@@ -2,6 +2,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
 
 /* eslint-disable @typescript-eslint/unbound-method */
 import { describe, it, expect, beforeEach } from 'vitest';
@@ -74,11 +75,9 @@ describe('Navigation Logic', () => {
     board.addChildNode(rootId);
     const childId = board.getSelectedNodeId();
 
-    // Force initial pan to 0,0
-    (board as any).controller.panX = 0;
-    (board as any).controller.panY = 0;
-    (board as any).controller.targetPanX = 0;
-    (board as any).controller.targetPanY = 0;
+    // Force initial pan to 0,0 via viewportService
+    const vs = (board as any).controller.viewportService;
+    vs.setInitialPan(0, 0);
 
     // Mock getBoundingClientRect globally for this test
     const originalGBR = HTMLElement.prototype.getBoundingClientRect;
@@ -148,9 +147,9 @@ describe('Navigation Logic', () => {
       // Expected dx = 400 - 1050 = -650
       // targetPanX should be -650
 
-      // Note: If panX starts at 0, targetPanX becomes -650.
-      const targetPanX = (board as any).controller.targetPanX;
-      expect(targetPanX).toBe(-650);
+      const vs2 = (board as any).controller.viewportService;
+      const targetPan = vs2.getTargetPan();
+      expect(targetPan.x).toBe(-650);
     } finally {
       // Restore
       HTMLElement.prototype.getBoundingClientRect = originalGBR;

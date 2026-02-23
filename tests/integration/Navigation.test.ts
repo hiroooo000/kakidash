@@ -1,5 +1,5 @@
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { MindMapController } from '../../src/presentation/logic/MindMapController';
 import { MindMap } from '../../src/features/core/domain/MindMap';
@@ -9,6 +9,8 @@ import { Renderer } from '../../src/presentation/components/Renderer';
 import { StyleEditor } from '../../src/features/theme/components/StyleEditor';
 import { IMindMapEventBus } from '../../src/presentation/logic/MindMapController';
 import { InteractionHandler } from '../../src/presentation/logic/InteractionHandler';
+import { ViewportService } from '../../src/presentation/logic/ViewportService';
+import { NavigationService } from '../../src/presentation/logic/NavigationService';
 
 describe('MindMapController Navigation Integration', () => {
   let controller: MindMapController;
@@ -51,24 +53,43 @@ describe('MindMapController Navigation Integration', () => {
 
     eventBus = {
       emit: vi.fn(),
+      on: vi.fn(),
+      off: vi.fn(),
     };
 
-    controller = new MindMapController(
+    controller = new MindMapController({
       mindMap,
       service,
       renderer,
       styleEditor,
       eventBus,
-
-      { saveState: vi.fn(), undo: vi.fn(), redo: vi.fn(), canUndo: false, canRedo: false } as any,
-      {
+      historyService: {
+        saveState: vi.fn(),
+        undo: vi.fn(),
+        redo: vi.fn(),
+        canUndo: false,
+        canRedo: false,
+      } as any,
+      clipboardService: {
         copyNodes: vi.fn(),
         getClipboardNodes: vi.fn(),
         createPastedNodes: vi.fn().mockImplementation(() => []),
       } as any,
-      { searchNodes: vi.fn().mockReturnValue([]) } as any,
-      undefined,
-    );
+      searchService: { searchNodes: vi.fn().mockReturnValue([]) } as any,
+      viewportService: {
+        pan: vi.fn(),
+        zoom: vi.fn(),
+        resetZoom: vi.fn(),
+        setInitialPan: vi.fn(),
+        applyTransform: vi.fn(),
+        ensureNodeVisible: vi.fn(),
+        startAnimationLoop: vi.fn(),
+        destroy: vi.fn(),
+        getScale: vi.fn().mockReturnValue(1),
+        getPan: vi.fn().mockReturnValue({ x: 0, y: 0 }),
+      } as unknown as ViewportService,
+      navigationService: new NavigationService(mindMap),
+    });
 
     // Mock interaction handler
     const interactionHandler = {
