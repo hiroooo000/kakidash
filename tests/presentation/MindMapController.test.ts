@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/unbound-method */
+
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
@@ -47,9 +47,9 @@ describe('MindMapController', () => {
     renderer = {
       container: document.createElement('div'),
       maxWidth: -1,
-      render: vi.fn(),
+      renderFromLayout: vi.fn(),
       updateTransform: vi.fn(),
-      measureNode: vi.fn(),
+      measureNode: vi.fn().mockReturnValue({ width: 100, height: 40 }),
       updateSelection: vi.fn(),
     };
     styleEditor = new StyleEditor(document.createElement('div'));
@@ -85,7 +85,7 @@ describe('MindMapController', () => {
 
     renderer.container = mockContainer;
     // renderer methods already mocked above or can be overridden here
-    renderer.render = vi.fn();
+    renderer.renderFromLayout = vi.fn();
     renderer.updateTransform = vi.fn();
 
     historyService = {
@@ -145,18 +145,19 @@ describe('MindMapController', () => {
   });
 
   it('init should set initial pan and start loop', () => {
-    controller.init(1000);
-    // init delegates to viewportService.setInitialPan(0.2 * width, 0)
+    controller.init(1000, 800);
+    // init delegates to viewportService.setInitialPan(0.2 * width, height / 2)
     // Since viewportService is mocked, we can't check panX directly
     // Verify render was called as part of init
-    expect(renderer.render).toHaveBeenCalled();
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    expect(renderer.renderFromLayout).toHaveBeenCalled();
   });
 
   it('init should apply initial theme', () => {
     const registry = ThemeRegistry.getInstance();
     const applySpy = vi.spyOn(registry, 'applyTheme');
 
-    controller.init(1000);
+    controller.init(1000, 800);
 
     expect(applySpy).toHaveBeenCalledWith(expect.anything(), 'default');
     applySpy.mockRestore();
@@ -169,7 +170,8 @@ describe('MindMapController', () => {
     const result = controller.addNode('root', 'New Node');
 
     expect(service.addNode).toHaveBeenCalledWith('root', 'New Node', undefined);
-    expect(renderer.render).toHaveBeenCalled();
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    expect(renderer.renderFromLayout).toHaveBeenCalled();
     expect(eventBus.emit).toHaveBeenCalledWith('node:add', { id: 'new1', topic: 'New Node' });
     expect(eventBus.emit).toHaveBeenCalledWith('model:change', undefined);
     expect(result).toBe(newNode);

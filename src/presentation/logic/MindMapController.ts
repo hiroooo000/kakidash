@@ -1,4 +1,5 @@
 import { MindMap } from '../../features/core/domain/MindMap';
+import { LayoutEngine } from '../layout/LayoutEngine';
 import { Node, NodeStyle } from '../../features/core/domain/Node';
 import { MindMapService } from '../../features/core/application/MindMapService';
 import { Renderer } from '../components/Renderer';
@@ -126,8 +127,8 @@ export class MindMapController {
     this.layoutSwitcher = switcher;
   }
 
-  public init(containerWidth: number) {
-    this.viewportService.setInitialPan(containerWidth * 0.2, 0); // Default Right mode
+  public init(containerWidth: number, containerHeight: number) {
+    this.viewportService.setInitialPan(containerWidth * 0.2, containerHeight / 2); // Default Right mode, centered vertically
 
     // Apply initial theme
     const theme = this.mindMap.theme;
@@ -485,10 +486,13 @@ export class MindMapController {
   private restoreSelection(data: MindMapData): void {
     if (data.selectedIds && data.selectedIds.length > 0) {
       this.selectNodes(data.selectedIds);
+      this.ensureNodeVisible(data.selectedIds[0], true, true);
     } else if (data.selectedId) {
       this.selectNode(data.selectedId);
+      this.ensureNodeVisible(data.selectedId, true, true);
     } else {
       this.selectNode(null);
+      this.ensureNodeVisible(this.mindMap.root.id, true, true);
     }
   }
 
@@ -548,7 +552,22 @@ export class MindMapController {
 
   render(): void {
     if (this.isBatching) return;
-    this.renderer.render(this.mindMap, this.selectedNodeIds, this.layoutMode);
+    const layoutEngine = new LayoutEngine((node) => this.renderer.measureNode(node, this.mindMap));
+    const layoutResult = layoutEngine.calculate(this.mindMap.root, this.layoutMode);
+
+    // Normalize selection
+    let selectionSet: Set<string>;
+    if (this.selectedNodeIds instanceof Set) {
+      selectionSet = this.selectedNodeIds;
+    } else if (Array.isArray(this.selectedNodeIds)) {
+      selectionSet = new Set(this.selectedNodeIds);
+    } else if (typeof this.selectedNodeIds === 'string') {
+      selectionSet = new Set([this.selectedNodeIds]);
+    } else {
+      selectionSet = new Set();
+    }
+
+    this.renderer.renderFromLayout(layoutResult, this.mindMap, selectionSet, this.layoutMode);
     this.viewportService.applyTransform();
   }
 
@@ -568,15 +587,22 @@ export class MindMapController {
     if (this.layoutSwitcher) this.layoutSwitcher.setMode(mode);
 
     const clientWidth = this.renderer.container.clientWidth;
+    const clientHeight = this.renderer.container.clientHeight;
     if (mode === 'Right') {
-      this.viewportService.setInitialPan(clientWidth * 0.2, 0);
+      this.viewportService.setInitialPan(clientWidth * 0.2, clientHeight / 2);
     } else if (mode === 'Left') {
-      this.viewportService.setInitialPan(clientWidth * 0.8, 0);
+      this.viewportService.setInitialPan(clientWidth * 0.8, clientHeight / 2);
     } else {
-      this.viewportService.setInitialPan(clientWidth * 0.5, 0);
+      this.viewportService.setInitialPan(clientWidth * 0.5, clientHeight / 2);
     }
 
     this.render();
+
+    if (this.selectedNodeId) {
+      this.ensureNodeVisible(this.selectedNodeId, true, true);
+    } else {
+      this.ensureNodeVisible(this.mindMap.root.id, true, true);
+    }
   }
 
   getLayoutMode(): LayoutMode {

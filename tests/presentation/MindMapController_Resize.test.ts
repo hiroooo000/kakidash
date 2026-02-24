@@ -29,9 +29,9 @@ describe('MindMapController Resizing Fix', () => {
     renderer = {
       container: document.createElement('div'),
       maxWidth: -1,
-      render: vi.fn(),
+      renderFromLayout: vi.fn(),
       updateTransform: vi.fn(),
-      measureNode: vi.fn(),
+      measureNode: vi.fn().mockReturnValue({ width: 100, height: 40 }),
       updateSelection: vi.fn(),
     } as unknown as Renderer;
 

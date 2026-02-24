@@ -37,7 +37,7 @@ describe('MindMapController Navigation Integration', () => {
 
     renderer = {
       container,
-      render: vi.fn(),
+      renderFromLayout: vi.fn(),
       measureNode: vi.fn().mockReturnValue({ width: 100, height: 40 }),
       updateTransform: vi.fn(),
       updateSelection: vi.fn(),
@@ -102,7 +102,7 @@ describe('MindMapController Navigation Integration', () => {
     } as unknown as InteractionHandler;
     controller.setInteractionHandler(interactionHandler);
 
-    controller.init(800);
+    controller.init(800, 600);
   });
 
   it('should navigate down between siblings and extend selection', () => {

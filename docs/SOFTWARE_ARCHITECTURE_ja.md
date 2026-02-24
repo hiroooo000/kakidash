@@ -72,6 +72,7 @@ classDiagram
         class MindMapController
         class ViewportService
         class NavigationService
+        class LayoutEngine
         class InteractionHandler
         class SvgRenderer
         class CommandPalette
@@ -109,6 +110,7 @@ classDiagram
     MindMapController --> ImageExporter : triggers
     MindMapController --> ViewportService : manages viewport
     MindMapController --> NavigationService : handles navigation
+    MindMapController --> LayoutEngine : calculates layout
     MindMapController --> SvgRenderer : renders
     
     MindMapService --> MindMap : manages
@@ -149,6 +151,7 @@ src/
 │   └── infrastructure/ # インフラ共通 (CryptoIdGenerator, EventEmitter)
 ├── presentation/     # アプリケーション全体のUI統合
 │   ├── components/   # 共通UIコンポーネント (Renderer, CommandPalette)
+│   ├── layout/       # 配置計算エンジン (LayoutEngine)
 │   └── logic/        # 全体制御 (MindMapController, InteractionHandler)
 ├── infrastructure/   # レイヤー化されたインフラ実装 (必要に応じて)
 └── index.ts          # エントリーポイント (Dependency Injection)
@@ -190,8 +193,9 @@ src/
 - **ViewportService**: ズームやパン操作、アニメーションループなどのビューポート制御を担当します。
 - **NavigationService**: 方向に応じたノード間のナビゲーションロジックを担当します。
 - **InteractionHandler**: ユーザー操作の入力処理。
+- **LayoutEngine**: マインドマップのツリー構造から各ノードの配置座標（X, Y）と接続線のパスを計算し、`LayoutResult` を生成します。
 - **Components**:
-  - **SvgRenderer**: SVGとHTMLを使用してマインドマップを描画します。高パフォーマンス維持のため **差分レンダリング（Differential Rendering）** を実装しています。
+  - **SvgRenderer**: SVGとHTMLを使用してマインドマップを描画します。`LayoutEngine` が計算したレイアウトデータをもとに描画を行います。高パフォーマンス維持のため **差分レンダリング（Differential Rendering）** を実装しています。
     - **DOMキャッシュ**: `nodeElementMap` を使用して各ノードのDOM要素をキャッシュし、O(1) でのアクセスを可能にします。
     - **差分更新**: フルレンダリングと選択状態の更新を分離。選択変更時にはDOMを再構築せず、対象要素のスタイル/属性のみを変更します。
   - **CommandPalette**: コマンドUI。
@@ -209,6 +213,7 @@ sequenceDiagram
     participant Service as Core/MindMapService
     participant IdGen as Shared/IdGenerator
     participant Entity as Core/MindMap
+    participant Layout as Presentation/LayoutEngine
     participant Renderer as Presentation/SvgRenderer
 
     User->>Controller: addChildNode(parentId)
@@ -226,7 +231,9 @@ sequenceDiagram
     Service-->>Controller: newNode
     deactivate Service
 
-    Controller->>Renderer: render(mindMap)
+    Controller->>Layout: calculate(mindMap.root)
+    Layout-->>Controller: layoutResult
+    Controller->>Renderer: renderFromLayout(layoutResult, mindMap)
     Controller-->>User: Update View
     deactivate Controller
 ```

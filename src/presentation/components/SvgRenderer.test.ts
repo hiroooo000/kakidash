@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { SvgRenderer } from './SvgRenderer';
 import { MindMap } from '../../features/core/domain/MindMap';
 import { Node } from '../../features/core/domain/Node';
+import { LayoutEngine } from '../layout/LayoutEngine';
 
 describe('SvgRenderer Cache', () => {
   let renderer: SvgRenderer;
@@ -41,7 +42,9 @@ describe('SvgRenderer Cache', () => {
     const initialDivCalls = spy.mock.calls.filter((call) => call[0] === 'div').length;
 
     // render() should clear cache
-    renderer.render(mindMap);
+    // render() equivalent with LayoutEngine
+    const engine = new LayoutEngine((n) => renderer.measureNode(n, mindMap));
+    renderer.renderFromLayout(engine.calculate(mindMap.root, 'Right'), mindMap, new Set(), 'Right');
 
     // This call should perform measurement again
     renderer.measureNode(node, mindMap);
@@ -83,7 +86,8 @@ describe('SvgRenderer Selection Update', () => {
     root.addChild(child2);
     mindMap = new MindMap(root);
     // Initial full render to populate nodeElementMap
-    renderer.render(mindMap);
+    const engine = new LayoutEngine((n) => renderer.measureNode(n, mindMap));
+    renderer.renderFromLayout(engine.calculate(mindMap.root, 'Right'), mindMap, new Set(), 'Right');
   });
 
   it('should populate nodeElementMap after render', () => {
@@ -134,7 +138,13 @@ describe('SvgRenderer Selection Update', () => {
 
   it('should sync selection state after full render (Bug Fix)', () => {
     // 1. Initial render with c1 selected
-    renderer.render(mindMap, new Set(['c1']));
+    const engine = new LayoutEngine((n) => renderer.measureNode(n, mindMap));
+    renderer.renderFromLayout(
+      engine.calculate(mindMap.root, 'Right'),
+      mindMap,
+      new Set(['c1']),
+      'Right',
+    );
     const c1El = renderer.getNodeElement('c1');
     expect(c1El?.dataset.selected).toBe('true');
 

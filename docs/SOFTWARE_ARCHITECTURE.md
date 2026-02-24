@@ -72,6 +72,7 @@ classDiagram
         class MindMapController
         class ViewportService
         class NavigationService
+        class LayoutEngine
         class InteractionHandler
         class SvgRenderer
         class CommandPalette
@@ -109,6 +110,7 @@ classDiagram
     MindMapController --> ImageExporter : triggers
     MindMapController --> ViewportService : manages viewport
     MindMapController --> NavigationService : handles navigation
+    MindMapController --> LayoutEngine : calculates layout
     MindMapController --> SvgRenderer : renders
     
     MindMapService --> MindMap : manages
@@ -149,6 +151,7 @@ src/
 │   └── infrastructure/ # Shared infrastructure (CryptoIdGenerator, EventEmitter)
 ├── presentation/     # Application-wide UI integration
 │   ├── components/   # Shared UI components (Renderer, CommandPalette)
+│   ├── layout/       # Layout calculation engine (LayoutEngine)
 │   └── logic/        # Global orchestration (MindMapController, InteractionHandler)
 ├── infrastructure/   # Layered infrastructure implementations (if needed)
 └── index.ts          # Entry point (Dependency Injection)
@@ -190,8 +193,9 @@ Integrates features and provides the user interface.
 - **ViewportService**: Handles viewport control such as zoom, pan, and animation loop.
 - **NavigationService**: Handles navigation logic between nodes based on direction.
 - **InteractionHandler**: Captures Mouse/Touch/Keyboard events and maps them to the controller.
+- **LayoutEngine**: Calculates layout coordinates (X, Y) and connection paths for each node based on the MindMap tree structure, and generates a `LayoutResult`.
 - **Components**:
-  - **SvgRenderer**: Responsible for rendering the mind map using SVG and HTML. Implements **Differential Rendering** for high performance:
+  - **SvgRenderer**: Responsible for rendering the mind map using SVG and HTML. It uses layout data calculated by `LayoutEngine`. Implements **Differential Rendering** for high performance:
     - **DOM Caching**: Uses `nodeElementMap` to cache node DOM elements for O(1) access.
     - **Delta Updates**: Separates full re-renders from selection updates. Selection changes only modify the styles/attributes of affected elements without rebuilding the DOM.
   - **CommandPalette**: Command user interface.
@@ -209,6 +213,7 @@ sequenceDiagram
     participant Service as Core/MindMapService
     participant IdGen as Shared/IdGenerator
     participant Entity as Core/MindMap
+    participant Layout as Presentation/LayoutEngine
     participant Renderer as Presentation/SvgRenderer
 
     User->>Controller: addChildNode(parentId)
@@ -226,7 +231,9 @@ sequenceDiagram
     Service-->>Controller: newNode
     deactivate Service
 
-    Controller->>Renderer: render(mindMap)
+    Controller->>Layout: calculate(mindMap.root)
+    Layout-->>Controller: layoutResult
+    Controller->>Renderer: renderFromLayout(layoutResult, mindMap)
     Controller-->>User: Update View
     deactivate Controller
 ```

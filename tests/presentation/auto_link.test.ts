@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call */
 import { SvgRenderer } from '../../src/presentation/components/SvgRenderer';
 import { Node } from '../../src/features/core/domain/Node';
+import { MindMap } from '../../src/features/core/domain/MindMap';
 
 describe('SvgRenderer Auto Link', () => {
   let container: HTMLElement;
@@ -19,7 +20,16 @@ describe('SvgRenderer Auto Link', () => {
     const url = 'https://example.com';
     const node = new Node('1', url);
 
-    (renderer as any).renderNode(node, 0, 0, new Set(), 'Right', false, 'right');
+    (renderer as any).renderNodeElement(
+      node,
+      0,
+      0,
+      (renderer as any).measureNode(node).width,
+      'right',
+      new Set(),
+      'Right',
+      new MindMap(node),
+    );
     const nodeEl = renderer.nodeContainer.querySelector(`[data-id="${node.id}"]`) as HTMLElement;
 
     // Find anchor tag
@@ -39,7 +49,16 @@ describe('SvgRenderer Auto Link', () => {
     const textAfter = ' out!';
     const node = new Node('2', textBefore + url + textAfter);
 
-    (renderer as any).renderNode(node, 0, 0, new Set(), 'Right', false, 'right');
+    (renderer as any).renderNodeElement(
+      node,
+      0,
+      0,
+      (renderer as any).measureNode(node).width,
+      'right',
+      new Set(),
+      'Right',
+      new MindMap(node),
+    );
     const nodeEl = renderer.nodeContainer.querySelector(`[data-id="${node.id}"]`) as HTMLElement;
 
     const anchor = nodeEl.querySelector('a');
@@ -53,7 +72,16 @@ describe('SvgRenderer Auto Link', () => {
     const malicious = '<script>alert(1)</script>';
     const node = new Node('3', malicious);
 
-    (renderer as any).renderNode(node, 0, 0, new Set(), 'Right', false, 'right');
+    (renderer as any).renderNodeElement(
+      node,
+      0,
+      0,
+      (renderer as any).measureNode(node).width,
+      'right',
+      new Set(),
+      'Right',
+      new MindMap(node),
+    );
     const nodeEl = renderer.nodeContainer.querySelector(`[data-id="${node.id}"]`) as HTMLElement;
 
     // Should NOT contain a script tag
@@ -69,7 +97,16 @@ describe('SvgRenderer Auto Link', () => {
     const url2 = 'http://b.org';
     const node = new Node('4', `${url1} and ${url2}`);
 
-    (renderer as any).renderNode(node, 0, 0, new Set(), 'Right', false, 'right');
+    (renderer as any).renderNodeElement(
+      node,
+      0,
+      0,
+      (renderer as any).measureNode(node).width,
+      'right',
+      new Set(),
+      'Right',
+      new MindMap(node),
+    );
     const nodeEl = renderer.nodeContainer.querySelector(`[data-id="${node.id}"]`) as HTMLElement;
 
     const anchors = nodeEl.querySelectorAll('a');

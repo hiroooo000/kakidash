@@ -96,7 +96,7 @@ describe('MindMapController', () => {
     const container = document.createElement('div');
     renderer = {
       container,
-      render: vi.fn(),
+      renderFromLayout: vi.fn(),
       updateTransform: vi.fn(),
       measureNode: vi.fn().mockReturnValue({ width: 100, height: 50 }),
       updateSelection: vi.fn(),

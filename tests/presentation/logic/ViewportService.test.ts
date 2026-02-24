@@ -22,7 +22,7 @@ function createMockRenderer(): Renderer {
   return {
     container,
     maxWidth: -1,
-    render: vi.fn(),
+    renderFromLayout: vi.fn(),
     updateTransform: vi.fn(),
     measureNode: vi.fn().mockReturnValue({ width: 100, height: 40 }),
     updateSelection: vi.fn(),

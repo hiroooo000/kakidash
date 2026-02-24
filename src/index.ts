@@ -207,7 +207,7 @@ export class Kakidash extends TypedEventEmitter<KakidashEventMap> {
       this.controller.updateGlobalStyles(options.customStyles);
     }
 
-    this.controller.init(container.clientWidth);
+    this.controller.init(container.clientWidth, container.clientHeight);
   }
 
   /* ==========================================================================================
