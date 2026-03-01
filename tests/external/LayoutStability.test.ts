@@ -27,7 +27,8 @@ vi.mock('../../src/presentation/logic/LayoutSwitcher', () => ({
 vi.mock('../../src/presentation/components/SvgRenderer', () => ({
   SvgRenderer: vi.fn().mockImplementation(function (container: any) {
     return {
-      render: vi.fn(),
+      renderFromLayout: vi.fn(),
+      measureNode: vi.fn().mockReturnValue({ width: 100, height: 40 }),
       updateTransform: vi.fn(),
       updateSelection: vi.fn(),
       container: container,

@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { MindMapController } from '../../src/presentation/logic/MindMapController';
 import { MindMap } from '../../src/features/core/domain/MindMap';
@@ -7,6 +9,8 @@ import { Renderer } from '../../src/presentation/components/Renderer';
 import { StyleEditor } from '../../src/features/theme/components/StyleEditor';
 import { IMindMapEventBus } from '../../src/presentation/logic/MindMapController';
 import { InteractionHandler } from '../../src/presentation/logic/InteractionHandler';
+import { ViewportService } from '../../src/presentation/logic/ViewportService';
+import { NavigationService } from '../../src/presentation/logic/NavigationService';
 
 describe('MindMapController Navigation Integration', () => {
   let controller: MindMapController;
@@ -33,7 +37,7 @@ describe('MindMapController Navigation Integration', () => {
 
     renderer = {
       container,
-      render: vi.fn(),
+      renderFromLayout: vi.fn(),
       measureNode: vi.fn().mockReturnValue({ width: 100, height: 40 }),
       updateTransform: vi.fn(),
       updateSelection: vi.fn(),
@@ -49,9 +53,43 @@ describe('MindMapController Navigation Integration', () => {
 
     eventBus = {
       emit: vi.fn(),
+      on: vi.fn(),
+      off: vi.fn(),
     };
 
-    controller = new MindMapController(mindMap, service, renderer, styleEditor, eventBus);
+    controller = new MindMapController({
+      mindMap,
+      service,
+      renderer,
+      styleEditor,
+      eventBus,
+      historyService: {
+        saveState: vi.fn(),
+        undo: vi.fn(),
+        redo: vi.fn(),
+        canUndo: false,
+        canRedo: false,
+      } as any,
+      clipboardService: {
+        copyNodes: vi.fn(),
+        getClipboardNodes: vi.fn(),
+        createPastedNodes: vi.fn().mockImplementation(() => []),
+      } as any,
+      searchService: { searchNodes: vi.fn().mockReturnValue([]) } as any,
+      viewportService: {
+        pan: vi.fn(),
+        zoom: vi.fn(),
+        resetZoom: vi.fn(),
+        setInitialPan: vi.fn(),
+        applyTransform: vi.fn(),
+        ensureNodeVisible: vi.fn(),
+        startAnimationLoop: vi.fn(),
+        destroy: vi.fn(),
+        getScale: vi.fn().mockReturnValue(1),
+        getPan: vi.fn().mockReturnValue({ x: 0, y: 0 }),
+      } as unknown as ViewportService,
+      navigationService: new NavigationService(mindMap),
+    });
 
     // Mock interaction handler
     const interactionHandler = {
@@ -64,7 +102,7 @@ describe('MindMapController Navigation Integration', () => {
     } as unknown as InteractionHandler;
     controller.setInteractionHandler(interactionHandler);
 
-    controller.init(800);
+    controller.init(800, 600);
   });
 
   it('should navigate down between siblings and extend selection', () => {

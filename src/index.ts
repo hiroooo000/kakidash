@@ -1,11 +1,16 @@
 import { MindMap } from './features/core/domain/MindMap';
 import { Node, NodeStyle } from './features/core/domain/Node';
 import { MindMapService } from './features/core/application/MindMapService';
+import { HistoryService } from './features/core/application/HistoryService';
+import { ClipboardService } from './features/core/application/ClipboardService';
+import { SearchService } from './features/core/application/SearchService';
 import { SvgRenderer } from './presentation/components/SvgRenderer';
 import { StyleEditor } from './features/theme/components/StyleEditor';
 import { LayoutSwitcher } from './presentation/logic/LayoutSwitcher';
 import { InteractionHandler } from './presentation/logic/InteractionHandler';
 import { MindMapController } from './presentation/logic/MindMapController';
+import { ViewportService } from './presentation/logic/ViewportService';
+import { NavigationService } from './presentation/logic/NavigationService';
 import { type LayoutMode } from './features/core/domain/LayoutMode';
 import { type MindMapData, type Theme } from './features/core/domain/MindMapData';
 import { TypedEventEmitter } from './shared/infrastructure/EventEmitter';
@@ -81,6 +86,10 @@ export class Kakidash extends TypedEventEmitter<KakidashEventMap> {
     const idGenerator = new CryptoIdGenerator();
     const service = new MindMapService(this.mindMap, idGenerator);
 
+    const historyService = new HistoryService(10);
+    const clipboardService = new ClipboardService(this.mindMap, idGenerator);
+    const searchService = new SearchService(this.mindMap);
+
     // dedicated UI layer to ensure z-index separation and stability
     const uiLayer = document.createElement('div');
     uiLayer.style.position = 'absolute';
@@ -117,18 +126,28 @@ export class Kakidash extends TypedEventEmitter<KakidashEventMap> {
       }
     }
 
-    this.controller = new MindMapController(
-      this.mindMap,
+    const viewportService = new ViewportService(renderer);
+    const navigationService = new NavigationService(this.mindMap);
+
+    this.controller = new MindMapController({
+      mindMap: this.mindMap,
       service,
       renderer,
       styleEditor,
-      {
+      eventBus: {
         emit: (event, payload) => this.emit(event, payload),
+        on: (event, handler) => this.on(event, handler),
+        off: (event, handler) => this.off(event, handler),
       },
-      options.fileHandler,
-      options.locale || defaultLocale,
-      options.disabledCommandPaletteFeatures,
-    );
+      historyService,
+      clipboardService,
+      searchService,
+      viewportService,
+      navigationService,
+      fileHandler: options.fileHandler,
+      locale: options.locale || defaultLocale,
+      commandPaletteFeatures: options.disabledCommandPaletteFeatures,
+    });
 
     styleEditor.onUpdate = (nodeId, style) => {
       this.controller.updateNode(nodeId, { style });
@@ -188,7 +207,7 @@ export class Kakidash extends TypedEventEmitter<KakidashEventMap> {
       this.controller.updateGlobalStyles(options.customStyles);
     }
 
-    this.controller.init(container.clientWidth);
+    this.controller.init(container.clientWidth, container.clientHeight);
   }
 
   /* ==========================================================================================

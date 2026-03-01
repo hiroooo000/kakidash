@@ -19,7 +19,17 @@ test.describe('Layout Regression - Phase 4: Styles & Layout Verification', () =>
       .locator('.mindmap-node')
       .filter({ hasText: 'In what distant deeps' })
       .first();
-    await node4_3.scrollIntoViewIfNeeded();
+
+    const node4_3_id = await node4_3.getAttribute('data-id');
+    // Ensure the node is visible by panning the viewport centrally
+    /* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-return */
+    await page.evaluate(
+      (id) => (window as any).kakidash.controller.ensureNodeVisible(id, true, true),
+      node4_3_id,
+    );
+    /* eslint-enable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-return */
+    await page.waitForTimeout(100);
+
     await node4_3.click();
     await expect(node4_3).toHaveCSS('outline-style', 'solid');
 
@@ -46,7 +56,17 @@ test.describe('Layout Regression - Phase 4: Styles & Layout Verification', () =>
 
     // Select NewNode4-10 directly by clicking
     const node4_10 = page.locator('.mindmap-node').filter({ hasText: 'NewNode4-10' }).first();
-    await node4_10.scrollIntoViewIfNeeded();
+
+    const node4_10_id = await node4_10.getAttribute('data-id');
+    // Ensure the node is visible by panning the viewport centrally
+    /* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-return */
+    await page.evaluate(
+      (id) => (window as any).kakidash.controller.ensureNodeVisible(id, true, true),
+      node4_10_id,
+    );
+    /* eslint-enable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-return */
+    await page.waitForTimeout(100);
+
     await node4_10.click();
     await expect(node4_10).toHaveCSS('outline-style', 'solid');
 

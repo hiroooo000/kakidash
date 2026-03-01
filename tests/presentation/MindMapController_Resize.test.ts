@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { describe, it, expect, beforeEach, vi, type Mock } from 'vitest';
 import { MindMapController } from '../../src/presentation/logic/MindMapController';
 import { MindMap } from '../../src/features/core/domain/MindMap';
@@ -6,6 +8,8 @@ import { MindMapService } from '../../src/features/core/application/MindMapServi
 import { Renderer } from '../../src/presentation/components/Renderer';
 import { StyleEditor } from '../../src/features/theme/components/StyleEditor';
 import { IMindMapEventBus } from '../../src/presentation/logic/MindMapController';
+import { ViewportService } from '../../src/presentation/logic/ViewportService';
+import { NavigationService } from '../../src/presentation/logic/NavigationService';
 import { IdGenerator } from '../../src/shared/kernel/IdGenerator';
 
 describe('MindMapController Resizing Fix', () => {
@@ -25,18 +29,56 @@ describe('MindMapController Resizing Fix', () => {
     renderer = {
       container: document.createElement('div'),
       maxWidth: -1,
-      render: vi.fn(),
+      renderFromLayout: vi.fn(),
       updateTransform: vi.fn(),
-      measureNode: vi.fn(),
+      measureNode: vi.fn().mockReturnValue({ width: 100, height: 40 }),
       updateSelection: vi.fn(),
     } as unknown as Renderer;
 
     const uiLayer = document.createElement('div');
     styleEditor = new StyleEditor(uiLayer);
 
-    eventBus = { emit: vi.fn() };
+    eventBus = { emit: vi.fn(), on: vi.fn(), off: vi.fn() };
 
-    controller = new MindMapController(mindMap, service, renderer, styleEditor, eventBus);
+    controller = new MindMapController({
+      mindMap,
+      service,
+      renderer,
+      styleEditor,
+      eventBus,
+      historyService: {
+        saveState: vi.fn(),
+        undo: vi.fn(),
+        redo: vi.fn(),
+        canUndo: false,
+        canRedo: false,
+      } as any,
+      clipboardService: {
+        copyNodes: vi.fn(),
+        getClipboardNodes: vi.fn(),
+        createPastedNodes: vi.fn().mockImplementation(() => []),
+      } as any,
+      searchService: { searchNodes: vi.fn().mockReturnValue([]) } as any,
+      viewportService: {
+        pan: vi.fn(),
+        zoom: vi.fn(),
+        resetZoom: vi.fn(),
+        setInitialPan: vi.fn(),
+        applyTransform: vi.fn(),
+        ensureNodeVisible: vi.fn(),
+        startAnimationLoop: vi.fn(),
+        destroy: vi.fn(),
+        getScale: vi.fn().mockReturnValue(1),
+        getPan: vi.fn().mockReturnValue({ x: 0, y: 0 }),
+      } as unknown as ViewportService,
+      navigationService: {
+        navigate: vi.fn(),
+        getNodeDirection: vi.fn().mockReturnValue('right'),
+        ensureExplicitLayoutSides: vi.fn(),
+        setLayoutMode: vi.fn(),
+        getLayoutMode: vi.fn().mockReturnValue('Right'),
+      } as unknown as NavigationService,
+    });
   });
 
   it('should use measureNode width as starting width if customWidth is undefined', () => {

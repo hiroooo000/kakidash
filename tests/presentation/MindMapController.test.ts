@@ -1,10 +1,9 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-
-/* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/unbound-method */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { MindMapController } from '../../src/presentation/logic/MindMapController';
 import { MindMap } from '../../src/features/core/domain/MindMap';
@@ -14,6 +13,8 @@ import { Renderer } from '../../src/presentation/components/Renderer';
 import { StyleEditor } from '../../src/features/theme/components/StyleEditor';
 import { InteractionHandler } from '../../src/presentation/logic/InteractionHandler';
 import { CryptoIdGenerator } from '../../src/shared/infrastructure/CryptoIdGenerator';
+import { ViewportService } from '../../src/presentation/logic/ViewportService';
+import { NavigationService } from '../../src/presentation/logic/NavigationService';
 import { ThemeRegistry } from '../../src/features/theme/registry/ThemeRegistry';
 
 // Mock dependencies
@@ -30,6 +31,9 @@ describe('MindMapController', () => {
   let styleEditor: any;
   let interactionHandler: any;
   let eventBus: any;
+  let historyService: any;
+  let clipboardService: any;
+  let searchService: any;
   let rootNode: Node;
 
   beforeEach(() => {
@@ -43,9 +47,9 @@ describe('MindMapController', () => {
     renderer = {
       container: document.createElement('div'),
       maxWidth: -1,
-      render: vi.fn(),
+      renderFromLayout: vi.fn(),
       updateTransform: vi.fn(),
-      measureNode: vi.fn(),
+      measureNode: vi.fn().mockReturnValue({ width: 100, height: 40 }),
       updateSelection: vi.fn(),
     };
     styleEditor = new StyleEditor(document.createElement('div'));
@@ -53,6 +57,8 @@ describe('MindMapController', () => {
 
     eventBus = {
       emit: vi.fn() as any,
+      on: vi.fn(),
+      off: vi.fn(),
     };
 
     // Fix renderer container for ensureNodeVisible and other layout logic
@@ -79,10 +85,50 @@ describe('MindMapController', () => {
 
     renderer.container = mockContainer;
     // renderer methods already mocked above or can be overridden here
-    renderer.render = vi.fn();
+    renderer.renderFromLayout = vi.fn();
     renderer.updateTransform = vi.fn();
 
-    controller = new MindMapController(mindMap, service, renderer, styleEditor, eventBus);
+    historyService = {
+      saveState: vi.fn(),
+      undo: vi.fn().mockReturnValue({ nodeData: { id: 'root', topic: 'Root' } }),
+      redo: vi.fn().mockReturnValue({ nodeData: { id: 'root', topic: 'Root' } }),
+      canUndo: false,
+      canRedo: false,
+    };
+    clipboardService = {
+      copyNodes: vi.fn(),
+      getClipboardNodes: vi.fn(),
+      createPastedNodes: vi.fn().mockImplementation(() => []),
+    };
+    searchService = { searchNodes: vi.fn().mockReturnValue([]) };
+
+    const viewportService = {
+      pan: vi.fn(),
+      zoom: vi.fn(),
+      resetZoom: vi.fn(),
+      setInitialPan: vi.fn(),
+      applyTransform: vi.fn(),
+      ensureNodeVisible: vi.fn(),
+      startAnimationLoop: vi.fn(),
+      destroy: vi.fn(),
+      getScale: vi.fn().mockReturnValue(1),
+      getPan: vi.fn().mockReturnValue({ x: 0, y: 0 }),
+    } as unknown as ViewportService;
+
+    const navigationService = new NavigationService(mindMap);
+
+    controller = new MindMapController({
+      mindMap,
+      service,
+      renderer,
+      styleEditor,
+      eventBus,
+      historyService,
+      clipboardService,
+      searchService,
+      viewportService,
+      navigationService,
+    });
 
     // Wire up InteractionHandler
     controller.setInteractionHandler(interactionHandler);
@@ -92,22 +138,26 @@ describe('MindMapController', () => {
     service.removeNode.mockReset();
     service.removeNodes = vi.fn();
     service.updateNodesStyle = vi.fn();
-    service.copyNodes = vi.fn();
-    service.cutNodes = vi.fn();
+    service.exportData = vi.fn().mockReturnValue({
+      nodeData: { id: 'root', topic: 'Root' },
+      theme: { name: 'default' },
+    });
   });
 
   it('init should set initial pan and start loop', () => {
-    controller.init(1000);
-    expect(renderer.container.clientWidth).toBe(1000);
-    // init sets pan to 0.2 * width = 200
-    expect(controller['panX']).toBe(200);
+    controller.init(1000, 800);
+    // init delegates to viewportService.setInitialPan(0.2 * width, height / 2)
+    // Since viewportService is mocked, we can't check panX directly
+    // Verify render was called as part of init
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    expect(renderer.renderFromLayout).toHaveBeenCalled();
   });
 
   it('init should apply initial theme', () => {
     const registry = ThemeRegistry.getInstance();
     const applySpy = vi.spyOn(registry, 'applyTheme');
 
-    controller.init(1000);
+    controller.init(1000, 800);
 
     expect(applySpy).toHaveBeenCalledWith(expect.anything(), 'default');
     applySpy.mockRestore();
@@ -120,7 +170,8 @@ describe('MindMapController', () => {
     const result = controller.addNode('root', 'New Node');
 
     expect(service.addNode).toHaveBeenCalledWith('root', 'New Node', undefined);
-    expect(renderer.render).toHaveBeenCalled();
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    expect(renderer.renderFromLayout).toHaveBeenCalled();
     expect(eventBus.emit).toHaveBeenCalledWith('node:add', { id: 'new1', topic: 'New Node' });
     expect(eventBus.emit).toHaveBeenCalledWith('model:change', undefined);
     expect(result).toBe(newNode);
@@ -288,14 +339,19 @@ describe('MindMapController', () => {
       controller.selectNodes(['id1', 'id2']);
 
       controller.copyNode('id1');
-      expect(service.copyNodes).toHaveBeenCalledWith(expect.arrayContaining(['id1', 'id2']));
+      expect(clipboardService.copyNodes).toHaveBeenCalledWith(
+        expect.arrayContaining(['id1', 'id2']),
+      );
     });
 
     it('cutNode with multiple selection should cut all selected nodes', () => {
       controller.selectNodes(['id1', 'id2']);
 
       controller.cutNode('id1');
-      expect(service.cutNodes).toHaveBeenCalledWith(expect.arrayContaining(['id1', 'id2']));
+      expect(clipboardService.copyNodes).toHaveBeenCalledWith(
+        expect.arrayContaining(['id1', 'id2']),
+      );
+      expect(service.removeNodes).toHaveBeenCalledWith(expect.arrayContaining(['id1', 'id2']));
     });
   });
 });

@@ -1,4 +1,5 @@
 import { MindMap } from '../../features/core/domain/MindMap';
+import { LayoutEngine } from '../layout/LayoutEngine';
 import { Node, NodeStyle } from '../../features/core/domain/Node';
 import { MindMapService } from '../../features/core/application/MindMapService';
 import { Renderer } from '../components/Renderer';
@@ -17,10 +18,43 @@ import { XMindImporter } from '../../features/export_import/XMindImporter';
 import { ImageExporter } from '../../features/export_import/ImageExporter';
 import { MarkdownExporter } from '../../features/export_import/MarkdownExporter';
 import { HelpModal } from '../components/HelpModal';
+import { HistoryService } from '../../features/core/application/HistoryService';
+import { ClipboardService } from '../../features/core/application/ClipboardService';
+import { SearchService } from '../../features/core/application/SearchService';
 import { FileHandler } from '../../shared/kernel/FileHandler';
+import { ViewportService } from './ViewportService';
+import { NavigationService } from './NavigationService';
 
 export interface IMindMapEventBus {
   emit<K extends keyof KakidashEventMap>(event: K, payload: KakidashEventMap[K]): void;
+  on<K extends keyof KakidashEventMap>(
+    event: K,
+    handler: (payload: KakidashEventMap[K]) => void,
+  ): void;
+  off<K extends keyof KakidashEventMap>(
+    event: K,
+    handler: (payload: KakidashEventMap[K]) => void,
+  ): void;
+}
+
+/**
+ * Dependencies required to construct a MindMapController.
+ * Consolidates constructor parameters for readability.
+ */
+export interface ControllerDependencies {
+  mindMap: MindMap;
+  service: MindMapService;
+  renderer: Renderer;
+  styleEditor: StyleEditor;
+  eventBus: IMindMapEventBus;
+  historyService: HistoryService;
+  clipboardService: ClipboardService;
+  searchService: SearchService;
+  viewportService: ViewportService;
+  navigationService: NavigationService;
+  fileHandler?: FileHandler;
+  locale?: 'en' | 'ja';
+  commandPaletteFeatures?: ('search' | 'icon' | 'import' | 'export')[];
 }
 
 export class MindMapController {
@@ -35,18 +69,18 @@ export class MindMapController {
   private layoutSwitcher!: LayoutSwitcher;
   private fileHandler?: FileHandler;
 
+  private historyService: HistoryService;
+  private clipboardService: ClipboardService;
+  private searchService: SearchService;
+  private viewportService: ViewportService;
+  private navigationService: NavigationService;
+
   private anchorNodeId: string | null = null;
   private selectedNodeId: string | null = null;
   private selectedNodeIds: Set<string> = new Set();
   private layoutMode: LayoutMode = 'Right';
 
-  private panX: number = 0;
-  private panY: number = 0;
-  private targetPanX: number = 0;
-  private targetPanY: number = 0;
-  private scale: number = 1;
   private isBatching: boolean = false;
-  private animationFrameId: number | null = null;
   private maxWidth: number = -1;
 
   private pendingNodeCreation: boolean = false;
@@ -57,23 +91,21 @@ export class MindMapController {
     connection: { color: '#abb2b9' },
   };
 
-  constructor(
-    mindMap: MindMap,
-    service: MindMapService,
-    renderer: Renderer,
-    styleEditor: StyleEditor,
-    eventBus: IMindMapEventBus,
-    fileHandler?: FileHandler,
-    locale: 'en' | 'ja' = 'en',
-    commandPaletteFeatures?: ('search' | 'icon' | 'import' | 'export')[],
-  ) {
-    this.mindMap = mindMap;
-    this.service = service;
-    this.renderer = renderer;
-    this.styleEditor = styleEditor;
-    this.eventBus = eventBus;
-    this.fileHandler = fileHandler;
-    this.locale = locale;
+  constructor(deps: ControllerDependencies) {
+    this.mindMap = deps.mindMap;
+    this.service = deps.service;
+    this.renderer = deps.renderer;
+    this.styleEditor = deps.styleEditor;
+    this.eventBus = deps.eventBus;
+    this.fileHandler = deps.fileHandler;
+
+    this.historyService = deps.historyService;
+    this.clipboardService = deps.clipboardService;
+    this.searchService = deps.searchService;
+    this.viewportService = deps.viewportService;
+    this.navigationService = deps.navigationService;
+
+    this.locale = deps.locale ?? 'en';
     this.commandPalette = new CommandPalette(this.renderer.container, {
       onInput: (query) => this.handleSearchInput(query),
       onSelect: (nodeId) => this.handleSearchResultSelect(nodeId),
@@ -83,14 +115,7 @@ export class MindMapController {
         if (this.interactionHandler) this.interactionHandler.container.focus();
       },
       getSelectedNodeId: () => this.selectedNodeId,
-      disabledFeatures: commandPaletteFeatures,
-    });
-
-    this.service.setSelectionProvider(() => {
-      return {
-        selectedId: this.selectedNodeId || undefined,
-        selectedIds: Array.from(this.selectedNodeIds),
-      };
+      disabledFeatures: deps.commandPaletteFeatures,
     });
   }
 
@@ -102,9 +127,8 @@ export class MindMapController {
     this.layoutSwitcher = switcher;
   }
 
-  public init(containerWidth: number) {
-    this.panX = containerWidth * 0.2; // Default Right mode
-    this.targetPanX = this.panX;
+  public init(containerWidth: number, containerHeight: number) {
+    this.viewportService.setInitialPan(containerWidth * 0.2, containerHeight / 2); // Default Right mode, centered vertically
 
     // Apply initial theme
     const theme = this.mindMap.theme;
@@ -116,15 +140,12 @@ export class MindMapController {
       ThemeRegistry.getInstance().applyTheme(this.renderer.container, theme);
     }
 
-    this.startAnimationLoop();
+    this.viewportService.startAnimationLoop();
     this.render();
   }
 
   public destroy() {
-    if (this.animationFrameId !== null) {
-      cancelAnimationFrame(this.animationFrameId);
-      this.animationFrameId = null;
-    }
+    this.viewportService.destroy();
   }
 
   // Data Persistence
@@ -142,7 +163,7 @@ export class MindMapController {
       this.restoreSelection(data);
       this.eventBus.emit('model:load', data);
       if (data.theme) {
-        this.setTheme(data.theme);
+        this.setTheme(data.theme, { saveState: false, emitChange: false });
       }
       this.eventBus.emit('model:change', undefined);
     } catch (e) {
@@ -177,6 +198,12 @@ export class MindMapController {
     return [targetId];
   }
 
+  private saveState(): void {
+    if (this.isBatching) return;
+    const data = this.getData();
+    this.historyService.saveState(data);
+  }
+
   // Core API Delegate
   addNode(
     parentId: string,
@@ -184,6 +211,7 @@ export class MindMapController {
     layoutSide?: 'left' | 'right',
     options: { emitChange?: boolean } = { emitChange: true },
   ): Node | null {
+    if (options.emitChange) this.saveState();
     this.eventBus.emit('command', { name: 'addNode', args: { parentId, topic, layoutSide } });
     const node = this.service.addNode(parentId, topic, layoutSide);
     if (node) {
@@ -202,13 +230,14 @@ export class MindMapController {
     topic: string = 'New topic',
     options: { emitChange?: boolean } = { emitChange: true },
   ): Node | null {
+    if (options.emitChange) this.saveState();
     this.eventBus.emit('command', { name: 'addSibling', args: { referenceId, position, topic } });
     const node = this.mindMap.findNode(referenceId);
     if (!node || !node.parentId) return null;
 
     const parent = this.mindMap.findNode(node.parentId);
     if (parent && parent.isRoot && this.layoutMode === 'Both') {
-      this.ensureExplicitLayoutSides(parent);
+      this.navigationService.ensureExplicitLayoutSides(parent);
     }
 
     const newNode = this.service.addSibling(referenceId, position, topic);
@@ -233,6 +262,7 @@ export class MindMapController {
     topic: string = 'New topic',
     options: { emitChange?: boolean } = { emitChange: true },
   ): Node | null {
+    if (options.emitChange) this.saveState();
     this.eventBus.emit('command', { name: 'insertParent', args: { targetId, topic } });
     const newNode = this.service.insertParent(targetId, topic);
     if (newNode) {
@@ -246,6 +276,7 @@ export class MindMapController {
   }
 
   deleteNode(nodeId: string): void {
+    this.saveState();
     this.eventBus.emit('command', { name: 'deleteNode', args: { nodeId } });
 
     const ids = this.getIdsToActOn(nodeId);
@@ -269,6 +300,7 @@ export class MindMapController {
     nodeId: string,
     updates: { topic?: string; style?: Partial<NodeStyle>; icon?: string },
   ): void {
+    this.saveState();
     this.eventBus.emit('command', { name: 'updateNode', args: { nodeId, updates } });
     if (this.interactionHandler && this.interactionHandler.isReadOnly) return;
 
@@ -309,6 +341,7 @@ export class MindMapController {
 
   // Interaction Handlers
   updateNodeWidth(nodeId: string, increment: number): void {
+    this.saveState();
     this.eventBus.emit('command', { name: 'updateNodeWidth', args: { nodeId, increment } });
     if (this.interactionHandler && this.interactionHandler.isReadOnly) return;
 
@@ -340,7 +373,7 @@ export class MindMapController {
   addChildNode(parentId: string): void {
     const parent = this.mindMap.findNode(parentId);
     if (parent && parent.isRoot && this.layoutMode === 'Both') {
-      this.ensureExplicitLayoutSides(parent);
+      this.navigationService.ensureExplicitLayoutSides(parent);
     }
 
     let side: 'left' | 'right' | undefined;
@@ -453,10 +486,13 @@ export class MindMapController {
   private restoreSelection(data: MindMapData): void {
     if (data.selectedIds && data.selectedIds.length > 0) {
       this.selectNodes(data.selectedIds);
+      this.ensureNodeVisible(data.selectedIds[0], true, true);
     } else if (data.selectedId) {
       this.selectNode(data.selectedId);
+      this.ensureNodeVisible(data.selectedId, true, true);
     } else {
       this.selectNode(null);
+      this.ensureNodeVisible(this.mindMap.root.id, true, true);
     }
   }
 
@@ -475,6 +511,7 @@ export class MindMapController {
   }
 
   moveNode(nodeId: string, targetId: string, position: 'top' | 'bottom' | 'left' | 'right'): void {
+    this.saveState();
     this.eventBus.emit('command', { name: 'moveNode', args: { nodeId, targetId, position } });
     const target = this.mindMap.findNode(targetId);
     if (!target) return;
@@ -490,7 +527,7 @@ export class MindMapController {
         const side = position === 'left' ? 'left' : 'right';
         this.service.moveNode(nodeId, targetId, side);
       } else {
-        const layoutDir = this.getNodeDirection(target);
+        const layoutDir = this.navigationService.getNodeDirection(target);
         const action = (layoutDir === 'right' ? position === 'right' : position === 'left')
           ? 'addChild'
           : 'insertParent';
@@ -515,8 +552,23 @@ export class MindMapController {
 
   render(): void {
     if (this.isBatching) return;
-    this.renderer.render(this.mindMap, this.selectedNodeIds, this.layoutMode);
-    this.renderer.updateTransform(this.panX, this.panY, this.scale);
+    const layoutEngine = new LayoutEngine((node) => this.renderer.measureNode(node, this.mindMap));
+    const layoutResult = layoutEngine.calculate(this.mindMap.root, this.layoutMode);
+
+    // Normalize selection
+    let selectionSet: Set<string>;
+    if (this.selectedNodeIds instanceof Set) {
+      selectionSet = this.selectedNodeIds;
+    } else if (Array.isArray(this.selectedNodeIds)) {
+      selectionSet = new Set(this.selectedNodeIds);
+    } else if (typeof this.selectedNodeIds === 'string') {
+      selectionSet = new Set([this.selectedNodeIds]);
+    } else {
+      selectionSet = new Set();
+    }
+
+    this.renderer.renderFromLayout(layoutResult, this.mindMap, selectionSet, this.layoutMode);
+    this.viewportService.applyTransform();
   }
 
   /**
@@ -525,28 +577,32 @@ export class MindMapController {
   private renderSelection(): void {
     if (this.isBatching) return;
     this.renderer.updateSelection(this.selectedNodeIds);
-    this.renderer.updateTransform(this.panX, this.panY, this.scale);
+    this.viewportService.applyTransform();
   }
 
   setLayoutMode(mode: LayoutMode): void {
     this.eventBus.emit('command', { name: 'setLayoutMode', args: { mode } });
     this.layoutMode = mode;
+    this.navigationService.setLayoutMode(mode);
     if (this.layoutSwitcher) this.layoutSwitcher.setMode(mode);
 
     const clientWidth = this.renderer.container.clientWidth;
+    const clientHeight = this.renderer.container.clientHeight;
     if (mode === 'Right') {
-      this.panX = clientWidth * 0.2;
+      this.viewportService.setInitialPan(clientWidth * 0.2, clientHeight / 2);
     } else if (mode === 'Left') {
-      this.panX = clientWidth * 0.8;
+      this.viewportService.setInitialPan(clientWidth * 0.8, clientHeight / 2);
     } else {
-      this.panX = clientWidth * 0.5;
+      this.viewportService.setInitialPan(clientWidth * 0.5, clientHeight / 2);
     }
 
-    this.panY = 0;
-    this.targetPanX = this.panX;
-    this.targetPanY = this.panY;
-
     this.render();
+
+    if (this.selectedNodeId) {
+      this.ensureNodeVisible(this.selectedNodeId, true, true);
+    } else {
+      this.ensureNodeVisible(this.mindMap.root.id, true, true);
+    }
   }
 
   getLayoutMode(): LayoutMode {
@@ -588,7 +644,11 @@ export class MindMapController {
     }
   }
 
-  setTheme(theme: Theme): void {
+  setTheme(
+    theme: Theme,
+    options: { saveState?: boolean; emitChange?: boolean } = { saveState: true, emitChange: true },
+  ): void {
+    if (options.saveState !== false) this.saveState();
     this.eventBus.emit('command', { name: 'setTheme', args: { theme } });
     this.service.setTheme(theme);
     if (this.layoutSwitcher) this.layoutSwitcher.setTheme(theme);
@@ -605,48 +665,16 @@ export class MindMapController {
   }
 
   resetZoom(): void {
-    const cx = this.renderer.container.clientWidth / 2;
-    const cy = this.renderer.container.clientHeight / 2;
-    const newScale = 1.0;
-
-    this.panX = cx - (cx - this.panX) * (newScale / this.scale);
-    this.panY = cy - (cy - this.panY) * (newScale / this.scale);
-
-    this.scale = newScale;
-    this.targetPanX = this.panX;
-    this.targetPanY = this.panY;
+    this.viewportService.resetZoom();
     this.render();
   }
 
   panBoard(dx: number, dy: number): void {
-    this.targetPanX += dx;
-    this.targetPanY += dy;
+    this.viewportService.pan(dx, dy);
   }
 
   zoomBoard(delta: number, clientX: number, clientY: number): void {
-    const ZOOM_SENSITIVITY = 0.001;
-    const MIN_SCALE = 0.1;
-    const MAX_SCALE = 5.0;
-
-    const rect = this.renderer.container.getBoundingClientRect();
-    const x = clientX - rect.left;
-    const y = clientY - rect.top;
-
-    const newScale = Math.min(
-      Math.max(this.scale * (1 - delta * ZOOM_SENSITIVITY), MIN_SCALE),
-      MAX_SCALE,
-    );
-
-    const newPanX = x - (x - this.panX) * (newScale / this.scale);
-    const newPanY = y - (y - this.panY) * (newScale / this.scale);
-
-    this.panX = newPanX;
-    this.panY = newPanY;
-    this.targetPanX = newPanX;
-    this.targetPanY = newPanY;
-
-    this.scale = newScale;
-    this.renderer.updateTransform(this.panX, this.panY, this.scale);
+    this.viewportService.zoom(delta, clientX, clientY);
   }
 
   setReadOnly(readOnly: boolean): void {
@@ -659,26 +687,29 @@ export class MindMapController {
   }
 
   undo(): void {
-    const prevState = this.service.undo();
+    const currentState = this.getData();
+    const prevState = this.historyService.undo(currentState);
     if (prevState) {
       this.eventBus.emit('command', { name: 'undo' });
+      this.loadData(prevState);
       this.render(); // Full render needed after model change
-      this.restoreSelection(prevState);
       this.eventBus.emit('model:change', undefined);
     }
   }
 
   redo(): void {
-    const nextState = this.service.redo();
+    const currentState = this.getData();
+    const nextState = this.historyService.redo(currentState);
     if (nextState) {
       this.eventBus.emit('command', { name: 'redo' });
+      this.loadData(nextState);
       this.render(); // Full render needed after model change
-      this.restoreSelection(nextState);
       this.eventBus.emit('model:change', undefined);
     }
   }
 
   toggleFold(nodeId: string): void {
+    this.saveState();
     if (this.service.toggleNodeFold(nodeId)) {
       this.eventBus.emit('command', { name: 'toggleFold', args: { nodeId } });
       this.render();
@@ -700,22 +731,7 @@ export class MindMapController {
     const node = this.mindMap.findNode(nodeId);
     if (!node) return;
 
-    let targetId: string | undefined;
-
-    switch (direction) {
-      case 'Left':
-        targetId = this.navigateLeft(node);
-        break;
-      case 'Right':
-        targetId = this.navigateRight(node);
-        break;
-      case 'Up':
-        targetId = this.navigateUp(node);
-        break;
-      case 'Down':
-        targetId = this.navigateDown(node);
-        break;
-    }
+    const targetId = this.navigationService.navigate(nodeId, direction);
 
     if (targetId) {
       if (extendSelection) {
@@ -804,15 +820,18 @@ export class MindMapController {
   copyNode(nodeId: string): void {
     const ids = this.getIdsToActOn(nodeId);
     if (ids.length > 1) {
-      this.service.copyNodes(ids);
+      this.clipboardService.copyNodes(ids);
     } else {
-      this.service.copyNode(nodeId);
+      this.clipboardService.copyNodes([nodeId]);
     }
   }
 
   pasteNode(parentId: string): void {
+    this.saveState();
     this.eventBus.emit('command', { name: 'pasteNode', args: { parentId } });
-    const newNode = this.service.pasteNode(parentId);
+    const newNodes = this.clipboardService.createPastedNodes(parentId);
+    const newNode = newNodes.length > 0 ? newNodes[0] : null;
+    if (newNodes.length > 0) this.service.addExistingNodes(parentId, newNodes);
     if (newNode) {
       this.render();
       this.selectNode(newNode.id);
@@ -823,6 +842,7 @@ export class MindMapController {
   }
 
   cutNode(nodeId: string): void {
+    this.saveState();
     this.eventBus.emit('command', { name: 'cutNode', args: { nodeId } });
     const ids = this.getIdsToActOn(nodeId);
 
@@ -830,9 +850,11 @@ export class MindMapController {
     const targetSelectId = this.findTargetIdAfterRemoval(nodeId, ids);
 
     if (ids.length > 1) {
-      this.service.cutNodes(ids);
+      this.clipboardService.copyNodes(ids);
+      this.service.removeNodes(ids);
     } else {
-      this.service.cutNode(nodeId);
+      this.clipboardService.copyNodes([nodeId]);
+      this.service.removeNode(nodeId);
     }
 
     this.selectNode(targetSelectId);
@@ -842,6 +864,7 @@ export class MindMapController {
   }
 
   pasteImage(parentId: string, imageData: string, width?: number, height?: number): void {
+    this.saveState();
     this.eventBus.emit('command', { name: 'pasteImage', args: { parentId, width, height } });
     const newNode = this.service.addImageNode(parentId, imageData, width, height);
     if (newNode) {
@@ -861,6 +884,7 @@ export class MindMapController {
   }
 
   onStyleAction(nodeId: string, action: StyleAction): void {
+    this.saveState();
     if (this.interactionHandler && this.interactionHandler.isReadOnly) return;
     const node = this.mindMap.findNode(nodeId);
     if (!node) return;
@@ -917,11 +941,11 @@ export class MindMapController {
   }
 
   public searchNodes(query: string): Node[] {
-    return this.service.searchNodes(query);
+    return this.searchService.searchNodes(query);
   }
 
   private handleSearchInput(query: string): void {
-    const results = this.service.searchNodes(query);
+    const results = this.searchService.searchNodes(query);
     this.commandPalette.setResults(results.map((n) => ({ id: n.id, topic: n.topic })));
   }
 
@@ -1027,168 +1051,12 @@ export class MindMapController {
     input.click();
   }
 
-  private ensureExplicitLayoutSides(parent: Node): void {
-    if (!parent.isRoot || this.layoutMode !== 'Both') return;
-    parent.children.forEach((child: Node, index: number) => {
-      if (!child.presentation.layoutSide) {
-        child.presentation.layoutSide = index % 2 === 0 ? 'right' : 'left';
-      }
-    });
-  }
-
-  private getNodeDirection(node: Node): 'left' | 'right' {
-    if (node.isRoot) return 'right';
-    if (this.layoutMode === 'Right') return 'right';
-    if (this.layoutMode === 'Left') return 'left';
-
-    let current = node;
-    while (current.parentId) {
-      const parent = this.mindMap.findNode(current.parentId);
-      if (!parent) break;
-      if (parent.isRoot) {
-        if (current.presentation.layoutSide) return current.presentation.layoutSide;
-        const index = parent.children.findIndex((c: Node) => c.id === current.id);
-        return index % 2 === 0 ? 'right' : 'left';
-      }
-      current = parent;
-    }
-    return 'right';
-  }
-
-  private startAnimationLoop(): void {
-    let lastTime = performance.now();
-    const tick = () => {
-      const currentTime = performance.now();
-      const dt = (currentTime - lastTime) / 1000;
-      lastTime = currentTime;
-      const decay = 8;
-      const factor = 1 - Math.exp(-decay * dt);
-
-      const dx = this.targetPanX - this.panX;
-      const dy = this.targetPanY - this.panY;
-
-      if (Math.abs(dx) > 0.1 || Math.abs(dy) > 0.1) {
-        this.panX += dx * factor;
-        this.panY += dy * factor;
-        this.renderer.updateTransform(this.panX, this.panY, this.scale);
-      } else {
-        if (this.panX !== this.targetPanX || this.panY !== this.targetPanY) {
-          this.panX = this.targetPanX;
-          this.panY = this.targetPanY;
-          this.renderer.updateTransform(this.panX, this.panY, this.scale);
-        }
-      }
-      if (Number.isNaN(this.panX)) this.panX = 0;
-      if (Number.isNaN(this.panY)) this.panY = 0;
-
-      this.animationFrameId = requestAnimationFrame(tick);
-    };
-    tick();
-  }
-
   private ensureNodeVisible(
     nodeId: string,
     centerIfOffscreen: boolean = false,
     immediate: boolean = false,
   ): void {
-    const nodeEl = this.renderer.container.querySelector(
-      `.mindmap-node[data-id="${nodeId}"]`,
-    ) as HTMLElement;
-    if (!nodeEl) return;
-
-    const rect = nodeEl.getBoundingClientRect();
-    const containerRect = this.renderer.container.getBoundingClientRect();
-    const padding = 50;
-    let dx = 0;
-    let dy = 0;
-    const isOffLeft = rect.left < containerRect.left + padding;
-    const isOffRight = rect.right > containerRect.right - padding;
-    const isOffTop = rect.top < containerRect.top + padding;
-    const isOffBottom = rect.bottom > containerRect.bottom - padding;
-
-    if (centerIfOffscreen && (isOffLeft || isOffRight || isOffTop || isOffBottom)) {
-      const nodeCenterX = rect.left + rect.width / 2;
-      const nodeCenterY = rect.top + rect.height / 2;
-      const containerCenterX = containerRect.left + containerRect.width / 2;
-      const containerCenterY = containerRect.top + containerRect.height / 2;
-      dx = containerCenterX - nodeCenterX;
-      dy = containerCenterY - nodeCenterY;
-    } else {
-      if (isOffLeft) dx = containerRect.left + padding - rect.left;
-      else if (isOffRight) dx = containerRect.right - padding - rect.right;
-      if (isOffTop) dy = containerRect.top + padding - rect.top;
-      else if (isOffBottom) dy = containerRect.bottom - padding - rect.bottom;
-    }
-
-    if (dx !== 0 || dy !== 0) {
-      if (immediate) {
-        this.panX += dx;
-        this.panY += dy;
-        this.targetPanX = this.panX;
-        this.targetPanY = this.panY;
-        this.renderer.updateTransform(this.panX, this.panY, this.scale);
-      } else {
-        this.panBoard(dx, dy);
-      }
-    }
-  }
-
-  private navigateLeft(node: Node): string | undefined {
-    if (node.isRoot) {
-      if (this.layoutMode === 'Left')
-        return node.children.length > 0 ? node.children[0].id : undefined;
-      if (this.layoutMode === 'Both') {
-        const target = node.children.find(
-          (c, i) => (c.presentation.layoutSide || (i % 2 !== 0 ? 'left' : 'right')) === 'left',
-        );
-        return target ? target.id : undefined;
-      }
-    } else if (node.parentId) {
-      const dir = this.getNodeDirection(node);
-      if (dir === 'right') return node.parentId;
-      return node.children.length > 0 ? node.children[0].id : undefined;
-    }
-  }
-
-  private navigateRight(node: Node): string | undefined {
-    if (node.isRoot) {
-      if (this.layoutMode === 'Right')
-        return node.children.length > 0 ? node.children[0].id : undefined;
-      if (this.layoutMode === 'Both') {
-        const target = node.children.find(
-          (c, i) => (c.presentation.layoutSide || (i % 2 === 0 ? 'right' : 'left')) === 'right',
-        );
-        return target ? target.id : undefined;
-      }
-    } else if (node.parentId) {
-      const dir = this.getNodeDirection(node);
-      if (dir === 'right') return node.children.length > 0 ? node.children[0].id : undefined;
-      return node.parentId;
-    }
-  }
-
-  private navigateUp(node: Node): string | undefined {
-    if (node.parentId) {
-      const parent = this.mindMap.findNode(node.parentId);
-      if (parent) {
-        const myDir = this.getNodeDirection(node);
-        const sameSide = parent.children.filter((c) => this.getNodeDirection(c) === myDir);
-        const idx = sameSide.findIndex((c) => c.id === node.id);
-        if (idx > 0) return sameSide[idx - 1].id;
-      }
-    }
-  }
-
-  private navigateDown(node: Node): string | undefined {
-    if (node.parentId) {
-      const parent = this.mindMap.findNode(node.parentId);
-      if (parent) {
-        const myDir = this.getNodeDirection(node);
-        const sameSide = parent.children.filter((c) => this.getNodeDirection(c) === myDir);
-        const idx = sameSide.findIndex((c) => c.id === node.id);
-        if (idx !== -1 && idx < sameSide.length - 1) return sameSide[idx + 1].id;
-      }
-    }
+    this.viewportService.ensureNodeVisible(nodeId, centerIfOffscreen, immediate);
   }
 
   public showHelpModal(): void {

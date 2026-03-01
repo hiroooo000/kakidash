@@ -4,6 +4,7 @@ import { ThemeRegistry } from '../../features/theme/registry/ThemeRegistry';
 import { Node } from '../../features/core/domain/Node';
 import { LayoutMode } from '../../features/core/domain/LayoutMode';
 import { SVG_ICONS } from '../../features/theme/resources/Icons';
+import { LayoutResult } from '../layout/LayoutTypes';
 
 export interface SvgRendererOptions {
   onImageZoom?: (active: boolean) => void;
@@ -17,7 +18,6 @@ export class SvgRenderer implements Renderer {
   options: SvgRendererOptions;
   maxWidth: number = -1;
   private measureCache: Map<string, { width: number; height: number }> = new Map();
-  private heightCache: Map<string, number> = new Map();
   private nodeElementMap: Map<string, HTMLElement> = new Map();
   private previousSelectedIds: Set<string> = new Set();
 
@@ -55,47 +55,45 @@ export class SvgRenderer implements Renderer {
     this.options = options;
   }
 
-  render(
+  renderFromLayout(
+    layout: LayoutResult,
     mindMap: MindMap,
-    selectedNodeIds: Set<string> | string[] | string | null = null,
+    selectedNodeIds: Set<string>,
     layoutMode: LayoutMode = 'Right',
   ): void {
-    // Normalize to Set
-    let selectionSet: Set<string>;
-    if (selectedNodeIds instanceof Set) {
-      selectionSet = selectedNodeIds;
-    } else if (Array.isArray(selectedNodeIds)) {
-      selectionSet = new Set(selectedNodeIds);
-    } else if (typeof selectedNodeIds === 'string') {
-      selectionSet = new Set([selectedNodeIds]);
-    } else {
-      selectionSet = new Set();
-    }
     // Clear previous render
     this.svg.innerHTML = '';
     this.nodeContainer.innerHTML = '';
     this.measureCache.clear();
-    this.heightCache.clear();
     this.nodeElementMap.clear();
     this.previousSelectedIds.clear();
 
-    // Simple recursive render for now
-    this.renderNode(
-      mindMap.root,
-      0,
-      this.container.clientHeight / 2,
-      selectionSet,
-      layoutMode,
-      true,
-      undefined, // default direction
-      mindMap,
-    );
+    // Render connections first (bottom layer)
+    layout.connections.forEach((conn) => {
+      const targetNode = mindMap.findNode(conn.toNodeId);
+      const color = targetNode ? this.getThemeColor(targetNode, mindMap) : '#ccc';
+      this.drawConnection(conn.fromX, conn.fromY, conn.toX, conn.toY, color, mindMap.theme);
+    });
 
-    // Center root logic if needed, but for now pan handles it.
-    // 0, center-y is a good start.
+    // Render nodes
+    layout.nodes.forEach((nodeLayout) => {
+      const node = mindMap.findNode(nodeLayout.nodeId);
+      if (node) {
+        this.renderNodeElement(
+          node,
+          nodeLayout.x,
+          nodeLayout.y,
+          nodeLayout.width,
+          nodeLayout.direction,
+          selectedNodeIds,
+          layoutMode,
+          mindMap,
+        );
+      }
+    });
 
     // Sync previous selection state for future delta updates (Bug Fix)
-    this.previousSelectedIds = new Set(selectionSet);
+    this.previousSelectedIds = new Set(selectedNodeIds);
   }
 
   updateTransform(panX: number, panY: number, scale: number = 1): void {
@@ -134,16 +132,17 @@ export class SvgRenderer implements Renderer {
     return currentTheme.styles.connection.color;
   }
 
-  private renderNode(
+  private renderNodeElement(
     node: Node,
     x: number,
     y: number,
+    nodeWidth: number,
+    direction: 'left' | 'right',
     selectedNodeIds: Set<string>,
     layoutMode: LayoutMode,
-    isRoot: boolean,
-    direction: 'left' | 'right' = 'right',
-    mindMap?: MindMap,
+    mindMap: MindMap,
   ): void {
+    const isRoot = node.isRoot;
     const currentTheme = ThemeRegistry.getInstance().getCurrentTheme();
     const el = document.createElement('div');
     el.dataset.id = node.id;
@@ -300,7 +299,7 @@ export class SvgRenderer implements Renderer {
     // But for specific logic like "Simple theme has no border", the CSS variable should handle it (border: none).
     // The only exception is dynamic colorful border.
 
-    const themeColor = this.getThemeColor(node, mindMap!); // mindMap is likely present if we are rendering
+    const themeColor = this.getThemeColor(node, mindMap); // mindMap is likely present if we are rendering
 
     if (currentTheme.name === 'colorful') {
       // Colorful theme specific overrides (dynamic color)
@@ -357,8 +356,6 @@ export class SvgRenderer implements Renderer {
         el.style.backgroundColor = 'var(--mindmap-child-background)';
       }
     }
-
-    const { width: nodeWidth } = this.measureNode(node);
 
     let finalX = x;
     if (direction === 'left' && !isRoot) {
@@ -447,160 +444,6 @@ export class SvgRenderer implements Renderer {
         this.nodeContainer.appendChild(toggleBtn);
       });
     }
-
-    if (node.presentation.isFolded) return;
-
-    // Calculate layout
-    // For Both mode at Root: Split children.
-    // For other modes or non-root: standard stack.
-
-    let rightChildren: Node[] = [];
-    let leftChildren: Node[] = [];
-
-    if (isRoot && layoutMode === 'Both') {
-      node.children.forEach((child, index) => {
-        const side = child.presentation.layoutSide || (index % 2 === 0 ? 'right' : 'left');
-        if (side === 'right') rightChildren.push(child);
-        else leftChildren.push(child);
-      });
-    } else if (layoutMode === 'Left') {
-      leftChildren = node.children;
-    } else if (layoutMode === 'Right') {
-      rightChildren = node.children;
-    } else {
-      // Recursive case: maintain direction
-      if (direction === 'left') leftChildren = node.children;
-      else rightChildren = node.children;
-    }
-
-    // Render Right Children
-    if (rightChildren.length > 0) {
-      this.renderChildrenStack(
-        node,
-        rightChildren,
-        x,
-        y,
-        selectedNodeIds,
-        layoutMode,
-        'right',
-        nodeWidth,
-        mindMap,
-      );
-    }
-
-    // Render Left Children
-    if (leftChildren.length > 0) {
-      this.renderChildrenStack(
-        node,
-        leftChildren,
-        x,
-        y,
-        selectedNodeIds,
-        layoutMode,
-        'left',
-        nodeWidth,
-        mindMap,
-      );
-    }
-  }
-
-  private renderChildrenStack(
-    parentNode: Node,
-    children: Node[],
-    parentX: number,
-    parentY: number,
-    selectedNodeIds: Set<string>,
-    layoutMode: LayoutMode,
-    direction: 'left' | 'right',
-    parentWidth: number,
-    mindMap?: MindMap,
-  ): void {
-    // Calculate total height
-    const totalHeight = children.reduce(
-      (acc, child) => acc + this.getNodeHeight(child, mindMap),
-      0,
-    );
-    let startY = parentY - totalHeight / 2;
-
-    const levelGap = 80;
-
-    let parentEdgeX = 0;
-    if (parentNode.isRoot) {
-      parentEdgeX = direction === 'right' ? parentX + parentWidth / 2 : parentX - parentWidth / 2;
-    } else {
-      // If direction is right, this node's left edge is at parentX, so right edge is parentX + width
-      // If direction is left, this node's right edge is at parentX, so left edge is parentX - width.
-      // Wait, in renderNode:
-      // Right: finalX = x. (x is left edge). Right edge is x + width.
-      // Left: finalX = x - width. (x is right edge). Left edge is x - width.
-
-      // So if we are going right from here, we start at our right edge.
-      // If we are going left from here, we start at our left edge.
-
-      if (direction === 'right') {
-        parentEdgeX = parentX + parentWidth;
-      } else {
-        parentEdgeX = parentX; // Because x passed in for 'left' direction node WAS the right edge.
-        // Wait, if direction is 'left', x is the right edge.
-        // So parentEdgeX should be x.
-        // Ah, but in renderNode for 'left', we set finalX = x - width.
-        // So visually the node is from (x-width) to x.
-        // So the Left Edge is x - width.
-        parentEdgeX = parentX - parentWidth;
-      }
-    }
-
-    children.forEach((child) => {
-      const childHeight = this.getNodeHeight(child, mindMap);
-      const childY = startY + childHeight / 2;
-
-      const childX = direction === 'right' ? parentEdgeX + levelGap : parentEdgeX - levelGap;
-
-      this.renderNode(
-        child,
-        childX,
-        childY,
-        selectedNodeIds,
-        layoutMode,
-        false,
-        direction,
-        mindMap,
-      );
-
-      const connectionColor = mindMap ? this.getThemeColor(child, mindMap) : '#ccc';
-      this.drawConnection(parentEdgeX, parentY, childX, childY, connectionColor, mindMap?.theme);
-
-      startY += childHeight;
-    });
-  }
-
-  private getChildrenHeight(node: Node, mindMap?: MindMap): number {
-    return node.children.reduce((acc, child) => acc + this.getNodeHeight(child, mindMap), 0);
-  }
-
-  private getNodeHeight(node: Node, mindMap?: MindMap): number {
-    if (this.heightCache.has(node.id)) {
-      return this.heightCache.get(node.id)!;
-    }
-
-    const { height } = this.measureNode(node, mindMap);
-    const verticalGap = 20;
-
-    if (node.children.length === 0 || node.presentation.isFolded) {
-      const result = height + verticalGap;
-      this.heightCache.set(node.id, result);
-      return result;
-    }
-
-    const childrenTotalHeight = this.getChildrenHeight(node, mindMap);
-    // Ensure the parent has at least enough space for itself plus gap,
-    // though typically children total height is larger.
-    // If children total height is smaller than parent node height, we might have overlap issues if we don't handle it.
-    // But for standard mindmaps, usually we care about the children stack.
-    // Let's take the max to be safe if a single child is smaller than parent.
-    const result = Math.max(height + verticalGap, childrenTotalHeight);
-    this.heightCache.set(node.id, result);
-    return result;
   }
 
   public measureNode(node: Node, mindMap?: MindMap): { width: number; height: number } {

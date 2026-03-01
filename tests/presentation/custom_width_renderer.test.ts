@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call */
 import { SvgRenderer } from '../../src/presentation/components/SvgRenderer';
 import { Node } from '../../src/features/core/domain/Node';
+import { MindMap } from '../../src/features/core/domain/MindMap';
 
 describe('SvgRenderer Custom Width', () => {
   let container: HTMLElement;
@@ -34,7 +35,16 @@ describe('SvgRenderer Custom Width', () => {
     // Let's create a node with explicit customWidth and verify renderNode sets correct style
     // We can assume renderNode appends to nodeContainer.
 
-    (renderer as any).renderNode(node, 0, 0, new Set(), 'Right', false, 'right');
+    (renderer as any).renderNodeElement(
+      node,
+      0,
+      0,
+      (renderer as any).measureNode(node).width,
+      'right',
+      new Set(),
+      'Right',
+      new MindMap(node),
+    );
     const nodeEl = renderer.nodeContainer.querySelector(`[data-id="${node.id}"]`) as HTMLElement;
     expect(nodeEl).toBeTruthy();
     expect(nodeEl.style.maxWidth).toBe('200px');
@@ -45,7 +55,16 @@ describe('SvgRenderer Custom Width', () => {
     const node = new Node('1', 'Long text');
     node.presentation.customWidth = 300;
 
-    (renderer as any).renderNode(node, 0, 0, new Set(), 'Right', false, 'right');
+    (renderer as any).renderNodeElement(
+      node,
+      0,
+      0,
+      (renderer as any).measureNode(node).width,
+      'right',
+      new Set(),
+      'Right',
+      new MindMap(node),
+    );
     const nodeEl = renderer.nodeContainer.querySelector(`[data-id="${node.id}"]`) as HTMLElement;
 
     expect(nodeEl.style.maxWidth).toBe('300px');
@@ -56,7 +75,16 @@ describe('SvgRenderer Custom Width', () => {
     const node = new Node('1', 'Long text');
     node.presentation.customWidth = 150;
 
-    (renderer as any).renderNode(node, 0, 0, new Set(), 'Right', false, 'right');
+    (renderer as any).renderNodeElement(
+      node,
+      0,
+      0,
+      (renderer as any).measureNode(node).width,
+      'right',
+      new Set(),
+      'Right',
+      new MindMap(node),
+    );
     const nodeEl = renderer.nodeContainer.querySelector(`[data-id="${node.id}"]`) as HTMLElement;
 
     expect(nodeEl.style.maxWidth).toBe('150px');

@@ -16,6 +16,16 @@ test.describe('Layout Regression - Phase 2: Multiline Text Update', () => {
 
   test('should update node with multiline text', async ({ page }) => {
     const node3 = page.locator('.mindmap-node').filter({ hasText: 'NewNode3' }).first();
+    const nodeId = await node3.getAttribute('data-id');
+    // Ensure the node is visible by panning the viewport centrally
+    /* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-return */
+    await page.evaluate(
+      (id) => (window as any).kakidash.controller.ensureNodeVisible(id, true, true),
+      nodeId,
+    );
+    /* eslint-enable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-return */
+    await page.waitForTimeout(100);
+
     await node3.click();
     await node3.dblclick();
 

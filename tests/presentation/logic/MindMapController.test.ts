@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, beforeEach, vi, afterEach, Mock } from 'vitest';
 import { MindMapController } from '../../../src/presentation/logic/MindMapController';
 import { MindMap } from '../../../src/features/core/domain/MindMap';
@@ -10,6 +12,11 @@ import { FileHandler } from '../../../src/shared/kernel/FileHandler';
 import { XMindImporter } from '../../../src/features/export_import/XMindImporter';
 import { MarkdownExporter } from '../../../src/features/export_import/MarkdownExporter';
 import { MindMapData } from '../../../src/features/core/domain/MindMapData';
+import { HistoryService } from '../../../src/features/core/application/HistoryService';
+import { ClipboardService } from '../../../src/features/core/application/ClipboardService';
+import { SearchService } from '../../../src/features/core/application/SearchService';
+import { ViewportService } from '../../../src/presentation/logic/ViewportService';
+import { NavigationService } from '../../../src/presentation/logic/NavigationService';
 import { ImageExporter } from '../../../src/features/export_import/ImageExporter';
 
 // Remove vi.mock and use spyOn instead
@@ -27,6 +34,9 @@ describe('MindMapController', () => {
   let mockOnExportFile: Mock;
   let mockImportData: Mock;
   let fileHandler: FileHandler;
+  let historyService: HistoryService;
+  let clipboardService: ClipboardService;
+  let searchService: SearchService;
 
   beforeEach(() => {
     // Setup Mocks
@@ -40,36 +50,53 @@ describe('MindMapController', () => {
       vi.fn(() => true),
     );
 
+    historyService = {
+      saveState: vi.fn(),
+      undo: vi.fn().mockReturnValue({ nodeData: { id: 'root', topic: 'Root' } }),
+      redo: vi.fn().mockReturnValue({ nodeData: { id: 'root', topic: 'Root' } }),
+    } as any;
+    clipboardService = {
+      copyNodes: vi.fn(),
+      createPastedNodes: vi.fn().mockReturnValue([new Node('pasted', 'Pasted')]),
+    } as any;
+    searchService = {
+      searchNodes: vi.fn().mockReturnValue([]),
+    } as any;
+
     mockImportData = vi.fn();
     service = {
       importData: mockImportData,
-      exportData: vi.fn(),
+      exportData: vi.fn().mockImplementation(() => ({
+        nodeData: { id: 'root', topic: 'Root' },
+        theme: {
+          name: 'default',
+          background: '#ffffff',
+          node: { color: '#000000', backgroundColor: '#ffffff', border: '#000000' },
+          connection: { color: '#000000', width: 2 },
+        },
+      })),
       addNode: vi.fn().mockReturnValue(new Node('new-id', 'Topic')),
       addSibling: vi.fn().mockReturnValue(new Node('sib-id', 'Topic')),
       insertParent: vi.fn().mockReturnValue(new Node('par-id', 'Topic')),
       removeNode: vi.fn().mockReturnValue(true),
+      removeNodes: vi.fn().mockReturnValue(true),
       updateNodeTopic: vi.fn().mockReturnValue(true),
-      updateNodeStyle: vi.fn().mockReturnValue(true),
+      updateNodesStyle: vi.fn().mockReturnValue(true),
       updateNodeIcon: vi.fn().mockReturnValue(true),
       updateNodeCustomWidth: vi.fn().mockReturnValue(true),
       reorderNode: vi.fn(),
       moveNode: vi.fn(),
       insertNodeAsParent: vi.fn(),
       setTheme: vi.fn(),
-      undo: vi.fn().mockReturnValue({ nodeData: { id: 'root', topic: 'Root' } }),
-      redo: vi.fn().mockReturnValue({ nodeData: { id: 'root', topic: 'Root' } }),
       toggleNodeFold: vi.fn().mockReturnValue(true),
-      pasteNode: vi.fn().mockReturnValue(new Node('pasted-id', 'Topic')),
-      cutNode: vi.fn(),
       addImageNode: vi.fn().mockReturnValue(new Node('img-id', 'Topic')),
-      searchNodes: vi.fn().mockReturnValue([]),
-      setSelectionProvider: vi.fn(),
+      addExistingNodes: vi.fn().mockReturnValue(true),
     } as unknown as MindMapService;
 
     const container = document.createElement('div');
     renderer = {
       container,
-      render: vi.fn(),
+      renderFromLayout: vi.fn(),
       updateTransform: vi.fn(),
       measureNode: vi.fn().mockReturnValue({ width: 100, height: 50 }),
       updateSelection: vi.fn(),
@@ -83,6 +110,8 @@ describe('MindMapController', () => {
     mockEmit = vi.fn();
     eventBus = {
       emit: mockEmit,
+      on: vi.fn(),
+      off: vi.fn(),
     };
 
     mockOnImportFile = vi.fn();
@@ -92,14 +121,40 @@ describe('MindMapController', () => {
       onExportFile: mockOnExportFile,
     };
 
-    controller = new MindMapController(
+    const viewportService = {
+      pan: vi.fn(),
+      zoom: vi.fn(),
+      resetZoom: vi.fn(),
+      setInitialPan: vi.fn(),
+      applyTransform: vi.fn(),
+      ensureNodeVisible: vi.fn(),
+      startAnimationLoop: vi.fn(),
+      destroy: vi.fn(),
+      getScale: vi.fn().mockReturnValue(1),
+      getPan: vi.fn().mockReturnValue({ x: 0, y: 0 }),
+    } as unknown as ViewportService;
+
+    const navigationService = {
+      navigate: vi.fn(),
+      getNodeDirection: vi.fn().mockReturnValue('right'),
+      ensureExplicitLayoutSides: vi.fn(),
+      setLayoutMode: vi.fn(),
+      getLayoutMode: vi.fn().mockReturnValue('Right'),
+    } as unknown as NavigationService;
+
+    controller = new MindMapController({
       mindMap,
       service,
       renderer,
       styleEditor,
       eventBus,
+      historyService,
+      clipboardService,
+      searchService,
+      viewportService,
+      navigationService,
       fileHandler,
-    );
+    });
   });
 
   afterEach(() => {
@@ -188,14 +243,35 @@ describe('MindMapController', () => {
 
   it('should fallback to DOM input if fileHandler is NOT provided', async () => {
     // Arrange
-    const controllerNoHandler = new MindMapController(
+    const controllerNoHandler = new MindMapController({
       mindMap,
       service,
       renderer,
       styleEditor,
       eventBus,
-      undefined, // No fileHandler
-    );
+      historyService,
+      clipboardService,
+      searchService,
+      viewportService: {
+        pan: vi.fn(),
+        zoom: vi.fn(),
+        resetZoom: vi.fn(),
+        setInitialPan: vi.fn(),
+        applyTransform: vi.fn(),
+        ensureNodeVisible: vi.fn(),
+        startAnimationLoop: vi.fn(),
+        destroy: vi.fn(),
+        getScale: vi.fn().mockReturnValue(1),
+        getPan: vi.fn().mockReturnValue({ x: 0, y: 0 }),
+      } as unknown as ViewportService,
+      navigationService: {
+        navigate: vi.fn(),
+        getNodeDirection: vi.fn().mockReturnValue('right'),
+        ensureExplicitLayoutSides: vi.fn(),
+        setLayoutMode: vi.fn(),
+        getLayoutMode: vi.fn().mockReturnValue('Right'),
+      } as unknown as NavigationService,
+    });
 
     const createElementSpy = vi.spyOn(document, 'createElement');
     // bodyAppendSpy removed to fix warning

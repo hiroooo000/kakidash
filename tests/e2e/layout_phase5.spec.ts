@@ -46,11 +46,17 @@ test.describe('Layout Regression - Phase 5: Layout Mode Verification', () => {
     await page.waitForTimeout(500); // Wait for transition
     await expect(page).toHaveScreenshot('09-layout-both.png');
 
-    // Explicitly select Parent NewNode4 (Stable starting point)
     const node4 = page
       .locator('.mindmap-node')
       .filter({ hasText: /^NewNode4$/ })
       .first();
+    const nodeId4 = await node4.getAttribute('data-id');
+    await page.evaluate(
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-return
+      (id) => (window as any).kakidash.controller.ensureNodeVisible(id, true, true),
+      nodeId4,
+    );
+    await page.waitForTimeout(300); // 描画待ち
     await node4.click({ force: true });
     await expect(node4).toHaveCSS('outline-style', 'solid');
 

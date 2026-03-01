@@ -27,15 +27,23 @@ vi.mock('../../src/presentation/logic/LayoutSwitcher', () => ({
 vi.mock('../../src/presentation/components/SvgRenderer', () => ({
   SvgRenderer: vi.fn().mockImplementation(function () {
     return {
-      render: vi.fn(),
+      renderFromLayout: vi.fn(),
+      measureNode: vi.fn().mockReturnValue({ width: 100, height: 40 }),
       updateTransform: vi.fn(),
       updateSelection: vi.fn(),
       container: {
-        getBoundingClientRect: () => ({ left: 0, top: 0 }),
+        getBoundingClientRect: vi
+          .fn()
+          .mockReturnValue({ top: 0, left: 0, width: 1000, height: 800 }),
         clientWidth: 1000,
         clientHeight: 800,
         appendChild: vi.fn(),
         contains: vi.fn(), // CommandPalette might check contains
+        querySelector: vi.fn().mockReturnValue({
+          getBoundingClientRect: vi
+            .fn()
+            .mockReturnValue({ top: 0, left: 0, right: 100, bottom: 30, width: 100, height: 30 }),
+        }),
         style: {
           setProperty: vi.fn(),
           removeProperty: vi.fn(),
@@ -56,9 +64,14 @@ class MockHTMLElement {
   setAttribute = vi.fn();
   appendChild = vi.fn();
   removeChild = vi.fn();
-  querySelector = vi
-    .fn()
-    .mockReturnValue({ value: '', classList: { contains: vi.fn() }, style: {} });
+  querySelector = vi.fn().mockReturnValue({
+    value: '',
+    classList: { contains: vi.fn() },
+    style: {},
+    getBoundingClientRect: vi
+      .fn()
+      .mockReturnValue({ top: 0, left: 0, right: 100, bottom: 30, width: 100, height: 30 }),
+  });
   querySelectorAll = vi.fn().mockReturnValue([]);
   getBoundingClientRect = vi.fn().mockReturnValue({ width: 0, height: 0, top: 0, left: 0 });
   clientWidth = 1000;

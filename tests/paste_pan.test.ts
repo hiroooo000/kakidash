@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-
+/* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/unbound-method */
 import { describe, it, expect, beforeEach } from 'vitest';
 import { Kakidash } from '../src/index';
@@ -20,11 +20,9 @@ describe('Paste Auto-Pan Logic', () => {
     const rootId = board.getRootId();
     board.selectNode(rootId);
 
-    // Force initial pan to 0,0
-    (board as any).controller.panX = 0;
-    (board as any).controller.panY = 0;
-    (board as any).controller.targetPanX = 0;
-    (board as any).controller.targetPanY = 0;
+    // Force initial pan to 0,0 via viewportService
+    const vs = (board as any).controller.viewportService;
+    vs.setInitialPan(0, 0);
 
     // Mock getBoundingClientRect
     const originalGBR = HTMLElement.prototype.getBoundingClientRect;
@@ -91,8 +89,9 @@ describe('Paste Auto-Pan Logic', () => {
       // Container Center X = 400
       // Expected dx = 400 - 1050 = -650
 
-      const targetPanX = (board as any).controller.targetPanX;
-      expect(targetPanX).toBe(-650);
+      const vs2 = (board as any).controller.viewportService;
+      const pan = vs2.getTargetPan();
+      expect(pan.x).toBe(-650);
     } finally {
       HTMLElement.prototype.getBoundingClientRect = originalGBR;
     }
@@ -102,9 +101,9 @@ describe('Paste Auto-Pan Logic', () => {
     const rootId = board.getRootId();
     board.selectNode(rootId);
 
-    // Force initial pan
-    (board as any).controller.panX = 0;
-    (board as any).controller.targetPanX = 0;
+    // Force initial pan via viewportService
+    const vs = (board as any).controller.viewportService;
+    vs.setInitialPan(0, 0);
 
     const originalGBR = HTMLElement.prototype.getBoundingClientRect;
     HTMLElement.prototype.getBoundingClientRect = function () {
@@ -154,8 +153,9 @@ describe('Paste Auto-Pan Logic', () => {
       // Wait for setTimeout (if any)
       await new Promise((resolve) => setTimeout(resolve, 50));
 
-      const targetPanX = (board as any).controller.targetPanX;
-      expect(targetPanX).toBe(-650);
+      const vs2 = (board as any).controller.viewportService;
+      const pan = vs2.getTargetPan();
+      expect(pan.x).toBe(-650);
     } finally {
       HTMLElement.prototype.getBoundingClientRect = originalGBR;
     }
