@@ -78,6 +78,8 @@ describe('MindMapController Resizing Fix', () => {
         setLayoutMode: vi.fn(),
         getLayoutMode: vi.fn().mockReturnValue('Right'),
       } as unknown as NavigationService,
+      fileIOService: {} as any,
+      themeService: {} as any,
     });
   });
 

@@ -15,7 +15,6 @@ import { InteractionHandler } from '../../src/presentation/logic/InteractionHand
 import { CryptoIdGenerator } from '../../src/shared/infrastructure/CryptoIdGenerator';
 import { ViewportService } from '../../src/presentation/logic/ViewportService';
 import { NavigationService } from '../../src/presentation/logic/NavigationService';
-import { ThemeRegistry } from '../../src/features/theme/registry/ThemeRegistry';
 
 // Mock dependencies
 vi.mock('../../src/features/core/application/MindMapService');
@@ -34,6 +33,7 @@ describe('MindMapController', () => {
   let historyService: any;
   let clipboardService: any;
   let searchService: any;
+  let themeServiceMock: any;
   let rootNode: Node;
 
   beforeEach(() => {
@@ -117,6 +117,13 @@ describe('MindMapController', () => {
 
     const navigationService = new NavigationService(mindMap);
 
+    themeServiceMock = {
+      applyInitialTheme: vi.fn(),
+      setTheme: vi.fn(),
+      updateGlobalStyles: vi.fn(),
+      setLayoutSwitcher: vi.fn(),
+    };
+
     controller = new MindMapController({
       mindMap,
       service,
@@ -128,6 +135,8 @@ describe('MindMapController', () => {
       searchService,
       viewportService,
       navigationService,
+      fileIOService: {} as any,
+      themeService: themeServiceMock,
     });
 
     // Wire up InteractionHandler
@@ -154,13 +163,9 @@ describe('MindMapController', () => {
   });
 
   it('init should apply initial theme', () => {
-    const registry = ThemeRegistry.getInstance();
-    const applySpy = vi.spyOn(registry, 'applyTheme');
-
     controller.init(1000, 800);
 
-    expect(applySpy).toHaveBeenCalledWith(expect.anything(), 'default');
-    applySpy.mockRestore();
+    expect(themeServiceMock.applyInitialTheme).toHaveBeenCalled();
   });
 
   it('addNode should call service and emit events', () => {

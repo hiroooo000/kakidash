@@ -6,52 +6,47 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { Kakidash } from '../../src/index';
 
 // Mock UI components
-vi.mock('../../src/features/theme/components/StyleEditor', () => ({
-  StyleEditor: vi.fn().mockImplementation(function () {
-    return {
-      show: vi.fn(),
-      hide: vi.fn(),
-      onUpdate: vi.fn(),
-    };
-  }),
-}));
+vi.mock('../../src/features/theme/components/StyleEditor', () => {
+  const StyleEditor = vi.fn().mockImplementation(function (this: any) {
+    this.show = vi.fn();
+    this.hide = vi.fn();
+    this.onUpdate = vi.fn();
+  });
+  return { StyleEditor };
+});
 
-vi.mock('../../src/presentation/logic/LayoutSwitcher', () => ({
-  LayoutSwitcher: vi.fn().mockImplementation(function () {
-    return {
-      setMode: vi.fn(),
-    };
-  }),
-}));
+vi.mock('../../src/presentation/logic/LayoutSwitcher', () => {
+  const LayoutSwitcher = vi.fn().mockImplementation(function (this: any) {
+    this.setMode = vi.fn();
+  });
+  return { LayoutSwitcher };
+});
 
-vi.mock('../../src/presentation/components/SvgRenderer', () => ({
-  SvgRenderer: vi.fn().mockImplementation(function () {
-    return {
-      renderFromLayout: vi.fn(),
-      measureNode: vi.fn().mockReturnValue({ width: 100, height: 40 }),
-      updateTransform: vi.fn(),
-      updateSelection: vi.fn(),
-      container: {
+vi.mock('../../src/presentation/components/SvgRenderer', () => {
+  const SvgRenderer = vi.fn().mockImplementation(function (this: any) {
+    this.renderFromLayout = vi.fn();
+    this.measureNode = vi.fn().mockReturnValue({ width: 100, height: 40 });
+    this.updateTransform = vi.fn();
+    this.updateSelection = vi.fn();
+    this.container = {
+      getBoundingClientRect: vi.fn().mockReturnValue({ top: 0, left: 0, width: 1000, height: 800 }),
+      clientWidth: 1000,
+      clientHeight: 800,
+      appendChild: vi.fn(),
+      contains: vi.fn(), // CommandPalette might check contains
+      querySelector: vi.fn().mockReturnValue({
         getBoundingClientRect: vi
           .fn()
-          .mockReturnValue({ top: 0, left: 0, width: 1000, height: 800 }),
-        clientWidth: 1000,
-        clientHeight: 800,
-        appendChild: vi.fn(),
-        contains: vi.fn(), // CommandPalette might check contains
-        querySelector: vi.fn().mockReturnValue({
-          getBoundingClientRect: vi
-            .fn()
-            .mockReturnValue({ top: 0, left: 0, right: 100, bottom: 30, width: 100, height: 30 }),
-        }),
-        style: {
-          setProperty: vi.fn(),
-          removeProperty: vi.fn(),
-        },
+          .mockReturnValue({ top: 0, left: 0, right: 100, bottom: 30, width: 100, height: 30 }),
+      }),
+      style: {
+        setProperty: vi.fn(),
+        removeProperty: vi.fn(),
       },
     };
-  }),
-}));
+  });
+  return { SvgRenderer };
+});
 
 // Mock DOM
 class MockHTMLElement {
