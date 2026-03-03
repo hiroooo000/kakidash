@@ -31,6 +31,7 @@ graph TD
         subgraph Export ["Export/Import Feature"]
             Importers[XMindImporter]
             Exporters[Image/Markdown Exporter]
+            FileIO[FileIOService]
         end
     end
 
@@ -56,8 +57,12 @@ graph TD
 
     %% Specific wiring
     Controller --> Service
-    Controller --> ThemeReg
-    Controller --> Exporters
+    Controller --> ThemeService
+    Controller --> FileIO
+
+    ThemeService --> ThemeReg
+    FileIO --> Exporters
+    FileIO --> Importers
 ```
 
 ### 1.2 Module/Class Dependency Diagram
@@ -93,6 +98,7 @@ classDiagram
     }
 
     namespace Features_Export {
+        class FileIOService
         class XMindImporter
         class ImageExporter
         class MarkdownExporter
@@ -106,12 +112,19 @@ classDiagram
 
     %% Relationships
     MindMapController --> MindMapService : delegates
-    MindMapController --> ThemeRegistry : uses
-    MindMapController --> ImageExporter : triggers
+    MindMapController --> ThemeService : delegates
+    MindMapController --> FileIOService : delegates
     MindMapController --> ViewportService : manages viewport
     MindMapController --> NavigationService : handles navigation
     MindMapController --> LayoutEngine : calculates layout
     MindMapController --> SvgRenderer : renders
+    
+    ThemeService --> ThemeRegistry : uses
+    ThemeService --> MindMapStyles : edits
+
+    FileIOService --> ImageExporter : triggers
+    FileIOService --> MarkdownExporter : triggers
+    FileIOService --> XMindImporter : triggers
     
     MindMapService --> MindMap : manages
     MindMapService --> HistoryManager : uses
@@ -142,7 +155,8 @@ src/
 │   │   ├── components/   # StyleEditor
 │   │   ├── registry/     # ThemeRegistry
 │   │   └── resources/    # Presets
-│   └── export_import/ # Export/Import capability
+│   └── io/               # Export/Import capability
+│       ├── FileIOService
 │       ├── ImageExporter
 │       ├── MarkdownExporter
 │       └── XMindImporter
@@ -173,9 +187,11 @@ Functionality related to styling and theme management.
 - **Domain**: `ThemeDefinition API`, `MindMapStyles`, `StyleAction`.
 - **Components**: `StyleEditor`.
 - **Registry**: `ThemeRegistry` (Theme application management).
+- **Presentation**: `ThemeService` (Manages global and custom themes logic, decoupled from main controller).
 
-#### Export/Import Feature (`src/features/export_import`)
+#### Export/Import Feature (`src/features/io`)
 Input/Output functionality with external formats.
+- `FileIOService`: High-level interface handling UI-related flow (confirms, triggers internal exporters/importers).
 - `XMindImporter`: Import XMind files.
 - `ImageExporter`: SVG/PNG export.
 - `MarkdownExporter`: Markdown export.
@@ -189,7 +205,11 @@ Common components referenced by all features.
 ### 3.3 Presentation Layer (`src/presentation`)
 
 Integrates features and provides the user interface.
-- **MindMapController**: Main controller orchestrating features (Core, Theme, Export). Manages selection state (single/multi) and delegates viewport and navigation operations to dedicated services.
+- **MindMapController**: Main controller orchestrating features. Manages selection state (single/multi) and delegates specialized functionalities to the following services:
+  - **ThemeService**: Extracts logic for layout themes, global styling overrides, and persisting current states.
+  - **FileIOService**: Extracts export/import features to separate DOM interaction handling (file popups, confirmations).
+  - **ViewportService**: Handles viewport control such as zoom, pan, and animation loop.
+  - **NavigationService**: Handles navigation logic between nodes based on direction.
 - **ViewportService**: Handles viewport control such as zoom, pan, and animation loop.
 - **NavigationService**: Handles navigation logic between nodes based on direction.
 - **InteractionHandler**: Captures Mouse/Touch/Keyboard events and maps them to the controller.

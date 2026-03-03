@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { MarkdownExporter } from '@/features/export_import/MarkdownExporter';
+import { MarkdownExporter } from '@/features/io/MarkdownExporter';
 import { MindMap } from '@/features/core/domain/MindMap';
 import { Node } from '@/features/core/domain/Node';
 

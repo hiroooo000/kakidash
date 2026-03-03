@@ -89,6 +89,18 @@ describe('MindMapController Navigation Integration', () => {
         getPan: vi.fn().mockReturnValue({ x: 0, y: 0 }),
       } as unknown as ViewportService,
       navigationService: new NavigationService(mindMap),
+      fileIOService: {
+        exportPng: vi.fn(),
+        exportSvg: vi.fn(),
+        exportMarkdown: vi.fn(),
+        importXMind: vi.fn(),
+      } as any,
+      themeService: {
+        applyInitialTheme: vi.fn(),
+        setTheme: vi.fn(),
+        updateGlobalStyles: vi.fn(),
+        setLayoutSwitcher: vi.fn(),
+      } as any,
     });
 
     // Mock interaction handler

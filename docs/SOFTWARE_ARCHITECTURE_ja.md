@@ -14,6 +14,8 @@ graph TD
         Interaction[InteractionHandler]
         Command[CommandPalette]
         View[SvgRenderer]
+        ThemeSvc[ThemeService]
+        IOSvc[FileIOService]
     end
 
     subgraph Features ["Features"]
@@ -55,9 +57,13 @@ graph TD
     Presentation --> Shared
 
     %% Specific wiring
+    %% Specific wiring
     Controller --> Service
-    Controller --> ThemeReg
-    Controller --> Exporters
+    Controller --> ThemeSvc
+    Controller --> IOSvc
+    ThemeSvc --> ThemeReg
+    IOSvc --> Importers
+    IOSvc --> Exporters
 ```
 
 ### 1.2 モジュール/クラス依存関係図
@@ -76,6 +82,8 @@ classDiagram
         class InteractionHandler
         class SvgRenderer
         class CommandPalette
+        class ThemeService
+        class FileIOService
     }
 
     namespace Features_Core {
@@ -105,9 +113,14 @@ classDiagram
     }
 
     %% Relationships
+    %% Relationships
     MindMapController --> MindMapService : delegates
-    MindMapController --> ThemeRegistry : uses
-    MindMapController --> ImageExporter : triggers
+    MindMapController --> ThemeService : delegates
+    MindMapController --> FileIOService : delegates
+    ThemeService --> ThemeRegistry : uses
+    FileIOService --> ImageExporter : triggers
+    FileIOService --> MarkdownExporter : triggers
+    FileIOService --> XMindImporter : triggers
     MindMapController --> ViewportService : manages viewport
     MindMapController --> NavigationService : handles navigation
     MindMapController --> LayoutEngine : calculates layout
@@ -189,9 +202,11 @@ src/
 ### 3.3 Presentation Layer (`src/presentation`)
 
 各機能を統合し、ユーザーインターフェースを提供します。
-- **MindMapController**: 各機能（Core, Theme, Export）をオーケストレーションするメインコントローラー。選択状態（単一・複数）を管理し、ビューポートやナビゲーションの操作は専用サービスに委譲します。
+- **MindMapController**: 各機能（Core, Theme, Export）をオーケストレーションするメインコントローラー。選択状態（単一・複数）を管理し、ビューポート・ナビゲーション・IO・テーマの操作は専用の各サービスに完全に委譲します。
 - **ViewportService**: ズームやパン操作、アニメーションループなどのビューポート制御を担当します。
 - **NavigationService**: 方向に応じたノード間のナビゲーションロジックを担当します。
+- **ThemeService**: テーマやスタイルの変更・適用ロジックを管理し、ThemeRegistry経由でコンテナに適用します。
+- **FileIOService**: マインドマップデータのインポート（XMind）およびエクスポート（PNG, SVG, Markdown）の操作を統合・実行します。
 - **InteractionHandler**: ユーザー操作の入力処理。
 - **LayoutEngine**: マインドマップのツリー構造から各ノードの配置座標（X, Y）と接続線のパスを計算し、`LayoutResult` を生成します。
 - **Components**:

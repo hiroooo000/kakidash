@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-explicit-any */
 import { vi, describe, it, expect, beforeEach } from 'vitest';
-import { XMindImporter } from '@/features/export_import/XMindImporter';
+import { XMindImporter } from '@/features/io/XMindImporter';
 import JSZip from 'jszip';
 
 // Correctly mock JSZip default export class

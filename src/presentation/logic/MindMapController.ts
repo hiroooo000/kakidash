@@ -13,15 +13,12 @@ import { KakidashEventMap } from '../../features/core/domain/KakidashEvents';
 import { MindMapStyles } from '../../features/theme/domain/MindMapStyles';
 import { StyleAction } from '../../features/theme/domain/StyleAction';
 import { CommandPalette, CustomCommand } from '../components/CommandPalette';
-import { ThemeRegistry } from '../../features/theme/registry/ThemeRegistry';
-import { XMindImporter } from '../../features/export_import/XMindImporter';
-import { ImageExporter } from '../../features/export_import/ImageExporter';
-import { MarkdownExporter } from '../../features/export_import/MarkdownExporter';
+import { ThemeService } from './ThemeService';
+import { FileIOService } from '../../features/io/FileIOService';
 import { HelpModal } from '../components/HelpModal';
 import { HistoryService } from '../../features/core/application/HistoryService';
 import { ClipboardService } from '../../features/core/application/ClipboardService';
 import { SearchService } from '../../features/core/application/SearchService';
-import { FileHandler } from '../../shared/kernel/FileHandler';
 import { ViewportService } from './ViewportService';
 import { NavigationService } from './NavigationService';
 
@@ -52,7 +49,8 @@ export interface ControllerDependencies {
   searchService: SearchService;
   viewportService: ViewportService;
   navigationService: NavigationService;
-  fileHandler?: FileHandler;
+  fileIOService: FileIOService;
+  themeService: ThemeService;
   locale?: 'en' | 'ja';
   commandPaletteFeatures?: ('search' | 'icon' | 'import' | 'export')[];
 }
@@ -67,7 +65,8 @@ export class MindMapController {
   private locale: 'en' | 'ja';
   private interactionHandler!: InteractionHandler;
   private layoutSwitcher!: LayoutSwitcher;
-  private fileHandler?: FileHandler;
+  private fileIOService: FileIOService;
+  private themeService: ThemeService;
 
   private historyService: HistoryService;
   private clipboardService: ClipboardService;
@@ -85,19 +84,14 @@ export class MindMapController {
 
   private pendingNodeCreation: boolean = false;
 
-  private savedCustomStyles: MindMapStyles = {
-    rootNode: { border: '2px solid #aeb6bf', background: '#ebf5fb', color: '#2e4053' },
-    childNode: { border: '1px solid #d5d8dc', background: '#fdfefe', color: '#2c3e50' },
-    connection: { color: '#abb2b9' },
-  };
-
   constructor(deps: ControllerDependencies) {
     this.mindMap = deps.mindMap;
     this.service = deps.service;
     this.renderer = deps.renderer;
     this.styleEditor = deps.styleEditor;
     this.eventBus = deps.eventBus;
-    this.fileHandler = deps.fileHandler;
+    this.fileIOService = deps.fileIOService;
+    this.themeService = deps.themeService;
 
     this.historyService = deps.historyService;
     this.clipboardService = deps.clipboardService;
@@ -125,20 +119,14 @@ export class MindMapController {
 
   public setLayoutSwitcher(switcher: LayoutSwitcher) {
     this.layoutSwitcher = switcher;
+    this.themeService.setLayoutSwitcher(switcher);
   }
 
   public init(containerWidth: number, containerHeight: number) {
     this.viewportService.setInitialPan(containerWidth * 0.2, containerHeight / 2); // Default Right mode, centered vertically
 
     // Apply initial theme
-    const theme = this.mindMap.theme;
-    if (theme === 'custom') {
-      const registry = ThemeRegistry.getInstance();
-      registry.setCustomTheme(this.savedCustomStyles);
-      registry.applyTheme(this.renderer.container, 'custom');
-    } else {
-      ThemeRegistry.getInstance().applyTheme(this.renderer.container, theme);
-    }
+    this.themeService.applyInitialTheme();
 
     this.viewportService.startAnimationLoop();
     this.render();
@@ -621,47 +609,14 @@ export class MindMapController {
   }
 
   updateGlobalStyles(styles: MindMapStyles): void {
-    this.eventBus.emit('command', { name: 'updateGlobalStyles', args: { styles } });
-    if (styles.rootNode)
-      this.savedCustomStyles.rootNode = { ...this.savedCustomStyles.rootNode, ...styles.rootNode };
-    if (styles.childNode)
-      this.savedCustomStyles.childNode = {
-        ...this.savedCustomStyles.childNode,
-        ...styles.childNode,
-      };
-    if (styles.connection)
-      this.savedCustomStyles.connection = {
-        ...this.savedCustomStyles.connection,
-        ...styles.connection,
-      };
-    if (styles.canvas)
-      this.savedCustomStyles.canvas = { ...this.savedCustomStyles.canvas, ...styles.canvas };
-
-    if (this.mindMap.theme === 'custom') {
-      const registry = ThemeRegistry.getInstance();
-      registry.setCustomTheme(this.savedCustomStyles);
-      registry.applyTheme(this.renderer.container, 'custom');
-    }
+    this.themeService.updateGlobalStyles(styles);
   }
 
   setTheme(
     theme: Theme,
     options: { saveState?: boolean; emitChange?: boolean } = { saveState: true, emitChange: true },
   ): void {
-    if (options.saveState !== false) this.saveState();
-    this.eventBus.emit('command', { name: 'setTheme', args: { theme } });
-    this.service.setTheme(theme);
-    if (this.layoutSwitcher) this.layoutSwitcher.setTheme(theme);
-
-    if (theme === 'custom') {
-      // Ensure custom theme is updated in registry before applying
-      ThemeRegistry.getInstance().setCustomTheme(this.savedCustomStyles);
-    }
-
-    ThemeRegistry.getInstance().applyTheme(this.renderer.container, theme);
-
-    this.render();
-    this.eventBus.emit('model:change', undefined);
+    this.themeService.setTheme(theme, options);
   }
 
   resetZoom(): void {
@@ -965,90 +920,16 @@ export class MindMapController {
 
   private handleCommandSelect(command: string): void {
     if (command === 'import-xmind') {
-      void this.importXMind();
+      void this.fileIOService.importXMind().then((data) => {
+        if (data) this.loadData(data);
+      });
     } else if (command === 'export-png') {
-      void this.exportPng();
+      void this.fileIOService.exportPng();
     } else if (command === 'export-svg') {
-      void this.exportSvg();
+      void this.fileIOService.exportSvg();
     } else if (command === 'export-markdown') {
-      void this.exportMarkdown();
+      void this.fileIOService.exportMarkdown();
     }
-  }
-
-  public async exportPng(): Promise<void> {
-    this.eventBus.emit('command', { name: 'exportPng' });
-    const exporter = new ImageExporter();
-    await exporter.exportToPng(this.renderer.container, this.fileHandler);
-  }
-
-  public async exportSvg(): Promise<void> {
-    this.eventBus.emit('command', { name: 'exportSvg' });
-    const exporter = new ImageExporter();
-    await exporter.exportToSvg(this.renderer.container, this.fileHandler);
-  }
-
-  public async exportMarkdown(): Promise<void> {
-    this.eventBus.emit('command', { name: 'exportMarkdown' });
-    const exporter = new MarkdownExporter();
-    await exporter.export(this.mindMap, this.fileHandler);
-  }
-
-  public async importXMind(): Promise<void> {
-    this.eventBus.emit('command', { name: 'importXMind' });
-    // Check if root has children to confirm replacement
-    if (this.mindMap.root.children.length > 0) {
-      if (!window.confirm('Current mind map will be replaced. Continue?')) {
-        return;
-      }
-    }
-
-    if (this.fileHandler) {
-      const content = await this.fileHandler.onImportFile('xmind');
-      if (content) {
-        try {
-          const importer = new XMindImporter();
-          let file: File;
-          if (content instanceof ArrayBuffer) {
-            file = new File([content], 'imported.xmind');
-          } else if (typeof content === 'string') {
-            file = new File([content], 'imported.xmind');
-          } else {
-            return;
-          }
-
-          const data = await importer.extractMindMapData(file);
-          this.loadData(data);
-        } catch (err) {
-          console.error(err);
-          alert('Failed to import XMind file.');
-        }
-      }
-      return;
-    }
-
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.xmind';
-    input.style.display = 'none';
-    document.body.appendChild(input);
-
-    input.onchange = async (e: Event) => {
-      const target = e.target as HTMLInputElement;
-      const file = target.files?.[0];
-      if (file) {
-        try {
-          const importer = new XMindImporter();
-          const data = await importer.extractMindMapData(file);
-          this.loadData(data);
-        } catch (err) {
-          console.error(err);
-          alert('Failed to import XMind file.');
-        }
-      }
-      document.body.removeChild(input);
-    };
-
-    input.click();
   }
 
   private ensureNodeVisible(

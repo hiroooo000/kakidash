@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { SvgGenerator } from '@/features/export_import/SvgGenerator';
+import { SvgGenerator } from '@/features/io/SvgGenerator';
 
 // Mock XMLSerializer
 global.XMLSerializer = class {

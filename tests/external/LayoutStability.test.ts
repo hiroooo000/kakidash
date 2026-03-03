@@ -6,35 +6,32 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { Kakidash } from '../../src/index';
 
 // Mock UI components to avoid DOM dependencies
-vi.mock('../../src/features/theme/components/StyleEditor', () => ({
-  StyleEditor: vi.fn().mockImplementation(function () {
-    return {
-      show: vi.fn(),
-      hide: vi.fn(),
-      onUpdate: vi.fn(), // Public property to capture callback
-    };
-  }),
-}));
+vi.mock('../../src/features/theme/components/StyleEditor', () => {
+  const StyleEditor = vi.fn().mockImplementation(function (this: any) {
+    this.show = vi.fn();
+    this.hide = vi.fn();
+    this.onUpdate = vi.fn(); // Public property to capture callback
+  });
+  return { StyleEditor };
+});
 
-vi.mock('../../src/presentation/logic/LayoutSwitcher', () => ({
-  LayoutSwitcher: vi.fn().mockImplementation(function () {
-    return {
-      setMode: vi.fn(),
-    };
-  }),
-}));
+vi.mock('../../src/presentation/logic/LayoutSwitcher', () => {
+  const LayoutSwitcher = vi.fn().mockImplementation(function (this: any) {
+    this.setMode = vi.fn();
+  });
+  return { LayoutSwitcher };
+});
 
-vi.mock('../../src/presentation/components/SvgRenderer', () => ({
-  SvgRenderer: vi.fn().mockImplementation(function (container: any) {
-    return {
-      renderFromLayout: vi.fn(),
-      measureNode: vi.fn().mockReturnValue({ width: 100, height: 40 }),
-      updateTransform: vi.fn(),
-      updateSelection: vi.fn(),
-      container: container,
-    };
-  }),
-}));
+vi.mock('../../src/presentation/components/SvgRenderer', () => {
+  const SvgRenderer = vi.fn().mockImplementation(function (this: any, container: any) {
+    this.renderFromLayout = vi.fn();
+    this.measureNode = vi.fn().mockReturnValue({ width: 100, height: 40 });
+    this.updateTransform = vi.fn();
+    this.updateSelection = vi.fn();
+    this.container = container;
+  });
+  return { SvgRenderer };
+});
 
 // Mock DOM dependencies
 class MockHTMLElement {

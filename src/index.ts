@@ -11,6 +11,8 @@ import { InteractionHandler } from './presentation/logic/InteractionHandler';
 import { MindMapController } from './presentation/logic/MindMapController';
 import { ViewportService } from './presentation/logic/ViewportService';
 import { NavigationService } from './presentation/logic/NavigationService';
+import { FileIOService } from './features/io/FileIOService';
+import { ThemeService } from './presentation/logic/ThemeService';
 import { type LayoutMode } from './features/core/domain/LayoutMode';
 import { type MindMapData, type Theme } from './features/core/domain/MindMapData';
 import { TypedEventEmitter } from './shared/infrastructure/EventEmitter';
@@ -37,8 +39,8 @@ export { Node } from './features/core/domain/Node';
 import { FileHandler } from './shared/kernel/FileHandler';
 export type { FileHandler } from './shared/kernel/FileHandler';
 export { TypedEventEmitter } from './shared/infrastructure/EventEmitter';
-export { SvgGenerator } from './features/export_import/SvgGenerator';
-export { XMindImporter } from './features/export_import/XMindImporter';
+export { SvgGenerator } from './features/io/SvgGenerator';
+export { XMindImporter } from './features/io/XMindImporter';
 export type { CustomCommand } from './presentation/components/CommandPalette';
 
 export interface KakidashOptions {
@@ -129,22 +131,41 @@ export class Kakidash extends TypedEventEmitter<KakidashEventMap> {
     const viewportService = new ViewportService(renderer);
     const navigationService = new NavigationService(this.mindMap);
 
+    const eventBusImpl = {
+      /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument */
+      emit: (event: keyof KakidashEventMap, payload: any) => this.emit(event, payload),
+      on: (event: keyof KakidashEventMap, handler: any) => this.on(event, handler),
+      off: (event: keyof KakidashEventMap, handler: any) => this.off(event, handler),
+      /* eslint-enable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument */
+    };
+
+    const fileIOService = new FileIOService({
+      mindMap: this.mindMap,
+      renderer,
+      eventBus: eventBusImpl,
+      fileHandler: options.fileHandler,
+    });
+
+    const themeService = new ThemeService({
+      mindMap: this.mindMap,
+      service,
+      renderer,
+      eventBus: eventBusImpl,
+    });
+
     this.controller = new MindMapController({
       mindMap: this.mindMap,
       service,
       renderer,
       styleEditor,
-      eventBus: {
-        emit: (event, payload) => this.emit(event, payload),
-        on: (event, handler) => this.on(event, handler),
-        off: (event, handler) => this.off(event, handler),
-      },
+      eventBus: eventBusImpl,
       historyService,
       clipboardService,
       searchService,
       viewportService,
       navigationService,
-      fileHandler: options.fileHandler,
+      fileIOService,
+      themeService,
       locale: options.locale || defaultLocale,
       commandPaletteFeatures: options.disabledCommandPaletteFeatures,
     });
