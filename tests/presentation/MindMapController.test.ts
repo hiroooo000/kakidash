@@ -11,7 +11,8 @@ import { Node } from '../../src/features/core/domain/Node';
 import { MindMapService } from '../../src/features/core/application/MindMapService';
 import { Renderer } from '../../src/presentation/components/Renderer';
 import { StyleEditor } from '../../src/features/theme/components/StyleEditor';
-import { InteractionHandler } from '../../src/presentation/logic/InteractionHandler';
+import { InteractionOrchestrator } from '../../src/presentation/logic/InteractionOrchestrator';
+import { CommandBus } from '../../src/presentation/commands/CommandBus';
 import { CryptoIdGenerator } from '../../src/shared/infrastructure/CryptoIdGenerator';
 import { ViewportService } from '../../src/presentation/logic/ViewportService';
 import { NavigationService } from '../../src/presentation/logic/NavigationService';
@@ -20,7 +21,7 @@ import { NavigationService } from '../../src/presentation/logic/NavigationServic
 vi.mock('../../src/features/core/application/MindMapService');
 // vi.mock('../../src/presentation/components/SvgRenderer'); // No longer needed as we use interface mock
 vi.mock('../../src/features/theme/components/StyleEditor');
-vi.mock('../../src/presentation/logic/InteractionHandler');
+vi.mock('../../src/presentation/logic/InteractionOrchestrator');
 
 describe('MindMapController', () => {
   let controller: MindMapController;
@@ -28,7 +29,8 @@ describe('MindMapController', () => {
   let service: any; // Using any for mocked instance
   let renderer: Renderer;
   let styleEditor: any;
-  let interactionHandler: any;
+  let interactionOrchestrator: any;
+  let commandBus: CommandBus;
   let eventBus: any;
   let historyService: any;
   let clipboardService: any;
@@ -51,9 +53,11 @@ describe('MindMapController', () => {
       updateTransform: vi.fn(),
       measureNode: vi.fn().mockReturnValue({ width: 100, height: 40 }),
       updateSelection: vi.fn(),
+      getNodeElement: vi.fn(),
     };
     styleEditor = new StyleEditor(document.createElement('div'));
-    interactionHandler = new InteractionHandler(document.createElement('div'), {} as any);
+    commandBus = new CommandBus();
+    interactionOrchestrator = new InteractionOrchestrator({} as any);
 
     eventBus = {
       emit: vi.fn() as any,
@@ -137,10 +141,11 @@ describe('MindMapController', () => {
       navigationService,
       fileIOService: {} as any,
       themeService: themeServiceMock,
+      commandBus,
     });
 
-    // Wire up InteractionHandler
-    controller.setInteractionHandler(interactionHandler);
+    // Wire up InteractionOrchestrator
+    controller.setInteractionOrchestrator(interactionOrchestrator);
 
     // Reset service mocks return values
     service.addNode.mockReset();
@@ -194,7 +199,7 @@ describe('MindMapController', () => {
     expect(eventBus.emit).not.toHaveBeenCalledWith('model:change', undefined);
 
     expect(controller['pendingNodeCreation']).toBe(true);
-    expect(interactionHandler.editNode).toHaveBeenCalledWith('child1');
+    expect(interactionOrchestrator.editNode).toHaveBeenCalledWith('child1');
     expect(controller['selectedNodeId']).toBe('child1');
   });
 

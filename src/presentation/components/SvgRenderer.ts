@@ -20,6 +20,7 @@ export class SvgRenderer implements Renderer {
   private measureCache: Map<string, { width: number; height: number }> = new Map();
   private nodeElementMap: Map<string, HTMLElement> = new Map();
   private previousSelectedIds: Set<string> = new Set();
+  private mindMap?: MindMap;
 
   constructor(container: HTMLElement, options: SvgRendererOptions = {}) {
     this.container = container;
@@ -61,6 +62,7 @@ export class SvgRenderer implements Renderer {
     selectedNodeIds: Set<string>,
     layoutMode: LayoutMode = 'Right',
   ): void {
+    this.mindMap = mindMap;
     // Clear previous render
     this.svg.innerHTML = '';
     this.nodeContainer.innerHTML = '';
@@ -615,6 +617,13 @@ export class SvgRenderer implements Renderer {
     path.setAttribute('stroke-width', '2');
 
     this.svg.appendChild(path);
+  }
+
+  public zoomNode(nodeId: string): void {
+    const node = this.mindMap?.findNode(nodeId);
+    if (node && node.image) {
+      this.showImageModal(node.image);
+    }
   }
 
   private showImageModal(imageData: string): void {

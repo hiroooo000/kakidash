@@ -22,6 +22,7 @@ class MockHTMLElement {
 }
 (global as any).HTMLElement = MockHTMLElement;
 (global as any).document = {
+  body: { appendChild: vi.fn(), removeChild: vi.fn() },
   createElement: (_tag: string) => {
     return {
       style: {
@@ -36,9 +37,18 @@ class MockHTMLElement {
       setAttribute: vi.fn(),
       offsetWidth: 100,
       offsetHeight: 30,
-      querySelector: vi
-        .fn()
-        .mockReturnValue({ value: '', classList: { contains: vi.fn() }, style: {} }),
+      value: '',
+      focus: vi.fn(),
+      select: vi.fn(),
+      querySelector: vi.fn().mockReturnValue({
+        value: '',
+        classList: { contains: vi.fn() },
+        style: {},
+        querySelector: vi.fn().mockReturnValue(null),
+        click: vi.fn(),
+        focus: vi.fn(),
+        select: vi.fn(),
+      }),
       querySelectorAll: vi.fn().mockReturnValue([
         { style: {}, classList: { add: vi.fn(), remove: vi.fn(), contains: vi.fn() }, dataset: {} },
         { style: {}, classList: { add: vi.fn(), remove: vi.fn(), contains: vi.fn() }, dataset: {} },
@@ -67,6 +77,7 @@ class MockHTMLElement {
     };
   },
   addEventListener: vi.fn(),
+  getElementById: vi.fn().mockReturnValue(null),
   head: { appendChild: vi.fn() },
 };
 (global as any).window = {

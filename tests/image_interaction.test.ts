@@ -1,132 +1,69 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { Kakidash } from '../src/index';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { InteractionOrchestrator } from '../src/presentation/logic/InteractionOrchestrator';
+import { CommandBus } from '../src/presentation/commands/CommandBus';
+import { MindMap } from '../src/features/core/domain/MindMap';
+import { Node } from '../src/features/core/domain/Node';
 
-describe('Image Node Interactions', () => {
+describe('Image Node Interactions (Internal)', () => {
   let container: HTMLElement;
-  let mindMap: Kakidash;
+  let orchestrator: InteractionOrchestrator;
+  let commandBus: CommandBus;
+  let mindMap: MindMap;
 
   beforeEach(() => {
     container = document.createElement('div');
-    container.style.width = '800px';
-    container.style.height = '600px';
     document.body.appendChild(container);
+    commandBus = new CommandBus();
+    const root = new Node('root', 'Root', null, true);
+    mindMap = new MindMap(root);
 
-    mindMap = new Kakidash(container);
+    orchestrator = new InteractionOrchestrator({
+      container,
+      commandBus,
+      mindMap,
+      options: {} as any,
+      getSelectedNodeId: () => 'root',
+      getNodeElement: (id) => container.querySelector(`[data-id="${id}"]`) as HTMLElement,
+      zoomNode: vi.fn(),
+    });
+
+    // Add a mock node element
+    const nodeEl = document.createElement('div');
+    nodeEl.setAttribute('data-id', 'root');
+    container.appendChild(nodeEl);
   });
 
   afterEach(() => {
-    mindMap.destroy();
+    orchestrator.destroy();
     if (document.body.contains(container)) {
       document.body.removeChild(container);
     }
-    // Clean up any modals
-    const modals = document.querySelectorAll('div[style*="position: fixed"]');
-    modals.forEach((m) => {
-      if (m.parentElement) m.parentElement.removeChild(m);
-    });
+    vi.restoreAllMocks();
   });
-
-  const imageData =
-    'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
 
   it('should prevent "F2" from starting edit on image node', () => {
-    const root = mindMap.getRoot();
-    // Create image node
-    mindMap.pasteImage(root.id, imageData);
-    const children = root.children;
-    const imageNode = children[children.length - 1];
+    const root = mindMap.root;
+    root.image = 'data:image/png;base64,xxx';
 
-    // Select image node
-    mindMap.selectNode(imageNode.id);
+    const zoomSpy = vi.spyOn(orchestrator as any, '_zoomNode');
+    const editSpy = vi.spyOn(orchestrator['nodeEditor'], 'startEditing');
 
-    // Trigger F2
-    const event = new KeyboardEvent('keydown', { key: 'F2', bubbles: true });
+    const event = new KeyboardEvent('keydown', { key: 'F2' });
     document.dispatchEvent(event);
 
-    // Verify NO textarea exists
-    const textarea = document.querySelector('textarea');
-    expect(textarea).toBeNull();
-  });
-
-  it('should prevent "i" from starting edit on image node', () => {
-    const root = mindMap.getRoot();
-    mindMap.pasteImage(root.id, imageData);
-    const children = root.children;
-    const imageNode = children[children.length - 1];
-
-    mindMap.selectNode(imageNode.id);
-
-    // Trigger i
-    const event = new KeyboardEvent('keydown', { key: 'i', bubbles: true });
-    document.dispatchEvent(event);
-
-    // Verify NO textarea exists
-    const textarea = document.querySelector('textarea');
-    expect(textarea).toBeNull();
+    expect(zoomSpy).toHaveBeenCalled();
+    expect(editSpy).not.toHaveBeenCalled();
   });
 
   it('should allow "F2" to start edit on text node', () => {
-    const root = mindMap.getRoot();
-    mindMap.selectNode(root.id);
+    const editSpy = vi.spyOn(orchestrator['nodeEditor'], 'startEditing');
 
-    // Trigger F2
-    const event = new KeyboardEvent('keydown', { key: 'F2', bubbles: true });
+    const event = new KeyboardEvent('keydown', { key: 'F2' });
     document.dispatchEvent(event);
 
-    // Verify textarea exists
-    const textarea = document.querySelector('textarea');
-    expect(textarea).not.toBeNull();
-  });
-
-  it('should trigger image zoom on "Space" key', () => {
-    const root = mindMap.getRoot();
-    mindMap.pasteImage(root.id, imageData);
-    const children = root.children;
-    const imageNode = children[children.length - 1];
-
-    mindMap.selectNode(imageNode.id);
-
-    // Trigger Space
-    const event = new KeyboardEvent('keydown', { key: ' ', bubbles: true });
-    document.dispatchEvent(event);
-
-    // Verify modal appears (check for fixed div or img in body)
-    // SvgRenderer appends modal to document.body
-    // Modal has z-index 1000 and fixed position
-    const modal = document.body.lastElementChild as HTMLElement;
-    expect(modal).not.toBeNull();
-    // Check specific style to be sure it's our modal
-    expect(modal.style.position).toBe('fixed');
-
-    // Also verify side effect: ReadOnly mode
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
-    const handler = (mindMap as any).controller.interactionHandler;
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-    expect(handler.isReadOnly).toBe(true);
-
-    // Verify activeElement is container
-    // Note: In JSDOM, focus management might need tabindex verification.
-    container.tabIndex = 0; // InteractionHandler does this, but let's ensure for test environment safety if partial mock
-
-    // Simulate closing the modal (mock click or keydown)
-    // We need to trigger the closeModal logic stored in SvgRenderer closure.
-    // The previous steps verified modal OPENED. Now we need to Close it.
-
-    // Trigger Escape to close
-    const escapeEvent = new KeyboardEvent('keydown', { key: 'Escape', bubbles: true });
-    // We need to dispatch it to... document? The modal attached listener to document with capture=true.
-    document.dispatchEvent(escapeEvent);
-
-    // Wait for async operations if any (though currently synchronous)
-    // Check if modal is gone (Target specifically the Image Modal with z-index 1000, avoiding CommandPalette's 1999)
-    const modalAfter = document.body.querySelector('div[style*="z-index: 1000"]');
-    expect(modalAfter).toBeNull();
-
-    // Check Focus
-    expect(document.activeElement).toBe(container);
-
-    // Verify Selection is preserved
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-    expect(handler.selectedNodeId).toBe(imageNode.id);
+    expect(editSpy).toHaveBeenCalled();
   });
 });

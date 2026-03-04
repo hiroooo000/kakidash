@@ -48,19 +48,16 @@ describe('Auto-Focus on Center Node', () => {
     // Kakidash constructor doesn't select node.
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
-    const handler = (mindMap as any).controller.interactionHandler;
     // Ensure no selection
     mindMap.selectNode(null);
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-    expect(handler.selectedNodeId).toBeNull();
+    expect(mindMap.getSelectedNodeId()).toBeNull();
 
     // 1. Initial State: Root is at default position.
     // Let's trigger arrow key. Root should be selected as it's the only node (closest).
     const event = new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true });
     document.dispatchEvent(event);
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-    expect(handler.selectedNodeId).toBe(root.id);
+    expect(mindMap.getSelectedNodeId()).toBe(root.id);
 
     // 2. Add another node and pan
     mindMap.selectNode(null);
@@ -76,14 +73,12 @@ describe('Auto-Focus on Center Node', () => {
 
     // Let's manually select null again.
     mindMap.selectNode(null);
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-    expect(handler.selectedNodeId).toBeNull();
+    expect(mindMap.getSelectedNodeId()).toBeNull();
 
     // Trigger generic arrow key
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
 
     // Should select SOME node (Root or Child).
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-    expect(handler.selectedNodeId).not.toBeNull();
+    expect(mindMap.getSelectedNodeId()).not.toBeNull();
   });
 });

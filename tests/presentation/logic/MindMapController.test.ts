@@ -14,6 +14,7 @@ import { SearchService } from '../../../src/features/core/application/SearchServ
 import { ViewportService } from '../../../src/presentation/logic/ViewportService';
 import { NavigationService } from '../../../src/presentation/logic/NavigationService';
 import { ThemeService } from '../../../src/presentation/logic/ThemeService';
+import { CommandBus } from '../../../src/presentation/commands/CommandBus';
 // Remove vi.mock and use spyOn instead
 // vi.mock('../../../src/features/io/XMindImporter');
 
@@ -148,6 +149,7 @@ describe('MindMapController', () => {
       navigationService,
       fileIOService: {} as any,
       themeService: themeServiceMock as unknown as ThemeService,
+      commandBus: new CommandBus(),
     });
   });
 

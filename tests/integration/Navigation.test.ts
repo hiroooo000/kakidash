@@ -8,9 +8,10 @@ import { MindMapService } from '../../src/features/core/application/MindMapServi
 import { Renderer } from '../../src/presentation/components/Renderer';
 import { StyleEditor } from '../../src/features/theme/components/StyleEditor';
 import { IMindMapEventBus } from '../../src/presentation/logic/MindMapController';
-import { InteractionHandler } from '../../src/presentation/logic/InteractionHandler';
+import { InteractionOrchestrator } from '../../src/presentation/logic/InteractionOrchestrator';
 import { ViewportService } from '../../src/presentation/logic/ViewportService';
 import { NavigationService } from '../../src/presentation/logic/NavigationService';
+import { CommandBus } from '../../src/presentation/commands/CommandBus';
 
 describe('MindMapController Navigation Integration', () => {
   let controller: MindMapController;
@@ -101,18 +102,19 @@ describe('MindMapController Navigation Integration', () => {
         updateGlobalStyles: vi.fn(),
         setLayoutSwitcher: vi.fn(),
       } as any,
+      commandBus: new CommandBus(),
     });
 
-    // Mock interaction handler
-    const interactionHandler = {
+    // Mock interaction orchestrator
+    const interactionOrchestrator = {
       updateSelection: vi.fn(),
       setReadOnly: vi.fn(),
-      isReadOnly: false,
+      isReadOnlyState: false,
       options: {},
       getShortcuts: () => ({}),
-      container: document.createElement('div'),
-    } as unknown as InteractionHandler;
-    controller.setInteractionHandler(interactionHandler);
+      focus: vi.fn(),
+    } as unknown as InteractionOrchestrator;
+    controller.setInteractionOrchestrator(interactionOrchestrator);
 
     controller.init(800, 600);
   });
