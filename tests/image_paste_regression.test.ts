@@ -22,7 +22,6 @@ describe('Image Paste Regression', () => {
       container,
       commandBus,
       mindMap,
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       options: {} as any,
       getSelectedNodeId: () => 'root',
       getNodeElement: (id) => {
@@ -67,9 +66,7 @@ describe('Image Paste Regression', () => {
     // allows the following 'paste' event to fire if the browser thinks it's a paste.
     // However, in JSDOM/Vitest, dispatching keydown doesn't automatically fire 'paste'.
     // So we manually dispatch 'paste' to verify Orchestrator's handling.
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const pasteEvent = new Event('paste', { bubbles: true, cancelable: true }) as any;
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     pasteEvent.clipboardData = {
       items: [
         {
@@ -79,9 +76,7 @@ describe('Image Paste Regression', () => {
       ],
     };
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     container.dispatchEvent(pasteEvent);
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     expect(pasteEvent.defaultPrevented).toBe(true);
   });
 
@@ -90,12 +85,10 @@ describe('Image Paste Regression', () => {
 
     // Mock Image to fire onload automatically
     const originalImage = global.Image;
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     global.Image = class extends originalImage {
       set src(value: string) {
         super.src = value;
         setTimeout(() => {
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-call
           if (this.onload) (this.onload as any)();
         }, 0);
       }
@@ -108,9 +101,7 @@ describe('Image Paste Regression', () => {
       // We need to mock globally used Image and FileReader if we want to test the full async flow,
       // but spying on commandBus.dispatch is enough if we trigger the paste correctly.
 
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const pasteEvent = new Event('paste', { bubbles: true, cancelable: true }) as any;
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       pasteEvent.clipboardData = {
         items: [
           {
@@ -123,7 +114,6 @@ describe('Image Paste Regression', () => {
       // Since InteractionOrchestrator uses FileReader.readAsDataURL and new Image().onload,
       // it's async. We'll wait a bit or use vi.waitFor.
 
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       container.dispatchEvent(pasteEvent);
 
       await vi.waitFor(

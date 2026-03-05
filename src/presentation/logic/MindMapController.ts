@@ -118,6 +118,14 @@ export class MindMapController {
     });
 
     this.subscribeToCommands();
+    this.subscribeToModel();
+  }
+
+  private subscribeToModel(): void {
+    // Model changes (including theme/layout) require re-render
+    this.eventBus.on('model:change', () => {
+      this.render();
+    });
   }
 
   private subscribeToCommands(): void {
@@ -143,6 +151,8 @@ export class MindMapController {
     bus.on('toggleFold', (c) => this.toggleFold(c.nodeId));
     bus.on('toggleCommandPalette', () => this.toggleCommandPalette());
     bus.on('updateNodeWidth', (c) => this.updateNodeWidth(c.nodeId, c.increment));
+    bus.on('setTheme', (c) => this.setTheme(c.theme));
+    bus.on('setLayoutMode', (c) => this.setLayoutMode(c.mode));
     bus.on('editEnd', () => this.onEditEnd());
     bus.on('selectNode', (c) => {
       if (c.extendSelection && c.nodeId) {

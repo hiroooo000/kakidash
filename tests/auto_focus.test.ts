@@ -47,7 +47,6 @@ describe('Auto-Focus on Center Node', () => {
     // Deselect first (initially selected? No, usually null or root?)
     // Kakidash constructor doesn't select node.
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
     // Ensure no selection
     mindMap.selectNode(null);
     expect(mindMap.getSelectedNodeId()).toBeNull();

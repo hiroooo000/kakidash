@@ -1,6 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { InteractionOrchestrator } from '../src/presentation/logic/InteractionOrchestrator';
 import { CommandBus } from '../src/presentation/commands/CommandBus';
@@ -24,6 +22,7 @@ describe('Image Node Interactions (Internal)', () => {
       container,
       commandBus,
       mindMap,
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       options: {} as any,
       getSelectedNodeId: () => 'root',
       getNodeElement: (id) => container.querySelector(`[data-id="${id}"]`) as HTMLElement,

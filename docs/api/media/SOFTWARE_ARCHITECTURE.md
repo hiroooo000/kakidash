@@ -11,8 +11,9 @@ Following the dependency rule, outer layers (Presentation, Infrastructure) depen
 graph TD
     subgraph Presentation ["Presentation Layer"]
         Controller[MindMapController]
-        Interaction[InteractionHandler]
+        Interaction[InteractionOrchestrator & Handlers]
         Command[CommandPalette]
+        CmdBus[CommandBus]
         View[SvgRenderer]
     end
 
@@ -31,6 +32,7 @@ graph TD
         subgraph Export ["Export/Import Feature"]
             Importers[XMindImporter]
             Exporters[Image/Markdown Exporter]
+            FileIO[FileIOService]
         end
     end
 
@@ -56,8 +58,12 @@ graph TD
 
     %% Specific wiring
     Controller --> Service
-    Controller --> ThemeReg
-    Controller --> Exporters
+    Controller --> ThemeService
+    Controller --> FileIO
+
+    ThemeService --> ThemeReg
+    FileIO --> Exporters
+    FileIO --> Importers
 ```
 
 ### 1.2 Module/Class Dependency Diagram
@@ -73,7 +79,11 @@ classDiagram
         class ViewportService
         class NavigationService
         class LayoutEngine
-        class InteractionHandler
+        class InteractionOrchestrator
+        class KeyboardShortcutHandler
+        class ZoomPanHandler
+        class DragDropHandler
+        class CommandBus
         class SvgRenderer
         class CommandPalette
     }
@@ -93,6 +103,7 @@ classDiagram
     }
 
     namespace Features_Export {
+        class FileIOService
         class XMindImporter
         class ImageExporter
         class MarkdownExporter
@@ -106,12 +117,19 @@ classDiagram
 
     %% Relationships
     MindMapController --> MindMapService : delegates
-    MindMapController --> ThemeRegistry : uses
-    MindMapController --> ImageExporter : triggers
+    MindMapController --> ThemeService : delegates
+    MindMapController --> FileIOService : delegates
     MindMapController --> ViewportService : manages viewport
     MindMapController --> NavigationService : handles navigation
     MindMapController --> LayoutEngine : calculates layout
     MindMapController --> SvgRenderer : renders
+    
+    ThemeService --> ThemeRegistry : uses
+    ThemeService --> MindMapStyles : edits
+
+    FileIOService --> ImageExporter : triggers
+    FileIOService --> MarkdownExporter : triggers
+    FileIOService --> XMindImporter : triggers
     
     MindMapService --> MindMap : manages
     MindMapService --> HistoryManager : uses
@@ -142,7 +160,8 @@ src/
 │   │   ├── components/   # StyleEditor
 │   │   ├── registry/     # ThemeRegistry
 │   │   └── resources/    # Presets
-│   └── export_import/ # Export/Import capability
+│   └── io/               # Export/Import capability
+│       ├── FileIOService
 │       ├── ImageExporter
 │       ├── MarkdownExporter
 │       └── XMindImporter
@@ -152,7 +171,9 @@ src/
 ├── presentation/     # Application-wide UI integration
 │   ├── components/   # Shared UI components (Renderer, CommandPalette)
 │   ├── layout/       # Layout calculation engine (LayoutEngine)
-│   └── logic/        # Global orchestration (MindMapController, InteractionHandler)
+│   ├── commands/     # CommandBus control and definitions (CommandBus, Command)
+│   └── logic/        # Global orchestration (MindMapController, InteractionOrchestrator)
+│       └── handlers/ # Segregated input event handlers
 ├── infrastructure/   # Layered infrastructure implementations (if needed)
 └── index.ts          # Entry point (Dependency Injection)
 ```
@@ -173,9 +194,11 @@ Functionality related to styling and theme management.
 - **Domain**: `ThemeDefinition API`, `MindMapStyles`, `StyleAction`.
 - **Components**: `StyleEditor`.
 - **Registry**: `ThemeRegistry` (Theme application management).
+- **Presentation**: `ThemeService` (Manages global and custom themes logic, decoupled from main controller).
 
-#### Export/Import Feature (`src/features/export_import`)
+#### Export/Import Feature (`src/features/io`)
 Input/Output functionality with external formats.
+- `FileIOService`: High-level interface handling UI-related flow (confirms, triggers internal exporters/importers).
 - `XMindImporter`: Import XMind files.
 - `ImageExporter`: SVG/PNG export.
 - `MarkdownExporter`: Markdown export.
@@ -189,10 +212,17 @@ Common components referenced by all features.
 ### 3.3 Presentation Layer (`src/presentation`)
 
 Integrates features and provides the user interface.
-- **MindMapController**: Main controller orchestrating features (Core, Theme, Export). Manages selection state (single/multi) and delegates viewport and navigation operations to dedicated services.
+- **MindMapController**: Main controller orchestrating features. Manages selection state (single/multi) and delegates specialized functionalities to the following services:
+  - **ThemeService**: Extracts logic for layout themes, global styling overrides, and persisting current states.
+  - **FileIOService**: Extracts export/import features to separate DOM interaction handling (file popups, confirmations).
+  - **ViewportService**: Handles viewport control such as zoom, pan, and animation loop.
+  - **NavigationService**: Handles navigation logic between nodes based on direction.
 - **ViewportService**: Handles viewport control such as zoom, pan, and animation loop.
 - **NavigationService**: Handles navigation logic between nodes based on direction.
-- **InteractionHandler**: Captures Mouse/Touch/Keyboard events and maps them to the controller.
+- **CommandBus**: Central message bus that receives commands (Actions) generated by various inputs or programmatic actions, and routes them to listeners for execution. This achieves loose coupling between components.
+- **InteractionOrchestrator & Handlers**: Processes user inputs and routes them to the command bus.
+  - `InteractionOrchestrator`: Manages DOM event listeners, focus control, and the overall lifecycle of input processing.
+  - Handlers (`KeyboardShortcutHandler`, `ZoomPanHandler`, `DragDropHandler`): Interpret DOM events, generate `Command` objects for logical behaviors (e.g., zoom, node move), and dispatch them to the `CommandBus`.
 - **LayoutEngine**: Calculates layout coordinates (X, Y) and connection paths for each node based on the MindMap tree structure, and generates a `LayoutResult`.
 - **Components**:
   - **SvgRenderer**: Responsible for rendering the mind map using SVG and HTML. It uses layout data calculated by `LayoutEngine`. Implements **Differential Rendering** for high performance:
@@ -361,13 +391,24 @@ This diagram shows the fast-path selection update that avoids a full re-render.
 ```mermaid
 sequenceDiagram
     participant User
+    participant DOM as Browser DOM
+    participant Orch as Presentation/InteractionOrchestrator
+    participant Bus as Presentation/CommandBus
     participant Controller as Presentation/MindMapController
     participant Renderer as Presentation/SvgRenderer
 
-    User->>Controller: selectNode(nodeId)
+    User->>DOM: Shift + Click Node (Multi Selection)
+    DOM->>Orch: click event (shiftKey=true)
+    activate Orch
+    Note over Orch: Extract nodeId from DOM
+    Orch->>Bus: dispatch({ type: 'selectNode', nodeId, extendSelection: true })
+    deactivate Orch
+    
+    Bus->>Controller: trigger 'selectNode' listener
     activate Controller
 
-    Controller->>Controller: Update selectedNodeIds (Set)
+    Controller->>Controller: selectNode(nodeId, true)
+    Note over Controller: Update internal selectedNodeIds (Set)
     
     Controller->>Renderer: updateSelection(selectedNodeIds)
     activate Renderer
