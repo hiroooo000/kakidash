@@ -7,7 +7,8 @@ import { SearchService } from './features/core/application/SearchService';
 import { SvgRenderer } from './presentation/components/SvgRenderer';
 import { StyleEditor } from './features/theme/components/StyleEditor';
 import { LayoutSwitcher } from './presentation/logic/LayoutSwitcher';
-import { InteractionHandler } from './presentation/logic/InteractionHandler';
+import { InteractionOrchestrator } from './presentation/logic/InteractionOrchestrator';
+import { CommandBus } from './presentation/commands/CommandBus';
 import { MindMapController } from './presentation/logic/MindMapController';
 import { ViewportService } from './presentation/logic/ViewportService';
 import { NavigationService } from './presentation/logic/NavigationService';
@@ -78,7 +79,9 @@ export interface KakidashOptions {
  */
 export class Kakidash extends TypedEventEmitter<KakidashEventMap> {
   private mindMap: MindMap;
-  private controller: MindMapController;
+  public controller: MindMapController;
+  public interactionOrchestrator: InteractionOrchestrator;
+  public commandBus: CommandBus;
 
   constructor(container: HTMLElement, options: KakidashOptions = {}) {
     super();
@@ -153,6 +156,8 @@ export class Kakidash extends TypedEventEmitter<KakidashEventMap> {
       eventBus: eventBusImpl,
     });
 
+    const commandBus = new CommandBus();
+
     this.controller = new MindMapController({
       mindMap: this.mindMap,
       service,
@@ -166,6 +171,7 @@ export class Kakidash extends TypedEventEmitter<KakidashEventMap> {
       navigationService,
       fileIOService,
       themeService,
+      commandBus,
       locale: options.locale || defaultLocale,
       commandPaletteFeatures: options.disabledCommandPaletteFeatures,
     });
@@ -174,42 +180,52 @@ export class Kakidash extends TypedEventEmitter<KakidashEventMap> {
       this.controller.updateNode(nodeId, { style });
     };
 
-    const interactionHandler = new InteractionHandler(container, {
-      onNodeClick: (nodeId, shiftKey) => {
-        if (shiftKey && nodeId) {
-          this.controller.selectRangeTo(nodeId);
-        } else {
-          this.controller.selectNode(nodeId || null);
-        }
+    this.interactionOrchestrator = new InteractionOrchestrator({
+      container,
+      commandBus,
+      mindMap: this.mindMap,
+      getSelectedNodeId: () => this.controller.getSelectedNodeId(),
+      getNodeElement: (id) => renderer.getNodeElement(id),
+      zoomNode: (id) => renderer.zoomNode(id),
+      options: {
+        ...options,
+        onNodeClick: (nodeId, shiftKey) => {
+          if (shiftKey && nodeId) {
+            this.controller.selectRangeTo(nodeId);
+          } else {
+            this.controller.selectNode(nodeId || null);
+          }
+        },
+        onAddChild: (parentId) => this.controller.addChildNode(parentId),
+        onInsertParent: (nodeId) => this.controller.insertParentNode(nodeId),
+        onAddSibling: (nodeId, position) => this.controller.addSiblingNode(nodeId, position),
+        onDeleteNode: (nodeId) => this.controller.removeNode(nodeId),
+        onDropNode: (draggedId, targetId, side) =>
+          this.controller.moveNode(draggedId, targetId, side),
+        onUpdateNode: (nodeId, topic) => this.controller.updateNodeTopic(nodeId, topic),
+        onNavigate: (nodeId, direction, extendSelection) =>
+          this.controller.navigateNode(nodeId, direction, extendSelection),
+        onPan: (dx, dy) => this.controller.panBoard(dx, dy),
+        onCopyNode: (nodeId) => this.controller.copyNode(nodeId),
+        onPasteNode: (parentId) => this.controller.pasteNode(parentId),
+        onCutNode: (nodeId) => this.controller.cutNode(nodeId),
+        onPasteImage: (parentId, imageData, width, height) =>
+          this.controller.pasteImage(parentId, imageData, width, height),
+        onZoom: (delta, x, y) => this.controller.zoomBoard(delta, x, y),
+        onZoomReset: () => this.controller.resetZoom(),
+        onUndo: () => this.controller.undo(),
+        onRedo: () => this.controller.redo(),
+        onStyleAction: (nodeId, action) => this.controller.onStyleAction(nodeId, action),
+        onEditEnd: (_) => this.controller.onEditEnd(),
+        onToggleFold: (nodeId) => this.controller.toggleFold(nodeId),
+        onToggleCommandPalette: () => this.controller.toggleCommandPalette(),
+        onUpdateNodeWidth: (nodeId, increment) =>
+          this.controller.updateNodeWidth(nodeId, increment),
       },
-      onAddChild: (parentId) => this.controller.addChildNode(parentId),
-      onInsertParent: (nodeId) => this.controller.insertParentNode(nodeId),
-      onAddSibling: (nodeId, position) => this.controller.addSiblingNode(nodeId, position),
-      onDeleteNode: (nodeId) => this.controller.removeNode(nodeId),
-      onDropNode: (draggedId, targetId, side) =>
-        this.controller.moveNode(draggedId, targetId, side),
-      onUpdateNode: (nodeId, topic) => this.controller.updateNodeTopic(nodeId, topic),
-      onNavigate: (nodeId, direction, extendSelection) =>
-        this.controller.navigateNode(nodeId, direction, extendSelection),
-      onPan: (dx, dy) => this.controller.panBoard(dx, dy),
-      onCopyNode: (nodeId) => this.controller.copyNode(nodeId),
-      onPasteNode: (parentId) => this.controller.pasteNode(parentId),
-      onCutNode: (nodeId) => this.controller.cutNode(nodeId),
-      onPasteImage: (parentId, imageData, width, height) =>
-        this.controller.pasteImage(parentId, imageData, width, height),
-      onZoom: (delta, x, y) => this.controller.zoomBoard(delta, x, y),
-      onZoomReset: () => this.controller.resetZoom(),
-      onUndo: () => this.controller.undo(),
-      onRedo: () => this.controller.redo(),
-      onStyleAction: (nodeId, action) => this.controller.onStyleAction(nodeId, action),
-      onEditEnd: (_) => this.controller.onEditEnd(),
-      onToggleFold: (nodeId) => this.controller.toggleFold(nodeId),
-      onToggleCommandPalette: () => this.controller.toggleCommandPalette(),
-      onUpdateNodeWidth: (nodeId, increment) => this.controller.updateNodeWidth(nodeId, increment),
-      shortcuts: options.shortcuts,
     });
 
-    this.controller.setInteractionHandler(interactionHandler);
+    this.commandBus = commandBus;
+    this.controller.setInteractionOrchestrator(this.interactionOrchestrator);
 
     const layoutSwitcher = new LayoutSwitcher(uiLayer, {
       onLayoutChange: (mode) => this.controller.setLayoutMode(mode),

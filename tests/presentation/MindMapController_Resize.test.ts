@@ -11,6 +11,7 @@ import { IMindMapEventBus } from '../../src/presentation/logic/MindMapController
 import { ViewportService } from '../../src/presentation/logic/ViewportService';
 import { NavigationService } from '../../src/presentation/logic/NavigationService';
 import { IdGenerator } from '../../src/shared/kernel/IdGenerator';
+import { CommandBus } from '../../src/presentation/commands/CommandBus';
 
 describe('MindMapController Resizing Fix', () => {
   let controller: MindMapController;
@@ -80,6 +81,7 @@ describe('MindMapController Resizing Fix', () => {
       } as unknown as NavigationService,
       fileIOService: {} as any,
       themeService: {} as any,
+      commandBus: new CommandBus(),
     });
   });
 

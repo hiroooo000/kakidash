@@ -4,7 +4,7 @@ import { Node, NodeStyle } from '../../features/core/domain/Node';
 import { MindMapService } from '../../features/core/application/MindMapService';
 import { Renderer } from '../components/Renderer';
 import { StyleEditor } from '../../features/theme/components/StyleEditor';
-import { InteractionHandler } from './InteractionHandler';
+import { InteractionOrchestrator } from './InteractionOrchestrator';
 import { Direction } from '../types/InteractionOptions';
 import { LayoutMode } from '../../features/core/domain/LayoutMode';
 import { LayoutSwitcher } from './LayoutSwitcher';
@@ -21,6 +21,7 @@ import { ClipboardService } from '../../features/core/application/ClipboardServi
 import { SearchService } from '../../features/core/application/SearchService';
 import { ViewportService } from './ViewportService';
 import { NavigationService } from './NavigationService';
+import { CommandBus } from '../commands/CommandBus';
 
 export interface IMindMapEventBus {
   emit<K extends keyof KakidashEventMap>(event: K, payload: KakidashEventMap[K]): void;
@@ -51,6 +52,7 @@ export interface ControllerDependencies {
   navigationService: NavigationService;
   fileIOService: FileIOService;
   themeService: ThemeService;
+  commandBus: CommandBus;
   locale?: 'en' | 'ja';
   commandPaletteFeatures?: ('search' | 'icon' | 'import' | 'export')[];
 }
@@ -63,10 +65,11 @@ export class MindMapController {
   private styleEditor: StyleEditor;
   private commandPalette: CommandPalette;
   private locale: 'en' | 'ja';
-  private interactionHandler!: InteractionHandler;
+  private interactionOrchestrator!: InteractionOrchestrator;
   private layoutSwitcher!: LayoutSwitcher;
   private fileIOService: FileIOService;
   private themeService: ThemeService;
+  private commandBus: CommandBus;
 
   private historyService: HistoryService;
   private clipboardService: ClipboardService;
@@ -100,21 +103,68 @@ export class MindMapController {
     this.navigationService = deps.navigationService;
 
     this.locale = deps.locale ?? 'en';
+    this.commandBus = deps.commandBus;
+
     this.commandPalette = new CommandPalette(this.renderer.container, {
       onInput: (query) => this.handleSearchInput(query),
       onSelect: (nodeId) => this.handleSearchResultSelect(nodeId),
       onIconSelect: (icon) => this.handleIconSelect(icon),
       onCommandSelect: (command) => this.handleCommandSelect(command),
       onClose: () => {
-        if (this.interactionHandler) this.interactionHandler.container.focus();
+        if (this.interactionOrchestrator) this.interactionOrchestrator.focus();
       },
       getSelectedNodeId: () => this.selectedNodeId,
       disabledFeatures: deps.commandPaletteFeatures,
     });
+
+    this.subscribeToCommands();
+    this.subscribeToModel();
   }
 
-  public setInteractionHandler(handler: InteractionHandler) {
-    this.interactionHandler = handler;
+  private subscribeToModel(): void {
+    // Model changes (including theme/layout) require re-render
+    this.eventBus.on('model:change', () => {
+      this.render();
+    });
+  }
+
+  private subscribeToCommands(): void {
+    const bus = this.commandBus;
+
+    bus.on('addNode', (c) => this.addChildNode(c.parentId));
+    bus.on('addSibling', (c) => this.addSiblingNode(c.nodeId, c.position));
+    bus.on('deleteNode', (c) => this.removeNode(c.nodeId));
+    bus.on('insertParent', (c) => this.insertParentNode(c.nodeId));
+    bus.on('dropNode', (c) => this.moveNode(c.draggedId, c.targetId, c.position));
+    bus.on('updateNode', (c) => this.updateNodeTopic(c.nodeId, c.topic));
+    bus.on('navigate', (c) => this.navigateNode(c.nodeId, c.direction, c.extendSelection));
+    bus.on('pan', (c) => this.panBoard(c.dx, c.dy));
+    bus.on('zoom', (c) => this.zoomBoard(c.delta, c.x, c.y));
+    bus.on('zoomReset', () => this.resetZoom());
+    bus.on('copyNode', (c) => this.copyNode(c.nodeId));
+    bus.on('pasteNode', (c) => this.pasteNode(c.parentId));
+    bus.on('cutNode', (c) => this.cutNode(c.nodeId));
+    bus.on('pasteImage', (c) => this.pasteImage(c.parentId, c.imageData, c.width, c.height));
+    bus.on('undo', () => this.undo());
+    bus.on('redo', () => this.redo());
+    bus.on('styleAction', (c) => this.onStyleAction(c.nodeId, c.action));
+    bus.on('toggleFold', (c) => this.toggleFold(c.nodeId));
+    bus.on('toggleCommandPalette', () => this.toggleCommandPalette());
+    bus.on('updateNodeWidth', (c) => this.updateNodeWidth(c.nodeId, c.increment));
+    bus.on('setTheme', (c) => this.setTheme(c.theme));
+    bus.on('setLayoutMode', (c) => this.setLayoutMode(c.mode));
+    bus.on('editEnd', () => this.onEditEnd());
+    bus.on('selectNode', (c) => {
+      if (c.extendSelection && c.nodeId) {
+        this.selectRangeTo(c.nodeId);
+      } else {
+        this.selectNode(c.nodeId);
+      }
+    });
+  }
+
+  public setInteractionOrchestrator(orchestrator: InteractionOrchestrator) {
+    this.interactionOrchestrator = orchestrator;
   }
 
   public setLayoutSwitcher(switcher: LayoutSwitcher) {
@@ -290,7 +340,7 @@ export class MindMapController {
   ): void {
     this.saveState();
     this.eventBus.emit('command', { name: 'updateNode', args: { nodeId, updates } });
-    if (this.interactionHandler && this.interactionHandler.isReadOnly) return;
+    if (this.interactionOrchestrator && this.interactionOrchestrator.isReadOnlyState) return;
 
     let changed = false;
     const ids = this.getIdsToActOn(nodeId);
@@ -331,7 +381,7 @@ export class MindMapController {
   updateNodeWidth(nodeId: string, increment: number): void {
     this.saveState();
     this.eventBus.emit('command', { name: 'updateNodeWidth', args: { nodeId, increment } });
-    if (this.interactionHandler && this.interactionHandler.isReadOnly) return;
+    if (this.interactionOrchestrator && this.interactionOrchestrator.isReadOnlyState) return;
 
     const node = this.mindMap.findNode(nodeId);
     if (!node) return;
@@ -383,7 +433,7 @@ export class MindMapController {
     if (node) {
       this.selectNode(node.id);
       this.ensureNodeVisible(node.id, false, true);
-      this.interactionHandler.editNode(node.id);
+      this.interactionOrchestrator.editNode(node.id);
     }
   }
 
@@ -393,7 +443,7 @@ export class MindMapController {
     if (newNode) {
       this.selectNode(newNode.id);
       this.ensureNodeVisible(newNode.id, false, true);
-      this.interactionHandler.editNode(newNode.id);
+      this.interactionOrchestrator.editNode(newNode.id);
     }
   }
 
@@ -403,7 +453,7 @@ export class MindMapController {
     if (newNode) {
       this.selectNode(newNode.id);
       this.ensureNodeVisible(newNode.id, false, true);
-      this.interactionHandler.editNode(newNode.id);
+      this.interactionOrchestrator.editNode(newNode.id);
     }
   }
 
@@ -449,14 +499,18 @@ export class MindMapController {
   private updateSelectionState(): void {
     const nodeId = this.selectedNodeId;
 
-    if (this.interactionHandler) {
-      this.interactionHandler.updateSelection(nodeId);
+    if (this.interactionOrchestrator) {
+      this.interactionOrchestrator.updateSelection(nodeId);
     }
 
     if (nodeId) {
       const node = this.mindMap.findNode(nodeId);
       if (node) {
-        if (!node.image && this.interactionHandler && !this.interactionHandler.isReadOnly) {
+        if (
+          !node.image &&
+          this.interactionOrchestrator &&
+          !this.interactionOrchestrator.isReadOnlyState
+        ) {
           this.styleEditor.show(nodeId, node.style);
         } else {
           this.styleEditor.hide();
@@ -600,7 +654,7 @@ export class MindMapController {
   setMaxNodeWidth(width: number): void {
     this.maxWidth = width;
     this.renderer.maxWidth = width;
-    if (this.interactionHandler) this.interactionHandler.maxWidth = width;
+    if (this.interactionOrchestrator) this.interactionOrchestrator.maxWidth = width;
     this.render();
   }
 
@@ -633,8 +687,8 @@ export class MindMapController {
   }
 
   setReadOnly(readOnly: boolean): void {
-    if (this.interactionHandler) {
-      this.interactionHandler.setReadOnly(readOnly);
+    if (this.interactionOrchestrator) {
+      this.interactionOrchestrator.setReadOnly(readOnly);
     }
     if (readOnly) {
       this.styleEditor.hide();
@@ -840,7 +894,7 @@ export class MindMapController {
 
   onStyleAction(nodeId: string, action: StyleAction): void {
     this.saveState();
-    if (this.interactionHandler && this.interactionHandler.isReadOnly) return;
+    if (this.interactionOrchestrator && this.interactionOrchestrator.isReadOnlyState) return;
     const node = this.mindMap.findNode(nodeId);
     if (!node) return;
 
@@ -887,7 +941,7 @@ export class MindMapController {
   }
 
   public toggleCommandPalette(): void {
-    if (this.interactionHandler && this.interactionHandler.isReadOnly) return;
+    if (this.interactionOrchestrator && this.interactionOrchestrator.isReadOnlyState) return;
     this.commandPalette.toggle();
   }
 
@@ -941,12 +995,12 @@ export class MindMapController {
   }
 
   public showHelpModal(): void {
-    if (!this.interactionHandler) return;
+    if (!this.interactionOrchestrator) return;
 
     // Check if valid environment (browsers)
     if (typeof document === 'undefined') return;
 
     const helpModal = new HelpModal();
-    helpModal.show(this.interactionHandler.getShortcuts(), this.locale, this.layoutSwitcher);
+    helpModal.show(this.interactionOrchestrator.getShortcuts(), this.locale, this.layoutSwitcher);
   }
 }

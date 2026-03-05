@@ -1,13 +1,17 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // @vitest-environment happy-dom
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { NodeEditor } from '@/presentation/components/NodeEditor';
-import type { InteractionOptions } from '@/presentation/types/InteractionOptions';
+import { CommandBus } from '@/presentation/commands/CommandBus';
+import type { Command } from '@/presentation/commands/Command';
 
 describe('NodeEditor', () => {
   let container: HTMLElement;
   let nodeEditor: NodeEditor;
   let element: HTMLElement;
-  let options: InteractionOptions;
+  let commandBus: CommandBus;
+  let dispatchedCommands: Command[] = [];
+  let dispatchSpy: any;
 
   beforeEach(() => {
     container = document.createElement('div');
@@ -22,17 +26,13 @@ describe('NodeEditor', () => {
     element.style.padding = '8px';
     container.appendChild(element);
 
-    options = {
-      onNodeClick: vi.fn(),
-      onAddChild: vi.fn(),
-      onAddSibling: vi.fn(),
-      onDeleteNode: vi.fn(),
-      onDropNode: vi.fn(),
-      onUpdateNode: vi.fn(),
-      onEditEnd: vi.fn(),
-    };
+    commandBus = new CommandBus();
+    dispatchedCommands = [];
+    dispatchSpy = vi.spyOn(commandBus, 'dispatch').mockImplementation((command: Command) => {
+      dispatchedCommands.push(command);
+    });
 
-    nodeEditor = new NodeEditor(container, -1, options);
+    nodeEditor = new NodeEditor(container, -1, commandBus);
   });
 
   afterEach(() => {
@@ -54,7 +54,11 @@ describe('NodeEditor', () => {
     textarea.value = 'Updated';
     textarea.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
 
-    expect(options.onUpdateNode).toHaveBeenCalledWith('node1', 'Updated');
+    expect(dispatchSpy).toHaveBeenCalledWith({
+      type: 'updateNode',
+      nodeId: 'node1',
+      topic: 'Updated',
+    });
   });
 
   it('should not call onUpdateNode when value is unchanged', () => {
@@ -64,7 +68,7 @@ describe('NodeEditor', () => {
     // Keep original value
     textarea.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
 
-    expect(options.onUpdateNode).not.toHaveBeenCalled();
+    expect(dispatchSpy).not.toHaveBeenCalledWith(expect.objectContaining({ type: 'updateNode' }));
   });
 
   it('should call onEditEnd when Enter is pressed', () => {
@@ -73,7 +77,7 @@ describe('NodeEditor', () => {
     const textarea = container.querySelector('textarea')!;
     textarea.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
 
-    expect(options.onEditEnd).toHaveBeenCalledWith('node1');
+    expect(dispatchSpy).toHaveBeenCalledWith({ type: 'editEnd', nodeId: 'node1' });
   });
 
   it('should call onEditEnd when Escape is pressed', () => {
@@ -83,8 +87,8 @@ describe('NodeEditor', () => {
     textarea.value = 'Changed';
     textarea.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
 
-    expect(options.onUpdateNode).not.toHaveBeenCalled();
-    expect(options.onEditEnd).toHaveBeenCalledWith('node1');
+    expect(dispatchSpy).not.toHaveBeenCalledWith(expect.objectContaining({ type: 'updateNode' }));
+    expect(dispatchSpy).toHaveBeenCalledWith({ type: 'editEnd', nodeId: 'node1' });
   });
 
   it('should respect maxWidth option', () => {
@@ -124,7 +128,7 @@ describe('NodeEditor', () => {
     textarea.dispatchEvent(event);
 
     expect(preventDefault).not.toHaveBeenCalled();
-    expect(options.onUpdateNode).not.toHaveBeenCalled();
+    expect(dispatchSpy).not.toHaveBeenCalledWith(expect.objectContaining({ type: 'updateNode' }));
   });
 
   it('should call onEditEnd on blur', () => {
@@ -134,8 +138,12 @@ describe('NodeEditor', () => {
     textarea.value = 'Blurred';
     textarea.dispatchEvent(new FocusEvent('blur'));
 
-    expect(options.onUpdateNode).toHaveBeenCalledWith('node1', 'Blurred');
-    expect(options.onEditEnd).toHaveBeenCalledWith('node1');
+    expect(dispatchSpy).toHaveBeenCalledWith({
+      type: 'updateNode',
+      nodeId: 'node1',
+      topic: 'Blurred',
+    });
+    expect(dispatchSpy).toHaveBeenCalledWith({ type: 'editEnd', nodeId: 'node1' });
   });
 
   it('should not process events when composing (IME)', () => {
@@ -148,7 +156,7 @@ describe('NodeEditor', () => {
     Object.defineProperty(event, 'isComposing', { value: true });
     textarea.dispatchEvent(event);
 
-    expect(options.onUpdateNode).not.toHaveBeenCalled();
+    expect(dispatchSpy).not.toHaveBeenCalledWith(expect.objectContaining({ type: 'updateNode' }));
   });
 
   it('should restore original outline and boxShadow on cleanup', () => {

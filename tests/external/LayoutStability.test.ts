@@ -28,6 +28,8 @@ vi.mock('../../src/presentation/components/SvgRenderer', () => {
     this.measureNode = vi.fn().mockReturnValue({ width: 100, height: 40 });
     this.updateTransform = vi.fn();
     this.updateSelection = vi.fn();
+    this.getNodeElement = vi.fn().mockReturnValue(new MockHTMLElement());
+    this.zoomNode = vi.fn();
     this.container = container;
   });
   return { SvgRenderer };
@@ -49,6 +51,10 @@ class MockHTMLElement {
     classList: { contains: vi.fn() },
     style: {},
     getBoundingClientRect: vi.fn().mockReturnValue({ top: 0, left: 0, width: 100, height: 30 }),
+    querySelector: vi.fn().mockReturnValue(null),
+    click: vi.fn(),
+    focus: vi.fn(),
+    select: vi.fn(),
   });
   querySelectorAll = vi.fn().mockReturnValue([]);
   getBoundingClientRect = vi.fn().mockReturnValue({ width: 0, height: 0, top: 0, left: 0 });
@@ -76,6 +82,10 @@ class MockHTMLElement {
       classList: { contains: vi.fn() },
       style: {},
       getBoundingClientRect: vi.fn().mockReturnValue({ top: 0, left: 0, width: 100, height: 30 }),
+      querySelector: vi.fn().mockReturnValue(null),
+      click: vi.fn(),
+      focus: vi.fn(),
+      select: vi.fn(),
     }),
     querySelectorAll: vi.fn().mockReturnValue([]),
     focus: vi.fn(),
@@ -89,6 +99,7 @@ class MockHTMLElement {
     getBBox: () => ({ x: 0, y: 0, width: 100, height: 30 }),
   }),
   addEventListener: vi.fn(),
+  getElementById: vi.fn().mockReturnValue(null),
   head: { appendChild: vi.fn() },
   body: { appendChild: vi.fn(), removeChild: vi.fn() },
 };

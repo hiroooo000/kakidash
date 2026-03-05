@@ -1,4 +1,4 @@
-import { InteractionOptions } from '../types/InteractionOptions';
+import { CommandBus } from '../commands/CommandBus';
 
 /**
  * Class responsible for node editing functionality
@@ -6,12 +6,12 @@ import { InteractionOptions } from '../types/InteractionOptions';
 export class NodeEditor {
   private container: HTMLElement;
   private maxWidth: number;
-  private options: InteractionOptions;
+  private commandBus: CommandBus;
 
-  constructor(container: HTMLElement, maxWidth: number, options: InteractionOptions) {
+  constructor(container: HTMLElement, maxWidth: number, commandBus: CommandBus) {
     this.container = container;
     this.maxWidth = maxWidth;
-    this.options = options;
+    this.commandBus = commandBus;
   }
 
   public setMaxWidth(width: number): void {
@@ -19,6 +19,7 @@ export class NodeEditor {
   }
 
   public startEditing(element: HTMLElement, nodeId: string): void {
+    console.log(`[NodeEditor] startEditing called for ${nodeId}`);
     const currentText = element.textContent || '';
 
     // 1. Create textarea
@@ -172,7 +173,9 @@ export class NodeEditor {
         span.textContent += '\u200b';
       }
 
-      document.body.appendChild(span);
+      if (document.body) {
+        document.body.appendChild(span);
+      }
 
       // Add a little buffer for cursor and borders (minimal)
       const width = span.offsetWidth + 4;
@@ -181,7 +184,9 @@ export class NodeEditor {
       textarea.style.width = Math.max(width, element.offsetWidth) + 'px';
       textarea.style.height = Math.max(height, element.offsetHeight) + 'px';
 
-      document.body.removeChild(span);
+      if (span.parentNode) {
+        span.parentNode.removeChild(span);
+      }
     };
   }
 
@@ -222,16 +227,12 @@ export class NodeEditor {
       const newTopic = textarea.value;
       // Only update if changed
       if (newTopic !== initialValue) {
-        if (this.options.onUpdateNode) {
-          this.options.onUpdateNode(nodeId, newTopic);
-        }
+        this.commandBus.dispatch({ type: 'updateNode', nodeId, topic: newTopic });
       }
 
       cleanup();
 
-      if (this.options.onEditEnd) {
-        this.options.onEditEnd(nodeId);
-      }
+      this.commandBus.dispatch({ type: 'editEnd', nodeId });
     };
 
     const cancelEditing = () => {
@@ -239,9 +240,7 @@ export class NodeEditor {
       isFinishing = true;
       cleanup();
 
-      if (this.options.onEditEnd) {
-        this.options.onEditEnd(nodeId);
-      }
+      this.commandBus.dispatch({ type: 'editEnd', nodeId });
     };
 
     textarea.addEventListener('blur', () => {

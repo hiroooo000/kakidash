@@ -11,8 +11,9 @@ Kakidashは、メンテナンス性、テスト容易性、拡張性を高める
 graph TD
     subgraph Presentation ["Presentation Layer"]
         Controller[MindMapController]
-        Interaction[InteractionHandler]
+        Interaction[InteractionOrchestrator & Handlers]
         Command[CommandPalette]
+        CmdBus[CommandBus]
         View[SvgRenderer]
         ThemeSvc[ThemeService]
         IOSvc[FileIOService]
@@ -79,7 +80,11 @@ classDiagram
         class ViewportService
         class NavigationService
         class LayoutEngine
-        class InteractionHandler
+        class InteractionOrchestrator
+        class KeyboardShortcutHandler
+        class ZoomPanHandler
+        class DragDropHandler
+        class CommandBus
         class SvgRenderer
         class CommandPalette
         class ThemeService
@@ -165,7 +170,9 @@ src/
 ├── presentation/     # アプリケーション全体のUI統合
 │   ├── components/   # 共通UIコンポーネント (Renderer, CommandPalette)
 │   ├── layout/       # 配置計算エンジン (LayoutEngine)
-│   └── logic/        # 全体制御 (MindMapController, InteractionHandler)
+│   ├── commands/     # CommandBusの制御と定義 (CommandBus, Command)
+│   └── logic/        # 全体制御 (MindMapController, InteractionOrchestrator)
+│       └── handlers/ # 分割された入力イベントハンドラー群
 ├── infrastructure/   # レイヤー化されたインフラ実装 (必要に応じて)
 └── index.ts          # エントリーポイント (Dependency Injection)
 ```
@@ -207,7 +214,10 @@ src/
 - **NavigationService**: 方向に応じたノード間のナビゲーションロジックを担当します。
 - **ThemeService**: テーマやスタイルの変更・適用ロジックを管理し、ThemeRegistry経由でコンテナに適用します。
 - **FileIOService**: マインドマップデータのインポート（XMind）およびエクスポート（PNG, SVG, Markdown）の操作を統合・実行します。
-- **InteractionHandler**: ユーザー操作の入力処理。
+- **CommandBus**: 各種入力やアクションによって生成されたコマンド（Action）を中央集権的に受けとり、リスナーにルーティングして実行させるメッセージング基盤。これによりコンポーネント間の疎結合を実現しています。
+- **InteractionOrchestrator & Handlers**: ユーザー操作の入力を処理し、コマンドバスへと流す役割。
+  - `InteractionOrchestrator`: DOMのイベントリスナー管理やフォーカス制御など、入力処理のライフサイクル全体を管理します。
+  - 各種ハンドラー (`KeyboardShortcutHandler`, `ZoomPanHandler`, `DragDropHandler`): DOMイベントを解釈し、論理的な振る舞い（ズームやノード移動など）の `Command` オブジェクトを生成して `CommandBus` に送信します。
 - **LayoutEngine**: マインドマップのツリー構造から各ノードの配置座標（X, Y）と接続線のパスを計算し、`LayoutResult` を生成します。
 - **Components**:
   - **SvgRenderer**: SVGとHTMLを使用してマインドマップを描画します。`LayoutEngine` が計算したレイアウトデータをもとに描画を行います。高パフォーマンス維持のため **差分レンダリング（Differential Rendering）** を実装しています。
@@ -224,6 +234,10 @@ src/
 ```mermaid
 sequenceDiagram
     participant User
+    participant DOM as Browser DOM
+    participant Orch as Presentation/InteractionOrchestrator
+    participant Handler as Presentation/KeyboardShortcutHandler
+    participant Bus as Presentation/CommandBus
     participant Controller as Presentation/MindMapController
     participant Service as Core/MindMapService
     participant IdGen as Shared/IdGenerator
@@ -231,7 +245,16 @@ sequenceDiagram
     participant Layout as Presentation/LayoutEngine
     participant Renderer as Presentation/SvgRenderer
 
-    User->>Controller: addChildNode(parentId)
+    User->>DOM: Press 'Tab' (Add Child Node)
+    DOM->>Orch: keydown event
+    activate Orch
+    Orch->>Handler: handleEvent(e)
+    activate Handler
+    Handler->>Bus: emit('addNode', { parentId })
+    deactivate Handler
+    deactivate Orch
+
+    Bus->>Controller: trigger 'addNode' listener
     activate Controller
 
     Controller->>Service: addNode(parentId, "New Topic")
@@ -296,24 +319,37 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant User
+    participant DOM as Browser DOM
+    participant Orch as Presentation/InteractionOrchestrator
+    participant Handler as Presentation/DragDropHandler
+    participant Bus as Presentation/CommandBus
     participant Controller as Presentation/MindMapController
     participant Service as Core/MindMapService
     participant Entity as Core/MindMap
 
-    User->>Controller: moveNode(nodeId, targetId, side)
+    User->>DOM: Drag & Drop Node
+    DOM->>Orch: pointer events (down, move, up)
+    activate Orch
+    Orch->>Handler: handleEvent(e)
+    activate Handler
+    Handler->>Bus: emit('dropNode', { draggedId, targetId, position })
+    deactivate Handler
+    deactivate Orch
+
+    Bus->>Controller: trigger 'dropNode' listener
     activate Controller
 
-    Controller->>Service: moveNode(nodeId, targetId, side)
+    Controller->>Service: moveNode(draggedId, targetId, side)
     activate Service
 
-    Service->>Entity: findNode(nodeId), findNode(targetId)
+    Service->>Entity: findNode(draggedId), findNode(targetId)
 
     alt Validation Failed (Cycle / Root Move)
         Entity-->>Service: false (from moveNode checks)
         Service-->>Controller: false
     else Validation Passed
         Service->>Service: saveState()
-        Service->>Entity: moveNode(nodeId, targetId)
+        Service->>Entity: moveNode(draggedId, targetId)
         Entity->>Entity: remove from old parent
         Entity->>Entity: add to new parent
         Service-->>Controller: true
@@ -334,11 +370,24 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant User
+    participant DOM as Browser DOM
+    participant Orch as Presentation/InteractionOrchestrator
+    participant Handler as Presentation/KeyboardShortcutHandler
+    participant Bus as Presentation/CommandBus
     participant Controller as Presentation/MindMapController
     participant Palette as Presentation/CommandPalette
     participant Service as Core/MindMapService
 
-    User->>Controller: toggleCommandPalette (m key)
+    User->>DOM: Press 'm' key
+    DOM->>Orch: keydown event
+    activate Orch
+    Orch->>Handler: handleEvent(e)
+    activate Handler
+    Handler->>Bus: emit('toggleCommandPalette')
+    deactivate Handler
+    deactivate Orch
+    
+    Bus->>Controller: trigger 'toggleCommandPalette' listener
     activate Controller
     Controller->>Palette: toggle()
     deactivate Controller
@@ -376,19 +425,30 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant User
+    participant DOM as Browser DOM
+    participant Orch as Presentation/InteractionOrchestrator
+    participant Bus as Presentation/CommandBus
     participant Controller as Presentation/MindMapController
     participant Renderer as Presentation/SvgRenderer
 
-    User->>Controller: selectNode(nodeId)
+    User->>DOM: Shift + Click Node (複数選択)
+    DOM->>Orch: click event (shiftKey=true)
+    activate Orch
+    Note over Orch: DOM要素から nodeId を取得
+    Orch->>Bus: dispatch({ type: 'selectNode', nodeId, extendSelection: true })
+    deactivate Orch
+    
+    Bus->>Controller: trigger 'selectNode' listener
     activate Controller
 
-    Controller->>Controller: internal selectedNodeIds (Set) の更新
+    Controller->>Controller: selectNode(nodeId, true)
+    Note over Controller: internal selectedNodeIds (Set) の更新
     
     Controller->>Renderer: updateSelection(selectedNodeIds)
     activate Renderer
     Note over Renderer: nodeElementMap と previousSelectedIds を利用
     Renderer->>Renderer: 以前の選択要素からスタイルを除去
-    Renderer->>Renderer: 新しい選択要素にスタイルを適用
+    Renderer->>Renderer: 新しい選択要素群にスタイルを適用
     Renderer-->>Controller: 
     deactivate Renderer
 

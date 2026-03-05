@@ -20,6 +20,7 @@ export class SvgRenderer implements Renderer {
   private measureCache: Map<string, { width: number; height: number }> = new Map();
   private nodeElementMap: Map<string, HTMLElement> = new Map();
   private previousSelectedIds: Set<string> = new Set();
+  private mindMap?: MindMap;
 
   constructor(container: HTMLElement, options: SvgRendererOptions = {}) {
     this.container = container;
@@ -61,6 +62,7 @@ export class SvgRenderer implements Renderer {
     selectedNodeIds: Set<string>,
     layoutMode: LayoutMode = 'Right',
   ): void {
+    this.mindMap = mindMap;
     // Clear previous render
     this.svg.innerHTML = '';
     this.nodeContainer.innerHTML = '';
@@ -112,24 +114,25 @@ export class SvgRenderer implements Renderer {
 
       // Find the direct child of root that is an ancestor of this node (or is this node)
       let current = node;
+      let depth = 0;
       while (current.parentId && current.parentId !== mindMap.root.id) {
         const parent = mindMap.findNode(current.parentId);
         if (!parent) break;
         current = parent;
+        depth++;
       }
 
       const rootChildren = mindMap.root.children;
       const index = rootChildren.findIndex((c) => c.id === current.id);
 
       if (index !== -1) {
-        // Calculate depth for potential future use, though colorful usually just uses index
-        // const depth = this.getNodeDepth(node, mindMap);
-        return currentTheme.getColor(index, 0);
+        // console.log(`[getThemeColor] node=${node.topic}, index=${index}, depth=${depth}`);
+        return currentTheme.getColor(index, depth);
       }
     }
 
     // Fallback to connection color from theme style if not dynamic
-    return currentTheme.styles.connection.color;
+    return currentTheme.styles?.connection?.color || '#ccc';
   }
 
   private renderNodeElement(
@@ -299,12 +302,17 @@ export class SvgRenderer implements Renderer {
     // But for specific logic like "Simple theme has no border", the CSS variable should handle it (border: none).
     // The only exception is dynamic colorful border.
 
-    const themeColor = this.getThemeColor(node, mindMap); // mindMap is likely present if we are rendering
+    const themeColor = this.getThemeColor(node, mindMap);
+    el.style.setProperty('--node-color', themeColor);
 
     if (currentTheme.name === 'colorful') {
       // Colorful theme specific overrides (dynamic color)
-      // We can't easily do this via static CSS variables unless we set style directly.
-      el.style.border = `2px solid ${themeColor}`;
+      if (node.isRoot) {
+        el.style.border = '2px solid var(--vscode-editor-foreground, #333)';
+      } else {
+        // Direct assignment to ensure color is applied even if CSS variables have issues
+        el.style.border = `2px solid ${themeColor}`;
+      }
     } else if (currentTheme.name === 'custom') {
       // Custom
       if (node.isRoot) {
@@ -353,7 +361,10 @@ export class SvgRenderer implements Renderer {
       if (node.isRoot) {
         el.style.backgroundColor = 'var(--mindmap-root-background)';
       } else {
-        el.style.backgroundColor = 'var(--mindmap-child-background)';
+        // For colorful, ensure we have a white/opaque background so it looks like a box
+        const fallbackBg =
+          currentTheme.name === 'colorful' ? 'var(--vscode-editor-background, white)' : 'inherit';
+        el.style.backgroundColor = `var(--mindmap-child-background, ${fallbackBg})`;
       }
     }
 
@@ -531,9 +542,14 @@ export class SvgRenderer implements Renderer {
     // For brevity, using simpler approach or copying the logic:
     const mTheme = ThemeRegistry.getInstance().getCurrentTheme();
     const mThemeColor = mindMap ? this.getThemeColor(node, mindMap) : '#ccc';
+    el.style.setProperty('--node-color', mThemeColor);
 
     if (mTheme.name === 'colorful') {
-      el.style.border = `2px solid ${mThemeColor}`;
+      if (node.isRoot) {
+        el.style.border = '2px solid var(--vscode-editor-foreground, #333)';
+      } else {
+        el.style.border = `2px solid ${mThemeColor}`;
+      }
     } else if (mTheme.name === 'custom') {
       if (node.isRoot) {
         el.style.border = `var(--mindmap-root-border, 2px solid #333)`;
@@ -604,10 +620,14 @@ export class SvgRenderer implements Renderer {
       // For 'colorful', color is dynamic.
 
       const currentTheme = ThemeRegistry.getInstance().getCurrentTheme();
-      if (currentTheme.name === 'colorful') {
+      if (currentTheme.name === 'colorful' || theme === 'colorful') {
+        path.setAttribute('stroke', color);
         path.style.stroke = color;
       } else {
         path.style.stroke = 'var(--mindmap-connection-color)';
+        // Set attribute as fallback for some SVG renderers
+        const fallbackColor = currentTheme.styles?.connection?.color || color;
+        path.setAttribute('stroke', fallbackColor);
       }
     }
 
@@ -615,6 +635,13 @@ export class SvgRenderer implements Renderer {
     path.setAttribute('stroke-width', '2');
 
     this.svg.appendChild(path);
+  }
+
+  public zoomNode(nodeId: string): void {
+    const node = this.mindMap?.findNode(nodeId);
+    if (node && node.image) {
+      this.showImageModal(node.image);
+    }
   }
 
   private showImageModal(imageData: string): void {
