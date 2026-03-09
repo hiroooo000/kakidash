@@ -327,8 +327,8 @@ sequenceDiagram
     participant Service as Core/MindMapService
     participant Entity as Core/MindMap
 
-    User->>DOM: Drag & Drop Node
-    DOM->>Orch: pointer events (down, move, up)
+    User->>DOM: Drag & Drop Node (Pointer/Touch)
+    DOM->>Orch: pointer events (pointerdown, pointermove, pointerup)
     activate Orch
     Orch->>Handler: handleEvent(e)
     activate Handler
