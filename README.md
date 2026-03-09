@@ -23,7 +23,7 @@ Master the shortcuts and expand your mind map at the speed of thought.
   - **Themes**: Switch between multiple built-in themes (Default, Simple, Colorful, Dark).
   - **Icon Settings**: Add/Remove flat icons and numeric icons (0-9) via Command Palette (`m` key).
 - **Interaction**:
-  - Drag and drop for node movement and reordering.
+  - Drag and drop for node movement and reordering (Supports Mouse & Touch on Mobile).
   - Keyboard shortcuts for rapid operation.
   - **Help Modal**: Accessible via the "?" icon in the toolbar, allowing you to check icon meanings and shortcuts.
   - **Multi-selection**: Shift + Click or Shift + Arrow Keys to select multiple nodes.

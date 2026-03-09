@@ -239,6 +239,10 @@ This diagram illustrates the interaction between layers when a user adds a node.
 ```mermaid
 sequenceDiagram
     participant User
+    participant DOM as Browser DOM
+    participant Orch as Presentation/InteractionOrchestrator
+    participant Handler as Presentation/KeyboardShortcutHandler
+    participant Bus as Presentation/CommandBus
     participant Controller as Presentation/MindMapController
     participant Service as Core/MindMapService
     participant IdGen as Shared/IdGenerator
@@ -246,7 +250,16 @@ sequenceDiagram
     participant Layout as Presentation/LayoutEngine
     participant Renderer as Presentation/SvgRenderer
 
-    User->>Controller: addChildNode(parentId)
+    User->>DOM: Press 'Tab' (Add Child Node)
+    DOM->>Orch: keydown event
+    activate Orch
+    Orch->>Handler: handleEvent(e)
+    activate Handler
+    Handler->>Bus: emit('addNode', { parentId })
+    deactivate Handler
+    deactivate Orch
+
+    Bus->>Controller: trigger 'addNode' listener
     activate Controller
 
     Controller->>Service: addNode(parentId, "New Topic")
@@ -311,24 +324,37 @@ This diagram shows the validation and execution flow when moving a node.
 ```mermaid
 sequenceDiagram
     participant User
+    participant DOM as Browser DOM
+    participant Orch as Presentation/InteractionOrchestrator
+    participant Handler as Presentation/DragDropHandler
+    participant Bus as Presentation/CommandBus
     participant Controller as Presentation/MindMapController
     participant Service as Core/MindMapService
     participant Entity as Core/MindMap
 
-    User->>Controller: moveNode(nodeId, targetId, side)
+    User->>DOM: Drag & Drop Node (Pointer/Touch)
+    DOM->>Orch: pointer events (pointerdown, pointermove, pointerup)
+    activate Orch
+    Orch->>Handler: handleEvent(e)
+    activate Handler
+    Handler->>Bus: emit('dropNode', { draggedId, targetId, position })
+    deactivate Handler
+    deactivate Orch
+
+    Bus->>Controller: trigger 'dropNode' listener
     activate Controller
 
-    Controller->>Service: moveNode(nodeId, targetId, side)
+    Controller->>Service: moveNode(draggedId, targetId, side)
     activate Service
 
-    Service->>Entity: findNode(nodeId), findNode(targetId)
+    Service->>Entity: findNode(draggedId), findNode(targetId)
 
     alt Validation Failed (Cycle / Root Move)
         Entity-->>Service: false (from moveNode checks)
         Service-->>Controller: false
     else Validation Passed
         Service->>Service: saveState()
-        Service->>Entity: moveNode(nodeId, targetId)
+        Service->>Entity: moveNode(draggedId, targetId)
         Entity->>Entity: remove from old parent
         Entity->>Entity: add to new parent
         Service-->>Controller: true
@@ -349,11 +375,24 @@ Flow when a user performs a search.
 ```mermaid
 sequenceDiagram
     participant User
+    participant DOM as Browser DOM
+    participant Orch as Presentation/InteractionOrchestrator
+    participant Handler as Presentation/KeyboardShortcutHandler
+    participant Bus as Presentation/CommandBus
     participant Controller as Presentation/MindMapController
     participant Palette as Presentation/CommandPalette
     participant Service as Core/MindMapService
 
-    User->>Controller: toggleCommandPalette (m key)
+    User->>DOM: Press 'm' key
+    DOM->>Orch: keydown event
+    activate Orch
+    Orch->>Handler: handleEvent(e)
+    activate Handler
+    Handler->>Bus: emit('toggleCommandPalette')
+    deactivate Handler
+    deactivate Orch
+    
+    Bus->>Controller: trigger 'toggleCommandPalette' listener
     activate Controller
     Controller->>Palette: toggle()
     deactivate Controller

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/unbound-method */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { NodeDragger } from '../../src/presentation/logic/NodeDragger';
 import { InteractionOptions } from '../../src/presentation/types/InteractionOptions';
@@ -26,6 +27,7 @@ describe('NodeDragger', () => {
 
   afterEach(() => {
     document.body.innerHTML = '';
+    document.querySelectorAll('.kakidash-drag-ghost').forEach((el) => el.remove());
     vi.clearAllMocks();
   });
 
@@ -37,51 +39,25 @@ describe('NodeDragger', () => {
     expect(style?.textContent).toContain('.mindmap-node.drag-over-top');
   });
 
-  it('should start drag correctly', () => {
+  it('should start drag correctly and set ghost', () => {
     const node = document.createElement('div');
     node.classList.add('mindmap-node');
     node.dataset.id = 'node1';
+    node.setPointerCapture = vi.fn();
     container.appendChild(node);
 
-    const event = new DragEvent('dragstart', { bubbles: true });
-    const dataTransfer = {
-      setData: vi.fn(),
-      effectAllowed: 'none',
-    };
-    Object.defineProperty(event, 'dataTransfer', {
-      value: dataTransfer,
-    });
+    const event = new PointerEvent('pointerdown', { bubbles: true, clientX: 10, clientY: 10 });
     Object.defineProperty(event, 'target', {
       value: node,
     });
 
-    nodeDragger.handleDragStart(event);
+    nodeDragger.handlePointerDown(event);
 
     expect(nodeDragger.draggedNodeId).toBe('node1');
-    expect(dataTransfer.setData).toHaveBeenCalledWith('text/plain', 'node1');
-    expect(dataTransfer.effectAllowed).toBe('move');
+    expect(node.setPointerCapture).toHaveBeenCalled();
   });
 
-  it('should set drag node id correctly from event target', () => {
-    const node = document.createElement('div');
-    node.classList.add('mindmap-node');
-    node.dataset.id = 'node1';
-    container.appendChild(node);
-
-    const event = {
-      target: node,
-      preventDefault: vi.fn(),
-      dataTransfer: {
-        setData: vi.fn(),
-        effectAllowed: '',
-      },
-    } as unknown as DragEvent;
-
-    nodeDragger.handleDragStart(event);
-    expect(nodeDragger.draggedNodeId).toBe('node1');
-  });
-
-  it('should determine drop position and style on drag over', () => {
+  it('should determine drop position and style on pointer move over', () => {
     // Setup dragged node
     nodeDragger.draggedNodeId = 'node1';
 
@@ -102,24 +78,26 @@ describe('NodeDragger', () => {
     });
     container.appendChild(targetNode);
 
-    const preventDefault = vi.fn();
+    // Mock document.elementFromPoint
+    const originalElementFromPoint = document.elementFromPoint;
+    const mockElementFromPoint = vi.fn().mockReturnValue(targetNode);
+    document.elementFromPoint = mockElementFromPoint;
+
     const event = {
-      target: targetNode,
-      preventDefault,
+      target: targetNode, // the target during pointer move is usually the captured node (node1), but elementFromPoint handles finding node2
       clientX: 50,
       clientY: 10, // Top area
-      dataTransfer: {
-        dropEffect: 'none',
-      },
-    } as unknown as DragEvent;
+    } as unknown as PointerEvent;
 
-    nodeDragger.handleDragOver(event);
+    nodeDragger.handlePointerMove(event);
 
     expect(targetNode.classList.contains('drag-over-top')).toBe(true);
-    expect(preventDefault).toHaveBeenCalled();
+
+    // Restore
+    document.elementFromPoint = originalElementFromPoint;
   });
 
-  it('should handle drop correctly', () => {
+  it('should handle drop correctly on pointer up', () => {
     // Setup dragged node
     nodeDragger.draggedNodeId = 'node1';
 
@@ -140,16 +118,26 @@ describe('NodeDragger', () => {
     });
     container.appendChild(targetNode);
 
+    const originalElementFromPoint = document.elementFromPoint;
+    const mockElementFromPoint = vi.fn().mockReturnValue(targetNode);
+    document.elementFromPoint = mockElementFromPoint;
+
     const event = {
-      target: targetNode,
+      target: document.createElement('div'), // Usually the captured node
       preventDefault: vi.fn(),
       clientX: 50,
       clientY: 10, // Top
-    } as unknown as DragEvent;
+    } as unknown as PointerEvent;
 
-    nodeDragger.handleDrop(event);
+    // Provide mock releasePointerCapture for the event target
+    (event.target as HTMLElement).releasePointerCapture = vi.fn();
+
+    nodeDragger.handlePointerUp(event);
 
     expect(onDropNode).toHaveBeenCalledWith('node1', 'node2', 'top');
     expect(nodeDragger.draggedNodeId).toBeNull();
+
+    // Restore
+    document.elementFromPoint = originalElementFromPoint;
   });
 });

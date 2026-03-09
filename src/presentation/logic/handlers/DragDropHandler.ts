@@ -10,6 +10,7 @@ export class DragDropHandler {
   private container: HTMLElement;
   public draggedNodeId: string | null = null;
   private isReadOnly: boolean = false;
+  private ghostElement: HTMLElement | null = null;
 
   private cleanupFns: Array<() => void> = [];
 
@@ -58,105 +59,120 @@ export class DragDropHandler {
   }
 
   private attachEvents(): void {
-    const handleDragStart = (e: Event) => this.handleDragStart(e);
-    const handleDragOver = (e: Event) => this.handleDragOver(e);
-    const handleDragLeave = (e: Event) => this.handleDragLeave(e);
-    const handleDrop = (e: Event) => this.handleDrop(e);
-    const handleDragEnd = () => this.handleDragEnd();
+    const handlePointerDown = (e: Event) => this.handlePointerDown(e);
+    const handlePointerMove = (e: Event) => this.handlePointerMove(e);
+    const handlePointerUp = (e: Event) => this.handlePointerUp(e);
 
-    this.container.addEventListener('dragstart', handleDragStart);
-    this.cleanupFns.push(() => this.container.removeEventListener('dragstart', handleDragStart));
+    this.container.addEventListener('pointerdown', handlePointerDown);
+    this.cleanupFns.push(() =>
+      this.container.removeEventListener('pointerdown', handlePointerDown),
+    );
 
-    this.container.addEventListener('dragover', handleDragOver);
-    this.cleanupFns.push(() => this.container.removeEventListener('dragover', handleDragOver));
+    this.container.addEventListener('pointermove', handlePointerMove);
+    this.cleanupFns.push(() =>
+      this.container.removeEventListener('pointermove', handlePointerMove),
+    );
 
-    this.container.addEventListener('dragleave', handleDragLeave);
-    this.cleanupFns.push(() => this.container.removeEventListener('dragleave', handleDragLeave));
+    this.container.addEventListener('pointerup', handlePointerUp);
+    this.cleanupFns.push(() => this.container.removeEventListener('pointerup', handlePointerUp));
 
-    this.container.addEventListener('drop', handleDrop);
-    this.cleanupFns.push(() => this.container.removeEventListener('drop', handleDrop));
-
-    this.container.addEventListener('dragend', handleDragEnd);
-    this.cleanupFns.push(() => this.container.removeEventListener('dragend', handleDragEnd));
+    this.container.addEventListener('pointercancel', handlePointerUp);
+    this.cleanupFns.push(() =>
+      this.container.removeEventListener('pointercancel', handlePointerUp),
+    );
   }
 
-  private handleDragStart = (e: Event): void => {
-    const de = e as DragEvent;
+  private handlePointerDown = (e: Event): void => {
+    const pe = e as PointerEvent;
     if (this.isReadOnly) {
-      de.preventDefault();
       return;
     }
-    const target = de.target as HTMLElement;
+    const target = pe.target as HTMLElement;
     const nodeEl = target.closest('.mindmap-node') as HTMLElement;
     if (nodeEl && nodeEl.dataset.id) {
       this.draggedNodeId = nodeEl.dataset.id;
-      de.dataTransfer?.setData('text/plain', nodeEl.dataset.id);
-      if (de.dataTransfer) {
-        de.dataTransfer.effectAllowed = 'move';
-      }
+      nodeEl.setPointerCapture(pe.pointerId);
+
+      // Create ghost element
+      this.ghostElement = nodeEl.cloneNode(true) as HTMLElement;
+      this.ghostElement.classList.add('kakidash-drag-ghost');
+      this.ghostElement.style.position = 'fixed';
+      this.ghostElement.style.pointerEvents = 'none'; // so elementFromPoint works
+      this.ghostElement.style.opacity = '0.7';
+      this.ghostElement.style.zIndex = '9999';
+      this.ghostElement.style.margin = '0';
+      this.ghostElement.style.left = `${pe.clientX}px`;
+      this.ghostElement.style.top = `${pe.clientY}px`;
+      this.ghostElement.style.transform = 'translate(-50%, -50%)'; // center on pointer
+      document.body.appendChild(this.ghostElement);
     }
   };
 
-  private handleDragOver = (e: Event): void => {
-    const de = e as DragEvent;
-    if (this.isReadOnly) return;
-    de.preventDefault(); // Allow drop
-    const target = de.target as HTMLElement;
-    const nodeEl = target.closest('.mindmap-node') as HTMLElement;
+  private handlePointerMove = (e: Event): void => {
+    const pe = e as PointerEvent;
+    if (this.isReadOnly || !this.draggedNodeId) return;
 
-    if (
-      nodeEl &&
-      nodeEl.dataset.id &&
-      this.draggedNodeId &&
-      nodeEl.dataset.id !== this.draggedNodeId
-    ) {
-      const position = this.getDropPosition(de, nodeEl);
+    if (this.ghostElement) {
+      this.ghostElement.style.left = `${pe.clientX}px`;
+      this.ghostElement.style.top = `${pe.clientY}px`;
+    }
 
-      // Clear all classes first
-      nodeEl.classList.remove(
-        'drag-over-top',
-        'drag-over-bottom',
-        'drag-over-left',
-        'drag-over-right',
-      );
+    // Find what we are dragging over
+    const targetElement = document.elementFromPoint(pe.clientX, pe.clientY) as HTMLElement;
+    if (!targetElement) return;
+
+    const nodeEl = targetElement.closest('.mindmap-node') as HTMLElement;
+
+    // Clear all classes first on all nodes to ensure no lingering styles
+    this.container.querySelectorAll('.mindmap-node').forEach((el) => {
+      el.classList.remove('drag-over-top', 'drag-over-bottom', 'drag-over-left', 'drag-over-right');
+    });
+
+    if (nodeEl && nodeEl.dataset.id && nodeEl.dataset.id !== this.draggedNodeId) {
+      const position = this.getDropPosition(pe, nodeEl);
       nodeEl.classList.add(`drag-over-${position}`);
+    }
+  };
 
-      if (de.dataTransfer) {
-        de.dataTransfer.dropEffect = 'move';
+  private handlePointerUp = (e: Event): void => {
+    const pe = e as PointerEvent;
+
+    if (this.ghostElement) {
+      this.ghostElement.remove();
+      this.ghostElement = null;
+    }
+
+    if (this.draggedNodeId) {
+      // Release capture. Target might have been removed or changed, so handle carefully.
+      const target = pe.target as HTMLElement;
+      if (target.hasPointerCapture && target.hasPointerCapture(pe.pointerId)) {
+        target.releasePointerCapture(pe.pointerId);
       }
     }
-  };
 
-  private handleDragLeave = (e: Event): void => {
-    const target = e.target as HTMLElement;
-    const nodeEl = target.closest('.mindmap-node') as HTMLElement;
-    if (nodeEl) {
-      nodeEl.classList.remove(
-        'drag-over-top',
-        'drag-over-bottom',
-        'drag-over-left',
-        'drag-over-right',
-      );
+    // Determine drop target before we clear states
+    let nodeEl: HTMLElement | null = null;
+    if (this.draggedNodeId) {
+      const targetElement = document.elementFromPoint(pe.clientX, pe.clientY) as HTMLElement;
+      if (targetElement) {
+        nodeEl = targetElement.closest('.mindmap-node') as HTMLElement;
+      }
     }
-  };
-
-  private handleDrop = (e: Event): void => {
-    const de = e as DragEvent;
-    de.preventDefault();
-    const target = de.target as HTMLElement;
-    const nodeEl = target.closest('.mindmap-node') as HTMLElement;
 
     // Remove drag-over class from all nodes to be safe
     this.container.querySelectorAll('.mindmap-node').forEach((el) => {
       el.classList.remove('drag-over-top', 'drag-over-bottom', 'drag-over-left', 'drag-over-right');
     });
 
-    if (this.isReadOnly) return;
+    if (this.isReadOnly) {
+      this.draggedNodeId = null;
+      return;
+    }
 
     if (nodeEl && nodeEl.dataset.id && this.draggedNodeId) {
       const targetId = nodeEl.dataset.id;
       if (this.draggedNodeId !== targetId) {
-        const position = this.getDropPosition(de, nodeEl);
+        const position = this.getDropPosition(pe, nodeEl);
         this.commandBus.dispatch({
           type: 'dropNode',
           draggedId: this.draggedNodeId,
@@ -165,20 +181,17 @@ export class DragDropHandler {
         });
       }
     }
+
     this.draggedNodeId = null;
   };
 
-  private handleDragEnd = (): void => {
-    this.draggedNodeId = null;
-    this.container.querySelectorAll('.mindmap-node').forEach((el) => {
-      el.classList.remove('drag-over-top', 'drag-over-bottom', 'drag-over-left', 'drag-over-right');
-    });
-  };
-
-  private getDropPosition(e: DragEvent, element: HTMLElement): 'top' | 'bottom' | 'left' | 'right' {
+  private getDropPosition(
+    pe: PointerEvent,
+    element: HTMLElement,
+  ): 'top' | 'bottom' | 'left' | 'right' {
     const rect = element.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    const x = pe.clientX - rect.left;
+    const y = pe.clientY - rect.top;
     const w = rect.width;
     const h = rect.height;
 

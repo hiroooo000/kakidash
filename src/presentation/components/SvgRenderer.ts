@@ -271,11 +271,8 @@ export class SvgRenderer implements Renderer {
     }
 
     el.className = 'mindmap-node';
-    if (!node.isRoot) {
-      el.draggable = true;
-    }
-
     el.style.position = 'absolute';
+    el.style.touchAction = 'none'; // Prevent browser native pan/scroll to allow PointerEvents on mobile
 
     // Initial styling to measure
     el.style.padding = '8px 12px';
