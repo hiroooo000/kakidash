@@ -18,7 +18,7 @@ Master the shortcuts and expand your mind map at the speed of thought.
 - **Layouts**: Standard (Standard/Both), Left aligned (Left), Right aligned (Right).
 - **Styling**:
   - Font size adjustment.
-  - Bold (`Bold`), Italic (`Italic`).
+  - Bold (`Bold`), Italic (`Italic`), Strikethrough (`Strikethrough`).
   - Color changes via palette (Style Editor).
   - **Themes**: Switch between multiple built-in themes (Default, Simple, Colorful, Dark).
   - **Icon Settings**: Add/Remove flat icons and numeric icons (0-9) via Command Palette (`m` key).
@@ -360,6 +360,7 @@ Here is the complete default configuration. You can partially override these key
 | --------------------------- | --------------------------------- |
 | `Shift + b`                 | Toggle Bold                       |
 | `Shift + i`                 | Toggle Italic                     |
+| `Shift + x`                 | Toggle Strikethrough              |
 | `Shift + . (>)` / `.`       | Increase font size                |
 | `Shift + , (<)` / `,`       | Decrease font size                |
 | `Shift + Alt + ArrowLeft / Right` | Adjust node width                 |

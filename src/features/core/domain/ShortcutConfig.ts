@@ -40,7 +40,8 @@ export type ShortcutAction =
   | 'selectColor7'
   | 'openCommandPalette'
   | 'increaseNodeWidth'
-  | 'decreaseNodeWidth';
+  | 'decreaseNodeWidth'
+  | 'strikethrough';
 
 export type ShortcutConfig = Partial<Record<ShortcutAction, KeyBinding[]>>;
 
@@ -102,6 +103,7 @@ export const DEFAULT_SHORTCUTS: ShortcutConfig = {
   ],
   bold: [{ key: 'b', shiftKey: true }], // Changed to just 'b' in previous task, keeping it? Or should it be Ctrl+b? Previous code was just 'b'
   italic: [{ key: 'i', shiftKey: true }], // Previous code was just 'i'
+  strikethrough: [{ key: 'x', shiftKey: true }],
   increaseFontSize: [{ key: '>', shiftKey: true }, { key: '.' }], // > is Shift+.
   decreaseFontSize: [{ key: '<', shiftKey: true }, { key: ',' }], // < is Shift+,
   zoomIn: [{ key: '[' }], // Canvas Zoom In

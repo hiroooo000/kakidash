@@ -203,6 +203,11 @@ export class HelpModal {
         actions: [
           { action: 'bold', desc: 'Toggle Bold', descJa: '太字 (Bold) 切り替え' },
           { action: 'italic', desc: 'Toggle Italic', descJa: '斜体 (Italic) 切り替え' },
+          {
+            action: 'strikethrough',
+            desc: 'Toggle Strikethrough',
+            descJa: '取り消し線 (Strikethrough) 切り替え',
+          },
           { action: 'selectColor1', desc: 'Color 1', descJa: 'ノードの色を変更 (1)' },
           { action: 'selectColor2', desc: 'Color 2', descJa: 'ノードの色を変更 (2)' },
           { action: 'selectColor3', desc: 'Color 3', descJa: 'ノードの色を変更 (3)' },

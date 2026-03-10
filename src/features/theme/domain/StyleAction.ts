@@ -3,4 +3,5 @@ export type StyleAction =
   | { type: 'italic' }
   | { type: 'increaseSize' }
   | { type: 'decreaseSize' }
+  | { type: 'strikethrough' }
   | { type: 'color'; index: number };

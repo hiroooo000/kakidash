@@ -19,9 +19,9 @@ Kakidashのミッションは、**アウトプット速度の最大化**です�
 - **マインドマップ作成**: ノードの追加、兄弟ノード、子ノードの操作
 - **レイアウト**: 標準 (Standard/Both)、左揃え (Left)、右揃え (Right)
 - **スタイリング**:
-  - フォントサイズ変更
-  - 太字 (Bold)、斜体 (Italic)
-  - カラーパレットによる色変更 (Style Editor)
+  - フォントサイズの調整
+  - 太字 (`Bold`)、斜体 (`Italic`)、取り消し線 (`Strikethrough`)
+  - パレットによる文字ごとの色変更 (Style Editor)
   - **テーマ**: 複数の組み込みテーマ (Default, Simple, Colorful, Dark) の切り替え
   - **アイコン設定**: コマンドパレットからのフラットアイコンおよび数字アイコン (0-9) の追加・削除 (`m` key)
 - **インタラクション**:
@@ -365,6 +365,7 @@ const kakidash = new Kakidash(container, {
 | --------------------------- | ----------------------------- |
 | `Shift + b`                 | 太字 (Bold) 切り替え          |
 | `Shift + i`                 | 斜体 (Italic) 切り替え        |
+| `Shift + x`                 | 取り消し線 (Strikethrough) 切り替え |
 | `Shift + . (>)` / `.`       | フォントサイズ拡大            |
 | `Shift + , (<)` / `,`       | フォントサイズ縮小            |
 | `Shift + Alt + ArrowLeft / Right` | ノード幅の変更                |

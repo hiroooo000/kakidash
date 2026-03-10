@@ -19,4 +19,14 @@ describe('DEFAULT_SHORTCUTS', () => {
     expect(hasDelete).toBe(true);
     expect(hasBackspace).toBe(true);
   });
+
+  it('should include "Shift+x" for strikethrough', () => {
+    const strikethroughShortcuts = DEFAULT_SHORTCUTS.strikethrough;
+    expect(strikethroughShortcuts).toBeDefined();
+
+    const hasShiftX = strikethroughShortcuts?.some(
+      (binding) => binding.key === 'x' && binding.shiftKey === true,
+    );
+    expect(hasShiftX).toBe(true);
+  });
 });
