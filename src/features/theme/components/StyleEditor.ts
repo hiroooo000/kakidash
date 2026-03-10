@@ -110,7 +110,12 @@ export class StyleEditor {
       btn.style.fontSize = '14px';
       if (styleProp) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
-        (btn.style as any)[styleProp] = styleProp === 'fontWeight' ? 'bold' : 'italic';
+        (btn.style as any)[styleProp] =
+          styleProp === 'fontWeight'
+            ? 'bold'
+            : styleProp === 'fontStyle'
+              ? 'italic'
+              : 'line-through';
       }
       btn.onclick = onClick;
       return btn;
@@ -136,8 +141,19 @@ export class StyleEditor {
       }
     });
 
+    // Strikethrough Button
+    const strikeBtn = createStyleBtn('S', 'textDecoration', () => {
+      if (this.currentNodeId && this.onUpdate) {
+        const isStrike = strikeBtn.classList.contains('active');
+        const newValue = isStrike ? 'none' : 'line-through';
+        this.onUpdate(this.currentNodeId, { textDecoration: newValue });
+        this.updateButtonState(strikeBtn, !isStrike);
+      }
+    });
+
     row1.appendChild(boldBtn);
     row1.appendChild(italicBtn);
+    row1.appendChild(strikeBtn);
     el.appendChild(row1);
 
     // --- Row 2: Palette (1-7) | Picker ---
@@ -241,11 +257,15 @@ export class StyleEditor {
     colorInput.value = currentColor;
     this.updateActivePaletteItem(currentColor);
 
-    const boldBtn = this.editorEl.querySelectorAll('button')[0] as HTMLElement;
-    this.updateButtonState(boldBtn, currentStyle.fontWeight === 'bold');
+    const boldBtn = this.editorEl.querySelectorAll('button')[0] as HTMLElement | undefined;
+    if (boldBtn) this.updateButtonState(boldBtn, currentStyle.fontWeight === 'bold');
 
-    const italicBtn = this.editorEl.querySelectorAll('button')[1] as HTMLElement;
-    this.updateButtonState(italicBtn, currentStyle.fontStyle === 'italic');
+    const italicBtn = this.editorEl.querySelectorAll('button')[1] as HTMLElement | undefined;
+    if (italicBtn) this.updateButtonState(italicBtn, currentStyle.fontStyle === 'italic');
+
+    const strikeBtn = this.editorEl.querySelectorAll('button')[2] as HTMLElement | undefined;
+    if (strikeBtn)
+      this.updateButtonState(strikeBtn, currentStyle.textDecoration === 'line-through');
   }
 
   hide() {

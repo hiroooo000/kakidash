@@ -69,6 +69,32 @@ describe('SvgRenderer Cache', () => {
   });
 });
 
+describe('SvgRenderer Style Application', () => {
+  let renderer: SvgRenderer;
+  let container: HTMLElement;
+  let mindMap: MindMap;
+
+  beforeEach(() => {
+    container = document.createElement('div');
+    Object.defineProperty(container, 'clientHeight', { value: 600, configurable: true });
+    renderer = new SvgRenderer(container);
+    mindMap = new MindMap(new Node('root', 'Root'));
+  });
+
+  it('should apply textDecoration style correctly', () => {
+    const node = new Node('n1', 'Test Node');
+    node.style.textDecoration = 'line-through';
+    mindMap.root.addChild(node);
+    mindMap.registerNode(node);
+
+    const engine = new LayoutEngine((n) => renderer.measureNode(n, mindMap));
+    renderer.renderFromLayout(engine.calculate(mindMap.root, 'Right'), mindMap, new Set(), 'Right');
+
+    const el = renderer.getNodeElement('n1');
+    expect(el?.getAttribute('style')).toContain('text-decoration: line-through');
+  });
+});
+
 describe('SvgRenderer Selection Update', () => {
   let renderer: SvgRenderer;
   let container: HTMLElement;

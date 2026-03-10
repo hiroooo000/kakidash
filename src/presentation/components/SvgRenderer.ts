@@ -342,6 +342,7 @@ export class SvgRenderer implements Renderer {
     if (node.style.fontSize) el.style.fontSize = node.style.fontSize;
     if (node.style.fontWeight) el.style.fontWeight = node.style.fontWeight;
     if (node.style.fontStyle) el.style.fontStyle = node.style.fontStyle;
+    if (node.style.textDecoration) el.style.textDecoration = node.style.textDecoration;
 
     // Background handling
     if (node.style.background) {
@@ -574,6 +575,7 @@ export class SvgRenderer implements Renderer {
     if (node.style.fontSize) el.style.fontSize = node.style.fontSize;
     if (node.style.fontWeight) el.style.fontWeight = node.style.fontWeight;
     if (node.style.fontStyle) el.style.fontStyle = node.style.fontStyle;
+    if (node.style.textDecoration) el.style.textDecoration = node.style.textDecoration;
     if (node.style.background) el.style.backgroundColor = node.style.background;
 
     this.nodeContainer.appendChild(el);

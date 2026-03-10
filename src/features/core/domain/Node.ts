@@ -4,6 +4,7 @@ export interface NodeStyle {
   fontSize?: string;
   fontWeight?: string;
   fontStyle?: string;
+  textDecoration?: string;
 }
 
 export interface NodePresentationData {

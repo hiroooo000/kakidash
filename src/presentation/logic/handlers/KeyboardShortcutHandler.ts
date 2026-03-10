@@ -254,6 +254,14 @@ export class KeyboardShortcutHandler {
           action: { type: 'italic' },
         });
         break;
+      case 'strikethrough':
+        ke.preventDefault();
+        this.commandBus.dispatch({
+          type: 'styleAction',
+          nodeId: selectedNodeId,
+          action: { type: 'strikethrough' },
+        });
+        break;
       case 'increaseFontSize':
         ke.preventDefault();
         this.commandBus.dispatch({

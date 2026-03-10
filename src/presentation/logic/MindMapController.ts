@@ -905,6 +905,10 @@ export class MindMapController {
       newStyle = { fontWeight: currentStyle.fontWeight === 'bold' ? 'normal' : 'bold' };
     } else if (action.type === 'italic') {
       newStyle = { fontStyle: currentStyle.fontStyle === 'italic' ? 'normal' : 'italic' };
+    } else if (action.type === 'strikethrough') {
+      newStyle = {
+        textDecoration: currentStyle.textDecoration === 'line-through' ? 'none' : 'line-through',
+      };
     } else if (action.type === 'color') {
       if (action.index >= 0 && action.index < StyleEditor.PALETTE.length) {
         newStyle = { color: StyleEditor.PALETTE[action.index] };
