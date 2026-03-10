@@ -5,6 +5,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2026-03-10
+
+### Added
+
+- Add strikethrough text style support and update help modal.
+- Migrate drag and drop to pointer events for touch support.
+
+### Refactoring & Architecture
+
+- Decompose god objects (`MindMapController`, `MindMapService`, and `SvgRenderer`).
+- Extract specialized services (`ViewportService`, `NavigationService`, `FileIOService`, and `ThemeService`).
+- Implement `InteractionOrchestrator` and `CommandBus` to handle specialized interaction handlers.
+- Remove presentation state from `Node` entity.
+
+### Fixed
+
+- Fix image paste regression.
+- Fix layout bugs and E2E test timeouts due to out-of-viewport nodes.
+- Resolve typing and lint errors in test files.
+
+### Documentation
+
+- Update architecture documentation to reflect Node presentation separation and interaction refactoring.
+- Update README.ja.md to include strikethrough features.
+
 ## [0.2.3] - 2026-02-22
 
 ### Added
