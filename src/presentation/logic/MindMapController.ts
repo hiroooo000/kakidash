@@ -142,7 +142,7 @@ export class MindMapController {
     bus.on('zoom', (c) => this.zoomBoard(c.delta, c.x, c.y));
     bus.on('zoomReset', () => this.resetZoom());
     bus.on('copyNode', (c) => this.copyNode(c.nodeId));
-    bus.on('pasteNode', (c) => this.pasteNode(c.parentId));
+    bus.on('pasteNode', (c) => this.pasteNode(c.parentId, c.text));
     bus.on('cutNode', (c) => this.cutNode(c.nodeId));
     bus.on('pasteImage', (c) => this.pasteImage(c.parentId, c.imageData, c.width, c.height));
     bus.on('undo', () => this.undo());
@@ -835,10 +835,10 @@ export class MindMapController {
     }
   }
 
-  pasteNode(parentId: string): void {
+  pasteNode(parentId: string, text?: string): void {
     this.saveState();
-    this.eventBus.emit('command', { name: 'pasteNode', args: { parentId } });
-    const newNodes = this.clipboardService.createPastedNodes(parentId);
+    this.eventBus.emit('command', { name: 'pasteNode', args: { parentId, text } });
+    const newNodes = this.clipboardService.createPastedNodes(parentId, text);
     const newNode = newNodes.length > 0 ? newNodes[0] : null;
     if (newNodes.length > 0) this.service.addExistingNodes(parentId, newNodes);
     if (newNode) {

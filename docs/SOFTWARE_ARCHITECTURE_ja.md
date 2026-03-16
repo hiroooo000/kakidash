@@ -456,6 +456,54 @@ sequenceDiagram
     deactivate Controller
 ```
 
+### 4.6 クリップボード処理（貼り付け）フロー
+
+ブラウザのネイティブ `paste` イベントを利用した、画像およびテキスト（内部・外部）の貼り付けフローです。
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant DOM as Browser DOM
+    participant Orch as Presentation/InteractionOrchestrator
+    participant Handler as Presentation/KeyboardShortcutHandler
+    participant Bus as Presentation/CommandBus
+    participant Controller as Presentation/MindMapController
+    participant ClipSvc as Features_Core/ClipboardService
+
+    User->>DOM: Press 'Ctrl+V' (Paste)
+    DOM->>Handler: keydown ('v', ctrl=true)
+    Handler->>Handler: Check if standard paste shortcut
+    Note over Handler: 委譲のため preventDefault を呼ばず return
+
+    DOM->>Orch: paste event
+    activate Orch
+    Orch->>DOM: clipboardData.getData('text/plain') or items
+    
+    alt image exists
+        Orch->>Bus: dispatch({ type: 'pasteImage', ... })
+    else text exists
+        Orch->>Bus: dispatch({ type: 'pasteNode', parentId, text })
+    end
+    deactivate Orch
+
+    Bus->>Controller: trigger 'pasteNode' listener
+    activate Controller
+    Controller->>ClipSvc: createPastedNodes(parentId, text)
+    activate ClipSvc
+    ClipSvc->>ClipSvc: Compare 'text' with internal clipboard
+    
+    alt text matches internal
+        ClipSvc-->>Controller: Node[] (cloned internal tree)
+    else text is external
+        ClipSvc-->>Controller: Node[] (newly created text node)
+    end
+    deactivate ClipSvc
+
+    Controller->>Controller: render()
+    Controller-->>User: Update View
+    deactivate Controller
+```
+
 ## 5. エントリーポイントとDI (`src/index.ts`)
 
 アプリケーションの起動時に各コンポーネントのインスタンス化と依存性の注入（Dependency Injection）を行います。

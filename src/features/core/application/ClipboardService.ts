@@ -57,21 +57,42 @@ export class ClipboardService {
     return this.clipboard;
   }
 
-  createPastedNodes(parentId: string): Node[] {
-    if (this.clipboard.length === 0) return [];
-
+  createPastedNodes(parentId: string, systemClipboardText?: string): Node[] {
     const parent = this.mindMap.findNode(parentId);
     if (!parent) return [];
 
+    let isInternalMatch = false;
+
+    if (this.clipboard.length > 0 && systemClipboardText !== undefined) {
+      // Normalize both texts for comparison (e.g., CRLF to LF)
+      const internalText = this.clipboard.map((n) => n.topic).join('\n');
+      const normalizedSystem = systemClipboardText.replace(/\r\n/g, '\n');
+
+      if (internalText === normalizedSystem) {
+        isInternalMatch = true;
+      }
+    } else if (this.clipboard.length > 0 && systemClipboardText === undefined) {
+      // Fallback: If no system text is provided but we have internal clipboard, assume internal
+      isInternalMatch = true;
+    }
+
     const newNodes: Node[] = [];
 
-    this.clipboard.forEach((clipNode) => {
-      // Clone again from clipboard to create new instance for the tree
-      const newNode = this.deepCloneNode(clipNode);
-      // Regenerate IDs for the new node and its children
-      this.regenerateIds(newNode);
+    if (!isInternalMatch && systemClipboardText) {
+      // Create a single new node with the external text
+      const newId = this.idGenerator.generate();
+      const newNode = new Node(newId, systemClipboardText);
       newNodes.push(newNode);
-    });
+    } else if (this.clipboard.length > 0) {
+      // Use internal clipboard
+      this.clipboard.forEach((clipNode) => {
+        // Clone again from clipboard to create new instance for the tree
+        const newNode = this.deepCloneNode(clipNode);
+        // Regenerate IDs for the new node and its children
+        this.regenerateIds(newNode);
+        newNodes.push(newNode);
+      });
+    }
 
     return newNodes;
   }

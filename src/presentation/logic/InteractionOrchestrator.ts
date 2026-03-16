@@ -182,7 +182,7 @@ export class InteractionOrchestrator {
       // For now, let default happen or prevent it if desired.
     });
 
-    // Paste handling (mainly for images)
+    // Paste handling (mainly for images, but now text as well)
     addListener(this.container, 'paste', (e) => {
       if (this.isReadOnly) return;
       const selectedId = this.getSelectedNodeId();
@@ -192,9 +192,12 @@ export class InteractionOrchestrator {
       if (!clipboardData) return;
 
       const items = clipboardData.items;
+      let hasImage = false;
+
       for (const item of Array.from(items)) {
         if (item.type.startsWith('image/')) {
-          e.preventDefault(); // Only prevent default if we actually have an image to paste
+          hasImage = true;
+          e.preventDefault(); // Prevent default so it's not pasted as text/blob elsewhere if applicable
           const file = item.getAsFile();
           if (file) {
             const reader = new FileReader();
@@ -214,6 +217,19 @@ export class InteractionOrchestrator {
             };
             reader.readAsDataURL(file);
           }
+        }
+      }
+
+      // If no image was found, handle as text paste
+      if (!hasImage) {
+        const text = clipboardData.getData('text/plain');
+        if (text) {
+          e.preventDefault();
+          this.commandBus.dispatch({ type: 'pasteNode', parentId: selectedId, text });
+        } else {
+          // Fallback if there's no text but we still want to trigger the internal paste behavior
+          e.preventDefault();
+          this.commandBus.dispatch({ type: 'pasteNode', parentId: selectedId });
         }
       }
     });

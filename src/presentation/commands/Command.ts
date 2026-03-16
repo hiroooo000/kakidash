@@ -19,7 +19,7 @@ export type Command =
   | { type: 'navigate'; nodeId: string | null; direction: Direction; extendSelection?: boolean }
   | { type: 'pan'; dx: number; dy: number }
   | { type: 'copyNode'; nodeId: string }
-  | { type: 'pasteNode'; parentId: string }
+  | { type: 'pasteNode'; parentId: string; text?: string }
   | { type: 'cutNode'; nodeId: string }
   | {
       type: 'pasteImage';

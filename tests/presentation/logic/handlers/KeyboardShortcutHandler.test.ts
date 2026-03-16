@@ -71,4 +71,19 @@ describe('KeyboardShortcutHandler', () => {
 
     expect(dispatchSpy).not.toHaveBeenCalledWith(expect.objectContaining({ type: 'addSibling' }));
   });
+
+  it('should not preventDefault and should not dispatch pasteNode for standard Ctrl+V paste', () => {
+    const event = new KeyboardEvent('keydown', {
+      key: 'v',
+      ctrlKey: true,
+      bubbles: true,
+      cancelable: true,
+    });
+
+    const preventDefaultSpy = vi.spyOn(event, 'preventDefault');
+    document.dispatchEvent(event);
+
+    expect(preventDefaultSpy).not.toHaveBeenCalled();
+    expect(dispatchSpy).not.toHaveBeenCalledWith(expect.objectContaining({ type: 'pasteNode' }));
+  });
 });
