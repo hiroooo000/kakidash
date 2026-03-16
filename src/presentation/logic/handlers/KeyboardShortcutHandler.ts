@@ -160,7 +160,19 @@ export class KeyboardShortcutHandler {
         this.commandBus.dispatch({ type: 'copyNode', nodeId: selectedNodeId });
         return;
       case 'paste':
-        // Do NOT preventDefault here, so the browser's 'paste' event can fire for image handling
+        // If it's the standard paste shortcut, let the browser's native 'paste' event handle it entirely.
+        // We do not preventDefault and do not dispatch the pasteNode command here.
+        if (
+          (ke.ctrlKey || ke.metaKey) &&
+          !ke.shiftKey &&
+          !ke.altKey &&
+          ke.key.toLowerCase() === 'v'
+        ) {
+          return;
+        }
+
+        // Otherwise (e.g., from a menu item or non-standard shortcut), trigger internal paste
+        ke.preventDefault();
         this.commandBus.dispatch({ type: 'pasteNode', parentId: selectedNodeId });
         return;
       case 'navUp':
