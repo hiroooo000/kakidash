@@ -11,6 +11,9 @@ export class DragDropHandler {
   public draggedNodeId: string | null = null;
   private isReadOnly: boolean = false;
   private ghostElement: HTMLElement | null = null;
+  private isDragging: boolean = false;
+  private startPosition: { x: number; y: number } | null = null;
+  private readonly DRAG_THRESHOLD = 5;
 
   private cleanupFns: Array<() => void> = [];
 
@@ -91,26 +94,28 @@ export class DragDropHandler {
     const nodeEl = target.closest('.mindmap-node') as HTMLElement;
     if (nodeEl && nodeEl.dataset.id) {
       this.draggedNodeId = nodeEl.dataset.id;
+      this.startPosition = { x: pe.clientX, y: pe.clientY };
+      this.isDragging = false;
       nodeEl.setPointerCapture(pe.pointerId);
-
-      // Create ghost element
-      this.ghostElement = nodeEl.cloneNode(true) as HTMLElement;
-      this.ghostElement.classList.add('kakidash-drag-ghost');
-      this.ghostElement.style.position = 'fixed';
-      this.ghostElement.style.pointerEvents = 'none'; // so elementFromPoint works
-      this.ghostElement.style.opacity = '0.7';
-      this.ghostElement.style.zIndex = '9999';
-      this.ghostElement.style.margin = '0';
-      this.ghostElement.style.left = `${pe.clientX}px`;
-      this.ghostElement.style.top = `${pe.clientY}px`;
-      this.ghostElement.style.transform = 'translate(-50%, -50%)'; // center on pointer
-      document.body.appendChild(this.ghostElement);
     }
   };
 
   private handlePointerMove = (e: Event): void => {
     const pe = e as PointerEvent;
     if (this.isReadOnly || !this.draggedNodeId) return;
+
+    if (!this.isDragging && this.startPosition) {
+      const dx = pe.clientX - this.startPosition.x;
+      const dy = pe.clientY - this.startPosition.y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+
+      if (distance >= this.DRAG_THRESHOLD) {
+        this.isDragging = true;
+        this.createGhostElement(pe);
+      } else {
+        return;
+      }
+    }
 
     if (this.ghostElement) {
       this.ghostElement.style.left = `${pe.clientX}px`;
@@ -152,7 +157,7 @@ export class DragDropHandler {
 
     // Determine drop target before we clear states
     let nodeEl: HTMLElement | null = null;
-    if (this.draggedNodeId) {
+    if (this.draggedNodeId && this.isDragging) {
       const targetElement = document.elementFromPoint(pe.clientX, pe.clientY) as HTMLElement;
       if (targetElement) {
         nodeEl = targetElement.closest('.mindmap-node') as HTMLElement;
@@ -166,10 +171,12 @@ export class DragDropHandler {
 
     if (this.isReadOnly) {
       this.draggedNodeId = null;
+      this.isDragging = false;
+      this.startPosition = null;
       return;
     }
 
-    if (nodeEl && nodeEl.dataset.id && this.draggedNodeId) {
+    if (nodeEl && nodeEl.dataset.id && this.draggedNodeId && this.isDragging) {
       const targetId = nodeEl.dataset.id;
       if (this.draggedNodeId !== targetId) {
         const position = this.getDropPosition(pe, nodeEl);
@@ -183,7 +190,27 @@ export class DragDropHandler {
     }
 
     this.draggedNodeId = null;
+    this.isDragging = false;
+    this.startPosition = null;
   };
+
+  private createGhostElement(pe: PointerEvent): void {
+    if (!this.draggedNodeId) return;
+    const nodeEl = this.container.querySelector(`[data-id="${this.draggedNodeId}"]`) as HTMLElement;
+    if (!nodeEl) return;
+
+    this.ghostElement = nodeEl.cloneNode(true) as HTMLElement;
+    this.ghostElement.classList.add('kakidash-drag-ghost');
+    this.ghostElement.style.position = 'fixed';
+    this.ghostElement.style.pointerEvents = 'none'; // so elementFromPoint works
+    this.ghostElement.style.opacity = '0.7';
+    this.ghostElement.style.zIndex = '9999';
+    this.ghostElement.style.margin = '0';
+    this.ghostElement.style.left = `${pe.clientX}px`;
+    this.ghostElement.style.top = `${pe.clientY}px`;
+    this.ghostElement.style.transform = 'translate(-50%, -50%)'; // center on pointer
+    document.body.appendChild(this.ghostElement);
+  }
 
   private getDropPosition(
     pe: PointerEvent,

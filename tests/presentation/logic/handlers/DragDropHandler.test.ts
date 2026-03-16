@@ -10,7 +10,7 @@ describe('DragDropHandler', () => {
   let container: HTMLElement;
   let dispatchedCommands: Command[] = [];
 
-  let dispatchSpy: any;
+  let dispatchSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
     commandBus = new CommandBus();
@@ -32,7 +32,7 @@ describe('DragDropHandler', () => {
     vi.clearAllMocks();
   });
 
-  it('should start drag and create ghost element on valid pointerdown', () => {
+  it('should capture pointer but NOT create ghost element on pointerdown', () => {
     // Mock the start of a drag on node 1
     const node1 = document.createElement('div');
     node1.className = 'mindmap-node';
@@ -49,11 +49,37 @@ describe('DragDropHandler', () => {
     node1.dispatchEvent(pointerDownEvent);
 
     expect(handler.draggedNodeId).toBe('node1');
-    // Ghost element should be created
+    // Ghost element should NOT be created yet
     const ghost = document.querySelector('.kakidash-drag-ghost');
-    expect(ghost).not.toBeNull();
+    expect(ghost).toBeNull();
     // capture must be set
     expect(node1.setPointerCapture).toHaveBeenCalled();
+  });
+
+  it('should start drag and create ghost element on move beyond threshold', () => {
+    const node1 = document.createElement('div');
+    node1.className = 'mindmap-node';
+    node1.dataset.id = 'node1';
+    container.appendChild(node1);
+    node1.setPointerCapture = vi.fn();
+
+    const pointerDownEvent = new PointerEvent('pointerdown', {
+      bubbles: true,
+      clientX: 10,
+      clientY: 10,
+    });
+    node1.dispatchEvent(pointerDownEvent);
+
+    const pointerMoveEvent = new PointerEvent('pointermove', {
+      bubbles: true,
+      clientX: 20, // 10px move > 5px threshold
+      clientY: 10,
+    });
+    container.dispatchEvent(pointerMoveEvent);
+
+    expect(handler.draggedNodeId).toBe('node1');
+    const ghost = document.querySelector('.kakidash-drag-ghost');
+    expect(ghost).not.toBeNull();
   });
 
   it('should emit dropNode on pointerup over target', () => {
@@ -89,6 +115,14 @@ describe('DragDropHandler', () => {
     node1.dispatchEvent(pointerDownEvent);
 
     expect(handler.draggedNodeId).toBe('node1');
+
+    // Move to start dragging
+    const pointerMoveEvent = new PointerEvent('pointermove', {
+      bubbles: true,
+      clientX: 20, // 10px move
+      clientY: 10,
+    });
+    container.dispatchEvent(pointerMoveEvent);
 
     // Mock drop on node 2
     const node2 = document.createElement('div');
@@ -138,8 +172,20 @@ describe('DragDropHandler', () => {
     node1.releasePointerCapture = vi.fn();
     container.appendChild(node1);
 
-    const pointerDownEvent = new PointerEvent('pointerdown', { bubbles: true });
+    const pointerDownEvent = new PointerEvent('pointerdown', {
+      bubbles: true,
+      clientX: 10,
+      clientY: 10,
+    });
     node1.dispatchEvent(pointerDownEvent);
+
+    // Move to start dragging
+    const pointerMoveEvent = new PointerEvent('pointermove', {
+      bubbles: true,
+      clientX: 20,
+      clientY: 10,
+    });
+    container.dispatchEvent(pointerMoveEvent);
 
     // Mock document.elementFromPoint to return node1
     const originalElementFromPoint = document.elementFromPoint;
