@@ -55,7 +55,9 @@ export class MarkdownExporter {
           types: [
             {
               description: 'Markdown File',
-              accept: { 'text/markdown': ['.md'] },
+              accept: {
+                'text/markdown': ['.md'],
+              },
             },
           ],
         });

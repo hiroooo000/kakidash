@@ -165,4 +165,24 @@ describe('MarkdownExporter', () => {
 
     expect(exportedContent).toBe(expected);
   });
+
+  it('should call showSaveFilePicker with correct options', async () => {
+    const root = createNode('root', 'Root Topic', null, true);
+    const mindMap = new MindMap(root);
+    const exporter = new MarkdownExporter();
+
+    await exporter.export(mindMap);
+
+    expect(mockShowSaveFilePicker).toHaveBeenCalledWith({
+      suggestedName: 'mindmap.md',
+      types: [
+        {
+          description: 'Markdown File',
+          accept: {
+            'text/markdown': ['.md'],
+          },
+        },
+      ],
+    });
+  });
 });
