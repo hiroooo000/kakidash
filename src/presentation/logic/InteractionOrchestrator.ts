@@ -172,7 +172,13 @@ export class InteractionOrchestrator {
       const nodeEl = target.closest('.mindmap-node') as HTMLElement;
 
       if (nodeEl && nodeEl.dataset.id) {
-        this.startEditing(nodeEl, nodeEl.dataset.id);
+        const nodeId = nodeEl.dataset.id;
+        const node = this.mindMap.findNode(nodeId);
+        if (node && (node.thumbnail || node.image)) {
+          this.zoomNode(nodeId);
+        } else {
+          this.startEditing(nodeEl, nodeId);
+        }
       }
     });
 

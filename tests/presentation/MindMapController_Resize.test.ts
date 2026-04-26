@@ -82,6 +82,8 @@ describe('MindMapController Resizing Fix', () => {
       fileIOService: {} as any,
       themeService: {} as any,
       commandBus: new CommandBus(),
+      imageStore: {} as any,
+      imageProcessingService: {} as any,
     });
   });
 

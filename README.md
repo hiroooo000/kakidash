@@ -90,13 +90,12 @@ Prepare a container element (e.g., `div`) to display `kakidash`.
 pnpm add kakidash
 ```
 
-````typescript
+```typescript
 import { Kakidash } from 'kakidash';
 
 // Get container
 const container = document.getElementById('mindmap-container');
 
-// Instantiate
 // Instantiate with optional configuration
 const kakidash = new Kakidash(container, {
     locale: 'en', // Optional: 'en' | 'ja' (Default: 'en')
@@ -104,11 +103,13 @@ const kakidash = new Kakidash(container, {
     customStyles: {    // Optional: Initial custom styles
         rootNode: { border: '2px solid red' }
     },
-    disabledCommandPaletteFeatures: ['import'] // Optional: Disable specific features
+    disabledCommandPaletteFeatures: ['import'], // Optional: Disable specific features
+    //getImage: (ref) => myImageMap[ref] // Optional: Callback to fetch original images for zooming
 });
 
 // Add initial data or nodes if needed
 kakidash.addNode(kakidash.getRootId(), 'Hello World');
+```
 
 ### 3. Theme Selection
 
@@ -116,9 +117,7 @@ You can switch themes dynamically:
 
 ```typescript
 kakidash.setTheme('dark'); // 'default', 'simple', 'colorful', 'dark'
-````
-
-````
+```
 
 #### B. Browser Direct Import (Script Tag / CDN)
 
@@ -204,7 +203,9 @@ All values accept standard CSS strings.
   - `options.disabledCommandPaletteFeatures`: Features to disable in the command palette ('search' | 'icon' | 'import' | 'export').
 - **`kakidash.addNode(parentId, topic)`**: Adds a new child node to the specified parent node.
 - **`kakidash.getData()`**: Retrieves current mindmap data as a JSON object.
-- **`kakidash.loadData(data)`**: Loads JSON data and renders the mindmap.
+- **`kakidash.loadData(data)`**: Loads JSON data and renders the mindmap. Supports legacy format with embedded images.
+- **`kakidash.getImages()`**: Retrieves all original high-resolution images currently in memory.
+- **`kakidash.gcImages()`**: Cleans up unused images from memory.
 - **`kakidash.updateGlobalStyles(styles)`**: Updates global styles (only active when theme is 'custom').
 - **`kakidash.updateLayout(mode)`**: Changes layout mode ('Standard', 'Left', 'Right').
 - **`kakidash.setReadOnly(boolean)`**: Toggles read-only mode.
@@ -385,6 +386,28 @@ board.registerCommand({
 ```
 
 Registered commands will appear in the Command Palette (default key: `m`). Clicking or pressing Enter on the item will execute the handler.
+
+## Image Management (Hybrid Storage)
+
+Kakidash uses a hybrid storage approach to handle large images efficiently. 
+- **Thumbnails**: Small, low-resolution versions are stored directly in the JSON data.
+- **Originals**: High-resolution versions are kept in a separate memory store (`ImageStore`) and should be persisted by the host application (e.g., in a sidecar folder).
+
+### Example: VSCode Extension Integration
+
+```typescript
+// 1. Saving
+const data = kakidash.getData(); // JSON without large images
+const images = kakidash.getImages(); // Map of { imageRef: base64Data }
+
+// Save 'data' to .kaki file and 'images' to .kaki_images/ folder
+saveToDisk(data, images);
+
+// 2. Loading
+const { data, images } = loadFromDisk();
+kakidash.loadData(data); // Library handles migration if old format
+// Images should be provided via the getImage callback in constructor
+```
 
 ## Architecture
 

@@ -20,7 +20,9 @@ export class Node {
   style: NodeStyle;
   parentId: string | null;
   isRoot: boolean;
-  image?: string;
+  thumbnail?: string;
+  imageRef?: string;
+  image?: string; // @deprecated
   imageSize?: { width: number; height: number };
   icon?: string;
   presentation: NodePresentationData;
@@ -30,12 +32,14 @@ export class Node {
     topic: string,
     parentId: string | null = null,
     isRoot: boolean = false,
-    image?: string,
+    image?: string, // @deprecated
     layoutSide?: 'left' | 'right',
     isFolded: boolean = false,
     icon?: string,
     imageSize?: { width: number; height: number },
     customWidth?: number,
+    thumbnail?: string,
+    imageRef?: string,
   ) {
     this.id = id;
     this.topic = topic;
@@ -43,6 +47,8 @@ export class Node {
     this.style = { fontSize: isRoot ? '24px' : '16px' };
     this.parentId = parentId;
     this.isRoot = isRoot;
+    this.thumbnail = thumbnail;
+    this.imageRef = imageRef;
     this.image = image;
     this.imageSize = imageSize;
     this.icon = icon;

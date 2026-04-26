@@ -92,13 +92,12 @@ pnpm add kakidash
 pnpm add kakidash
 ```
 
-````typescript
+```typescript
 import { Kakidash } from 'kakidash';
 
 // コンテナ取得
 const container = document.getElementById('mindmap-container');
 
-// インスタンス化
 // インスタンス化 (オプション指定可能)
 const kakidash = new Kakidash(container, {
     locale: 'ja', // オプション: 'en' | 'ja' (デフォルト: 'en')
@@ -106,11 +105,13 @@ const kakidash = new Kakidash(container, {
     customStyles: {    // オプション: 初期のカスタムスタイル
         rootNode: { border: '2px solid red' }
     },
-    disabledCommandPaletteFeatures: ['import'] // オプション: 特定の機能を無効化
+    disabledCommandPaletteFeatures: ['import'], // オプション: 特定の機能を無効化
+    //getImage: (ref) => myImageMap[ref] // オプション: 拡大表示用にオリジナル画像を取得するコールバック
 });
 
 // 必要に応じて初期データをロードしたり、ノードを追加したりします
 kakidash.addNode(kakidash.getRootId(), 'Hello World');
+```
 
 ### 3. テーマの切り替え
 
@@ -118,9 +119,7 @@ kakidash.addNode(kakidash.getRootId(), 'Hello World');
 
 ```typescript
 kakidash.setTheme('dark'); // 'default', 'simple', 'colorful', 'dark'
-````
-
-````
+```
 
 #### B. ブラウザ直接読み込み (Script Tag / CDN)
 
@@ -209,7 +208,9 @@ kakidash.setTheme('custom');
   - `options.disabledCommandPaletteFeatures`: コマンドパレットの特定の機能を無効化 ('search' | 'icon' | 'import' | 'export')。
 - **`kakidash.addNode(parentId, topic)`**: 指定した親ノードに新しい子ノードを追加します。
 - **`kakidash.getData()`**: 現在のマインドマップデータをJSONオブジェクトとして取得します。
-- **`kakidash.loadData(data)`**: JSONデータを読み込み、マインドマップを描画します。
+- **`kakidash.loadData(data)`**: JSONデータを読み込み、マインドマップを描画します。画像埋め込み済みの旧形式データも自動移行して読み込めます。
+- **`kakidash.getImages()`**: 現在メモリ（ImageStore）に保持されているすべてのオリジナル画像を取得します。
+- **`kakidash.gcImages()`**: 使用されていない画像をメモリから削除します。
 - **`kakidash.updateGlobalStyles(styles)`**: グローバルスタイルを更新します ('custom' テーマ選択時のみ有効)。
 - **`kakidash.updateLayout(mode)`**: レイアウトモードを変更します ('Standard', 'Left', 'Right')。
 - **`kakidash.setReadOnly(boolean)`**: 読み取り専用モードを切り替えます。
@@ -390,6 +391,28 @@ board.registerCommand({
 ```
 
 登録されたコマンドはコマンドパレット（デフォルト：`m` キー）の一覧に表示されます。項目をクリックするか Enter キーを押すことで実行されます。
+
+## 画像の管理 (ハイブリッド形式)
+
+Kakidashは、大量の画像を効率的に扱うために「ハイブリッド保存方式」を採用しています。
+- **サムネイル**: 軽量な画像データ。マインドマップのJSON内に直接保存されます。
+- **オリジナル画像**: 高解像度の画像データ。JSONからは切り離され、メモリ上（`ImageStore`）で管理されます。これらはホストアプリケーション（VSCode拡張機能など）側でサイドカーフォルダ等に保存する必要があります。
+
+### 実装例: VSCode拡張機能との連携
+
+```typescript
+// 1. 保存時
+const data = kakidash.getData(); // 巨大な画像を含まない軽量なJSON
+const images = kakidash.getImages(); // { 参照ID: Base64データ } のマップ
+
+// 'data' を .kaki ファイルに、'images' を 'filename_images/' フォルダ等に保存します
+saveToDisk(data, images);
+
+// 2. 読み込み時
+const { data, images } = loadFromDisk();
+kakidash.loadData(data); // 旧形式（画像埋め込み）の場合も自動でマイグレーションされます
+// コンストラクタの getImage コールバックを通じて、読み込んだ画像をライブラリに提供します
+```
 
 ## アーキテクチャ
 

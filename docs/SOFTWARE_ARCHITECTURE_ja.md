@@ -17,6 +17,7 @@ graph TD
         View[SvgRenderer]
         ThemeSvc[ThemeService]
         IOSvc[FileIOService]
+        ImgStore[ImageStore]
     end
 
     subgraph Features ["Features"]
@@ -109,6 +110,8 @@ classDiagram
         class XMindImporter
         class ImageExporter
         class MarkdownExporter
+        class ImageStore
+        class ImageProcessingService
     }
 
     namespace Shared_Kernel {
@@ -130,6 +133,8 @@ classDiagram
     MindMapController --> NavigationService : handles navigation
     MindMapController --> LayoutEngine : calculates layout
     MindMapController --> SvgRenderer : renders
+    MindMapController --> ImageStore : manages binaries
+    MindMapController --> ImageProcessingService : generates thumbnails
     
     MindMapService --> MindMap : manages
     MindMapService --> HistoryManager : uses
@@ -140,6 +145,7 @@ classDiagram
     Node *-- NodePresentationData : presentation
 
     SvgRenderer ..> MindMap : reads
+    SvgRenderer ..> ImageStore : fetches original images
     StyleEditor ..> MindMapStyles : edits
     
     CryptoIdGenerator ..|> IdGenerator : implements
@@ -214,6 +220,8 @@ src/
 - **NavigationService**: 方向に応じたノード間のナビゲーションロジックを担当します。
 - **ThemeService**: テーマやスタイルの変更・適用ロジックを管理し、ThemeRegistry経由でコンテナに適用します。
 - **FileIOService**: マインドマップデータのインポート（XMind）およびエクスポート（PNG, SVG, Markdown）の操作を統合・実行します。
+- **ImageStore**: オリジナルの高解像度画像データをメモリ上で管理するインフラ層に近いコンポーネント。JSONの肥大化を防ぐため、バイナリデータをモデルから分離します。
+- **ImageProcessingService**: クライアントサイドでの画像リサイズやサムネイル生成を担当します。
 - **CommandBus**: 各種入力やアクションによって生成されたコマンド（Action）を中央集権的に受けとり、リスナーにルーティングして実行させるメッセージング基盤。これによりコンポーネント間の疎結合を実現しています。
 - **InteractionOrchestrator & Handlers**: ユーザー操作の入力を処理し、コマンドバスへと流す役割。
   - `InteractionOrchestrator`: DOMのイベントリスナー管理やフォーカス制御など、入力処理のライフサイクル全体を管理します。
@@ -504,17 +512,64 @@ sequenceDiagram
     deactivate Controller
 ```
 
-## 5. エントリーポイントとDI (`src/index.ts`)
+### 4.7 画像貼り付けと永続化フロー (Hybrid Storage)
 
-アプリケーションの起動時に各コンポーネントのインスタンス化と依存性の注入（Dependency Injection）を行います。
+画像の貼り付け時、サムネイル（JSON内）とオリジナル（外部）を分離して処理するフローです。
 
-```typescript
-// DIの例
-const idGenerator = new CryptoIdGenerator(); // Shared/Infrastructure
-const mindMap = new MindMap(rootNode);       // Core/Domain
-const service = new MindMapService(mindMap, idGenerator); // Core/Application <- Core/Domain, Shared/Infrastructure
-const controller = new MindMapController(mindMap, service, renderer, ...); // Presentation <- Core/Application
+```mermaid
+sequenceDiagram
+    participant User
+    participant Controller as Presentation/MindMapController
+    participant Proc as Presentation/ImageProcessingService
+    participant Store as Presentation/ImageStore
+    participant Service as Core/MindMapService
+    participant Host as VSCode Extension (Host)
+
+    User->>Controller: Paste Image
+    Controller->>Proc: generateThumbnail(originalData)
+    Proc-->>Controller: thumbnailData, width, height
+    
+    Controller->>Store: addImage(imageRef, originalData)
+    Note over Store: メモリ上にオリジナルを保持
+    
+    Controller->>Service: addImageNode(thumbnail, imageRef, size)
+    Note over Service: JSONには参照IDとサムネイルのみ保存
+    
+    Controller->>Controller: render()
+    
+    Note over User, Host: 保存時
+    Host->>Controller: getData()
+    Controller-->>Host: MindMapData (JSON)
+    Host->>Controller: getImages()
+    Controller-->>Host: Map<imageRef, originalData>
+    Note over Host: サイドカーフォルダに個別に書き出し
 ```
+
+### 4.8 画像のガベージコレクションフロー
+
+不要になった画像をメモリおよびファイルシステムから削除するフローです。
+
+```mermaid
+sequenceDiagram
+    participant Controller as Presentation/MindMapController
+    participant Store as Presentation/ImageStore
+    participant Service as Core/MindMapService
+    participant Host as VSCode Extension (Host)
+
+    Controller->>Service: getAllActiveImageRefs()
+    Service-->>Controller: string[]
+    
+    Controller->>Store: removeOrphanedImages(activeRefs)
+    Note over Store: メモリから削除
+    
+    Note over Controller, Host: 保存時
+    Host->>Controller: getImages()
+    Controller-->>Host: 現在使用中の画像のみ
+    Note over Host: サイドカーフォルダを同期（削除された画像を消す）
+```
+
+## 5. エントリーポイントとDI (`src/index.ts`)
+... (以下略) ...
 
 ## 6. 主要な設計原則
 

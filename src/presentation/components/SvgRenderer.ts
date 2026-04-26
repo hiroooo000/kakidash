@@ -9,6 +9,7 @@ import { LayoutResult } from '../layout/LayoutTypes';
 export interface SvgRendererOptions {
   onImageZoom?: (active: boolean) => void;
   onToggleFold?: (nodeId: string) => void;
+  getImage?: (ref: string) => string | undefined;
 }
 
 export class SvgRenderer implements Renderer {
@@ -155,14 +156,16 @@ export class SvgRenderer implements Renderer {
     el.style.left = `${x}px`;
     el.style.top = `${y}px`;
 
-    if (node.image) {
+    const imageSource = node.thumbnail || node.image;
+    if (imageSource) {
       // Image Node
       const img = document.createElement('img');
-      img.src = node.image;
+      img.src = imageSource;
       if (node.imageSize) {
         if (node.imageSize.width > 150) {
           img.style.width = '150px';
-          img.style.height = 'auto';
+          const ratio = 150 / node.imageSize.width;
+          img.style.height = `${Math.round(node.imageSize.height * ratio)}px`;
         } else {
           img.style.width = `${node.imageSize.width}px`;
           img.style.height = `${node.imageSize.height}px`;
@@ -195,7 +198,12 @@ export class SvgRenderer implements Renderer {
 
       zoomBtn.addEventListener('click', (e) => {
         e.stopPropagation(); // Prevent selection
-        this.showImageModal(node.image!);
+        let displayData = imageSource;
+        if (node.imageRef && this.options.getImage) {
+          const fullData = this.options.getImage(node.imageRef);
+          if (fullData) displayData = fullData;
+        }
+        this.showImageModal(displayData);
       });
 
       el.style.padding = '5px'; // Less padding for images
@@ -460,7 +468,8 @@ export class SvgRenderer implements Renderer {
       return this.measureCache.get(node.id)!;
     }
 
-    if (node.image) {
+    const imageSource = node.thumbnail || node.image;
+    if (imageSource) {
       if (node.imageSize) {
         if (node.imageSize.width > 150) {
           const ratio = node.imageSize.height / node.imageSize.width;
@@ -638,8 +647,16 @@ export class SvgRenderer implements Renderer {
 
   public zoomNode(nodeId: string): void {
     const node = this.mindMap?.findNode(nodeId);
-    if (node && node.image) {
-      this.showImageModal(node.image);
+    if (node) {
+      const imageSource = node.thumbnail || node.image;
+      if (imageSource) {
+        let displayData = imageSource;
+        if (node.imageRef && this.options.getImage) {
+          const fullData = this.options.getImage(node.imageRef);
+          if (fullData) displayData = fullData;
+        }
+        this.showImageModal(displayData);
+      }
     }
   }
 

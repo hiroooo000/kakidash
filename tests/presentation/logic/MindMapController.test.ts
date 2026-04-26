@@ -150,6 +150,8 @@ describe('MindMapController', () => {
       fileIOService: {} as any,
       themeService: themeServiceMock as unknown as ThemeService,
       commandBus: new CommandBus(),
+      imageStore: {} as any,
+      imageProcessingService: {} as any,
     });
   });
 

@@ -22,7 +22,8 @@ import { KakidashEventMap } from './features/core/domain/KakidashEvents';
 import { ShortcutConfig } from './features/core/domain/ShortcutConfig';
 import { MindMapStyles } from './features/theme/domain/MindMapStyles';
 import { type Direction } from './presentation/types/InteractionOptions';
-
+import { ImageStore } from './features/core/application/ImageStore';
+import { ImageProcessingService } from './features/core/application/ImageProcessingService';
 // StyleAction import removed (unused)
 
 export type { MindMapData, Theme, MindMapNodeData } from './features/core/domain/MindMapData';
@@ -94,6 +95,8 @@ export class Kakidash extends TypedEventEmitter<KakidashEventMap> {
     const historyService = new HistoryService(10);
     const clipboardService = new ClipboardService(this.mindMap, idGenerator);
     const searchService = new SearchService(this.mindMap);
+    const imageStore = new ImageStore();
+    const imageProcessingService = new ImageProcessingService();
 
     // dedicated UI layer to ensure z-index separation and stability
     const uiLayer = document.createElement('div');
@@ -122,6 +125,7 @@ export class Kakidash extends TypedEventEmitter<KakidashEventMap> {
     const renderer = new SvgRenderer(container, {
       onImageZoom: (active) => this.controller.setReadOnly(active),
       onToggleFold: (nodeId) => this.controller.toggleFold(nodeId),
+      getImage: (ref) => this.controller.getImage(ref),
     });
 
     let defaultLocale: 'en' | 'ja' = 'en';
@@ -172,6 +176,8 @@ export class Kakidash extends TypedEventEmitter<KakidashEventMap> {
       fileIOService,
       themeService,
       commandBus,
+      imageStore,
+      imageProcessingService,
       locale: options.locale || defaultLocale,
       commandPaletteFeatures: options.disabledCommandPaletteFeatures,
     });
@@ -490,6 +496,10 @@ export class Kakidash extends TypedEventEmitter<KakidashEventMap> {
     this.controller.resetZoom();
   }
 
+  zoomNode(nodeId: string): void {
+    this.controller.zoomNode(nodeId);
+  }
+
   copyNode(nodeId: string): void {
     this.controller.copyNode(nodeId);
   }
@@ -542,6 +552,16 @@ export class Kakidash extends TypedEventEmitter<KakidashEventMap> {
     // I must add getData to Controller.
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-return
     return (this.controller as any).getData();
+  }
+
+  getImages(): Record<string, string> {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-return
+    return (this.controller as any).getImages();
+  }
+
+  gcImages(): void {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-explicit-any
+    (this.controller as any).gcImages();
   }
 
   loadData(data: MindMapData): void {

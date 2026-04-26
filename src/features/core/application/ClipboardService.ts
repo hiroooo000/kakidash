@@ -109,6 +109,8 @@ export class ClipboardService {
       node.icon,
       node.imageSize && { ...node.imageSize },
       node.presentation.customWidth,
+      node.thumbnail,
+      node.imageRef,
     );
     clone.style = { ...node.style };
     clone.children = node.children.map((child) => this.deepCloneNode(child));
