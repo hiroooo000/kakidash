@@ -27,7 +27,13 @@ export class MindMapService {
     return newNode;
   }
 
-  addImageNode(parentId: string, imageData: string, width?: number, height?: number): Node | null {
+  addImageNode(
+    parentId: string,
+    thumbnail: string,
+    imageRef: string,
+    width?: number,
+    height?: number,
+  ): Node | null {
     const parent = this.mindMap.findNode(parentId);
     if (!parent) return null;
 
@@ -39,11 +45,14 @@ export class MindMapService {
       '',
       parentId,
       false,
-      imageData,
-      undefined,
-      false,
-      undefined,
-      imageSize,
+      undefined, // @deprecated image
+      undefined, // layoutSide
+      false, // isFolded
+      undefined, // icon
+      imageSize, // imageSize
+      undefined, // customWidth
+      thumbnail,
+      imageRef,
     );
     parent.addChild(newNode);
     this.mindMap.registerNode(newNode);
@@ -369,7 +378,9 @@ export class MindMapService {
         root: node.isRoot || undefined,
         children: node.children.length > 0 ? node.children.map(buildNodeData) : undefined,
         style: Object.keys(node.style).length > 0 ? node.style : undefined,
-        image: node.image,
+        image: node.image, // @deprecated
+        thumbnail: node.thumbnail,
+        imageRef: node.imageRef,
         layoutSide: node.presentation.layoutSide,
         isFolded: node.presentation.isFolded,
 
@@ -402,6 +413,8 @@ export class MindMapService {
         data.icon,
         data.imageSize,
         data.customWidth,
+        data.thumbnail,
+        data.imageRef,
       );
 
       if (data.style) {

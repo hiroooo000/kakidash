@@ -16,4 +16,5 @@ export interface Renderer {
   measureNode(node: Node, mindMap?: MindMap): { width: number; height: number };
   updateSelection(selectedNodeIds: Set<string>): void;
   getNodeElement(nodeId: string): HTMLElement | undefined;
+  zoomNode(nodeId: string): void;
 }

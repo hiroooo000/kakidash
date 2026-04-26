@@ -103,6 +103,8 @@ describe('MindMapController Navigation Integration', () => {
         setLayoutSwitcher: vi.fn(),
       } as any,
       commandBus: new CommandBus(),
+      imageStore: {} as any,
+      imageProcessingService: {} as any,
     });
 
     // Mock interaction orchestrator

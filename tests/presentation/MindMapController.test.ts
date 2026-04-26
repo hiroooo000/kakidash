@@ -54,6 +54,7 @@ describe('MindMapController', () => {
       measureNode: vi.fn().mockReturnValue({ width: 100, height: 40 }),
       updateSelection: vi.fn(),
       getNodeElement: vi.fn(),
+      zoomNode: vi.fn(),
     };
     styleEditor = new StyleEditor(document.createElement('div'));
     commandBus = new CommandBus();
@@ -142,6 +143,8 @@ describe('MindMapController', () => {
       fileIOService: {} as any,
       themeService: themeServiceMock,
       commandBus,
+      imageStore: {} as any,
+      imageProcessingService: {} as any,
     });
 
     // Wire up InteractionOrchestrator

@@ -91,4 +91,58 @@ describe('InteractionOrchestrator Navigation', () => {
       extendSelection: false,
     });
   });
+
+  it('should handle image paste and dispatch pasteImage', async () => {
+    // Mock FileReader
+    const originalFileReader = global.FileReader;
+    global.FileReader = class {
+      onload: ((event: any) => void) | null = null;
+      readAsDataURL() {
+        if (this.onload) {
+          this.onload({ target: { result: 'data:image/png;base64,testdata' } } as any);
+        }
+      }
+    } as any;
+
+    // Mock Image
+    const originalImage = global.Image;
+    global.Image = class {
+      onload: () => void = () => {};
+      width = 800;
+      height = 600;
+      set src(_val: string) {
+        setTimeout(() => this.onload(), 0);
+      }
+    } as any;
+
+    try {
+      const clipboardEvent = new Event('paste', { bubbles: true }) as ClipboardEvent;
+      Object.defineProperty(clipboardEvent, 'clipboardData', {
+        value: {
+          items: [
+            {
+              type: 'image/png',
+              getAsFile: () => new Blob([''], { type: 'image/png' }),
+            },
+          ],
+        },
+      });
+
+      container.dispatchEvent(clipboardEvent);
+
+      // Wait for async onload
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
+      expect(dispatchSpy).toHaveBeenCalledWith({
+        type: 'pasteImage',
+        parentId: 'root',
+        imageData: 'data:image/png;base64,testdata',
+        width: 800,
+        height: 600,
+      });
+    } finally {
+      global.FileReader = originalFileReader;
+      global.Image = originalImage;
+    }
+  });
 });

@@ -146,7 +146,18 @@ describe('Paste Auto-Pan Logic', () => {
       } as DOMRect;
     };
 
+    let originalGenerate: any;
     try {
+      // Mock generateThumbnail
+      const controller = (board as any).controller;
+      originalGenerate = controller.imageProcessingService.generateThumbnail;
+      controller.imageProcessingService.generateThumbnail = () =>
+        Promise.resolve({
+          thumbnailBase64: 'mock_thumbnail',
+          width: 100,
+          height: 100,
+        });
+
       // Act: Paste Image
       board.pasteImage(rootId, 'data:image/png;base64,dummy');
 
@@ -158,6 +169,8 @@ describe('Paste Auto-Pan Logic', () => {
       expect(pan.x).toBe(-650);
     } finally {
       HTMLElement.prototype.getBoundingClientRect = originalGBR;
+      const controller = (board as any).controller;
+      controller.imageProcessingService.generateThumbnail = originalGenerate;
     }
   });
 });

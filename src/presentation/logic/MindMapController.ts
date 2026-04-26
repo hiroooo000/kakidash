@@ -22,6 +22,9 @@ import { SearchService } from '../../features/core/application/SearchService';
 import { ViewportService } from './ViewportService';
 import { NavigationService } from './NavigationService';
 import { CommandBus } from '../commands/CommandBus';
+import { LegacyDataMigrationHelper } from '../../features/io/helpers/LegacyDataMigrationHelper';
+import { ImageStore } from '../../features/core/application/ImageStore';
+import { ImageProcessingService } from '../../features/core/application/ImageProcessingService';
 
 export interface IMindMapEventBus {
   emit<K extends keyof KakidashEventMap>(event: K, payload: KakidashEventMap[K]): void;
@@ -53,6 +56,8 @@ export interface ControllerDependencies {
   fileIOService: FileIOService;
   themeService: ThemeService;
   commandBus: CommandBus;
+  imageStore: ImageStore;
+  imageProcessingService: ImageProcessingService;
   locale?: 'en' | 'ja';
   commandPaletteFeatures?: ('search' | 'icon' | 'import' | 'export')[];
 }
@@ -76,6 +81,8 @@ export class MindMapController {
   private searchService: SearchService;
   private viewportService: ViewportService;
   private navigationService: NavigationService;
+  private imageStore: ImageStore;
+  private imageProcessingService: ImageProcessingService;
 
   private anchorNodeId: string | null = null;
   private selectedNodeId: string | null = null;
@@ -101,6 +108,8 @@ export class MindMapController {
     this.searchService = deps.searchService;
     this.viewportService = deps.viewportService;
     this.navigationService = deps.navigationService;
+    this.imageStore = deps.imageStore;
+    this.imageProcessingService = deps.imageProcessingService;
 
     this.locale = deps.locale ?? 'en';
     this.commandBus = deps.commandBus;
@@ -194,9 +203,50 @@ export class MindMapController {
     return data;
   }
 
+  getImages(): Record<string, string> {
+    const images: Record<string, string> = {};
+    if (!this.imageStore) return images;
+    const refs = this.imageStore.getAllRefs();
+    for (const ref of refs) {
+      const data = this.imageStore.getImage(ref);
+      if (data) images[ref] = data;
+    }
+    return images;
+  }
+
+  getImage(ref: string): string | undefined {
+    return this.imageStore?.getImage(ref);
+  }
+
+  gcImages(): void {
+    if (!this.imageStore) return;
+
+    // Collect all active image references from nodes
+    const activeRefs = new Set<string>();
+    const collectRefs = (node: import('../../features/core/domain/Node').Node) => {
+      if (node.imageRef) activeRefs.add(node.imageRef);
+      node.children.forEach(collectRefs);
+    };
+    collectRefs(this.service.mindMap.root);
+
+    // Remove any image from store that is not in activeRefs
+    const allRefs = this.imageStore.getAllRefs();
+    for (const ref of allRefs) {
+      if (!activeRefs.has(ref)) {
+        this.imageStore.removeImage(ref);
+      }
+    }
+  }
+
   loadData(data: MindMapData): void {
     try {
-      this.service.importData(data);
+      const migrationResult = LegacyDataMigrationHelper.migrateIfNeeded(data);
+      if (migrationResult.extractedImages.length > 0) {
+        console.warn(
+          `Migrated ${migrationResult.extractedImages.length} legacy images. Please save to write them to sidecars.`,
+        );
+      }
+      this.service.importData(migrationResult.migratedData);
       this.render(); // Full render needed after model change
       this.restoreSelection(data);
       this.eventBus.emit('model:load', data);
@@ -622,6 +672,10 @@ export class MindMapController {
     this.viewportService.applyTransform();
   }
 
+  zoomNode(nodeId: string): void {
+    this.renderer.zoomNode(nodeId);
+  }
+
   setLayoutMode(mode: LayoutMode): void {
     this.eventBus.emit('command', { name: 'setLayoutMode', args: { mode } });
     this.layoutMode = mode;
@@ -875,14 +929,38 @@ export class MindMapController {
   pasteImage(parentId: string, imageData: string, width?: number, height?: number): void {
     this.saveState();
     this.eventBus.emit('command', { name: 'pasteImage', args: { parentId, width, height } });
-    const newNode = this.service.addImageNode(parentId, imageData, width, height);
-    if (newNode) {
-      this.render();
-      this.selectNode(newNode.id);
-      this.eventBus.emit('node:add', { id: newNode.id, topic: '' });
-      this.eventBus.emit('model:change', undefined);
-      setTimeout(() => this.ensureNodeVisible(newNode.id, true), 0);
-    }
+
+    // Generate thumbnail asynchronously, but since this method is void, we handle it internally
+    this.imageProcessingService
+      .generateThumbnail(imageData)
+      .then((thumbnailResult) => {
+        // We need a unique ref for the original image
+        // We can just use a random ID or crypto ID. Let's use the node ID generator logic,
+        // but we don't have direct access to it here unless we add it to dependencies or just use a random string.
+        const imageRef = `img_${Math.random().toString(36).substr(2, 9)}.png`;
+        this.imageStore.addImage(imageRef, imageData);
+
+        const newNode = this.service.addImageNode(
+          parentId,
+          thumbnailResult.thumbnailBase64,
+          imageRef,
+          width || thumbnailResult.width,
+          height || thumbnailResult.height,
+        );
+        if (newNode) {
+          newNode.thumbnail = thumbnailResult.thumbnailBase64;
+          newNode.imageRef = imageRef;
+
+          this.render();
+          this.selectNode(newNode.id);
+          this.eventBus.emit('node:add', { id: newNode.id, topic: '' });
+          this.eventBus.emit('model:change', undefined);
+          setTimeout(() => this.ensureNodeVisible(newNode.id, true), 0);
+        }
+      })
+      .catch((err) => {
+        console.error('Failed to process pasted image', err);
+      });
   }
 
   onEditEnd(): void {

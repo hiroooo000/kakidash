@@ -27,6 +27,7 @@ function createMockRenderer(): Renderer {
     measureNode: vi.fn().mockReturnValue({ width: 100, height: 40 }),
     updateSelection: vi.fn(),
     getNodeElement: vi.fn(),
+    zoomNode: vi.fn(),
   };
 }
 
