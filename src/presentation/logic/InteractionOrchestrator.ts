@@ -251,7 +251,7 @@ export class InteractionOrchestrator {
 
   private startEditing(element: HTMLElement, nodeId: string): void {
     const node = this.mindMap?.findNode(nodeId);
-    if (node && node.image) {
+    if (node && (node.thumbnail || node.image)) {
       this.zoomNode(nodeId);
       return;
     }
