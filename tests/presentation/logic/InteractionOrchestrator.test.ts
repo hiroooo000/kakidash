@@ -131,14 +131,14 @@ describe('InteractionOrchestrator Navigation', () => {
       container.dispatchEvent(clipboardEvent);
 
       // Wait for async onload
-      await new Promise((resolve) => setTimeout(resolve, 10));
-
-      expect(dispatchSpy).toHaveBeenCalledWith({
-        type: 'pasteImage',
-        parentId: 'root',
-        imageData: 'data:image/png;base64,testdata',
-        width: 800,
-        height: 600,
+      await vi.waitFor(() => {
+        expect(dispatchSpy).toHaveBeenCalledWith({
+          type: 'pasteImage',
+          parentId: 'root',
+          imageData: 'data:image/png;base64,testdata',
+          width: 800,
+          height: 600,
+        });
       });
     } finally {
       global.FileReader = originalFileReader;

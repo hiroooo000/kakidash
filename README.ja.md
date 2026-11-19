@@ -414,6 +414,13 @@ kakidash.loadData(data); // 旧形式（画像埋め込み）の場合も自動�
 // コンストラクタの getImage コールバックを通じて、読み込んだ画像をライブラリに提供します
 ```
 
+## データ形式 (JSON)
+
+`getData()` / `loadData()` で入出力される JSON データの詳細仕様および JSON Schema については、以下を参照してください：
+
+- [JSON データ仕様書](./docs/JSON_DATA_SPEC_ja.md)
+- [JSON Schema (`kakidash.schema.json`)](./docs/schema/kakidash.schema.json)
+
 ## アーキテクチャ
 
 ソフトウェアアーキテクチャの詳細や内部モジュールの依存関係については、以下を参照してください：

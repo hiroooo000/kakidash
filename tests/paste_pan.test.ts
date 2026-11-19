@@ -4,7 +4,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/unbound-method */
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { Kakidash } from '../src/index';
 
 describe('Paste Auto-Pan Logic', () => {
@@ -81,17 +81,16 @@ describe('Paste Auto-Pan Logic', () => {
       // Act: Paste Node
       board.pasteNode(rootId);
 
-      // Wait for setTimeout
-      await new Promise((resolve) => setTimeout(resolve, 50));
-
       // Logic:
       // Node Center X = 1050
       // Container Center X = 400
       // Expected dx = 400 - 1050 = -650
 
       const vs2 = (board as any).controller.viewportService;
-      const pan = vs2.getTargetPan();
-      expect(pan.x).toBe(-650);
+      await vi.waitFor(() => {
+        const pan = vs2.getTargetPan();
+        expect(pan.x).toBe(-650);
+      });
     } finally {
       HTMLElement.prototype.getBoundingClientRect = originalGBR;
     }
@@ -161,12 +160,11 @@ describe('Paste Auto-Pan Logic', () => {
       // Act: Paste Image
       board.pasteImage(rootId, 'data:image/png;base64,dummy');
 
-      // Wait for setTimeout (if any)
-      await new Promise((resolve) => setTimeout(resolve, 50));
-
       const vs2 = (board as any).controller.viewportService;
-      const pan = vs2.getTargetPan();
-      expect(pan.x).toBe(-650);
+      await vi.waitFor(() => {
+        const pan = vs2.getTargetPan();
+        expect(pan.x).toBe(-650);
+      });
     } finally {
       HTMLElement.prototype.getBoundingClientRect = originalGBR;
       const controller = (board as any).controller;

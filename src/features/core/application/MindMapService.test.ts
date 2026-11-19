@@ -229,6 +229,71 @@ describe('MindMapService', () => {
       expect(gc1?.topic).toBe('GrandChild 1');
     });
 
+    it('should export and import full NodeStyle properties', () => {
+      const child = service.addNode('root', 'Styled Child');
+      expect(child).toBeDefined();
+      service.updateNodeStyle(child!.id, {
+        fontSize: '18px',
+        color: '#E74C3C',
+        background: '#FFF3CD',
+        fontWeight: 'bold',
+        fontStyle: 'italic',
+        textDecoration: 'line-through',
+      });
+
+      const exported = service.exportData();
+      const exportedChild = exported.nodeData.children?.find((c) => c.id === child!.id);
+      expect(exportedChild?.style).toEqual({
+        fontSize: '18px',
+        color: '#E74C3C',
+        background: '#FFF3CD',
+        fontWeight: 'bold',
+        fontStyle: 'italic',
+        textDecoration: 'line-through',
+      });
+
+      service.importData(exported);
+      const importedChild = service.mindMap.findNode(child!.id);
+      expect(importedChild?.style).toEqual({
+        fontSize: '18px',
+        color: '#E74C3C',
+        background: '#FFF3CD',
+        fontWeight: 'bold',
+        fontStyle: 'italic',
+        textDecoration: 'line-through',
+      });
+    });
+
+    it('should export and import dark theme', () => {
+      service.setTheme('dark');
+      const exported = service.exportData();
+      expect(exported.theme).toBe('dark');
+
+      service.setTheme('default');
+      service.importData(exported);
+      expect(service.mindMap.theme).toBe('dark');
+    });
+
+    it('should treat top-level nodeData as root without root flag', () => {
+      service.importData({
+        nodeData: {
+          id: 'implicit-root',
+          topic: 'Implicit Root',
+          children: [
+            {
+              id: 'child-1',
+              topic: 'Child 1',
+              root: true,
+            },
+          ],
+        },
+      });
+
+      expect(service.mindMap.root.id).toBe('implicit-root');
+      expect(service.mindMap.root.isRoot).toBe(true);
+      expect(service.mindMap.root.children[0].isRoot).toBe(false);
+    });
+
     it('should persist folded state', () => {
       const child1 = service.addNode('root', 'Child 1');
       expect(child1).toBeDefined();

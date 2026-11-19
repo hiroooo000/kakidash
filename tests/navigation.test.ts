@@ -5,7 +5,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 
 /* eslint-disable @typescript-eslint/unbound-method */
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { Kakidash } from '../src/index';
 
 describe('Navigation Logic', () => {
@@ -138,9 +138,6 @@ describe('Navigation Logic', () => {
       // Navigate Right to Child
       board.navigateNode(rootId, 'Right');
 
-      // Wait for setTimeout in navigateNode
-      await new Promise((resolve) => setTimeout(resolve, 50));
-
       // Logic:
       // Node Center X = 1050
       // Container Center X = 400
@@ -148,8 +145,10 @@ describe('Navigation Logic', () => {
       // targetPanX should be -650
 
       const vs2 = (board as any).controller.viewportService;
-      const targetPan = vs2.getTargetPan();
-      expect(targetPan.x).toBe(-650);
+      await vi.waitFor(() => {
+        const targetPan = vs2.getTargetPan();
+        expect(targetPan.x).toBe(-650);
+      });
     } finally {
       // Restore
       HTMLElement.prototype.getBoundingClientRect = originalGBR;

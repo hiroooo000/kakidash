@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access */
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { Kakidash } from '../src/index';
 
 describe('Image Zoom Readonly Mode', () => {
@@ -41,13 +41,12 @@ describe('Image Zoom Readonly Mode', () => {
     try {
       mindMap.pasteImage(rootId, imageData, 100, 100);
 
-      // Wait for async processing
-      await new Promise((resolve) => setTimeout(resolve, 50));
-
-      // 2. The render happens in the container.
-      // In our simplified test environment, we might need a manual query.
-      const zoomBtn = container.querySelector('.mindmap-node img + div') as HTMLElement;
-      expect(zoomBtn).not.toBeNull();
+      // 2. The render happens in the container asynchronously.
+      let zoomBtn: HTMLElement | null = null;
+      await vi.waitFor(() => {
+        zoomBtn = container.querySelector('.mindmap-node img + div');
+        expect(zoomBtn).not.toBeNull();
+      });
 
       // 3. Spy on Orchestrator state
       const orchestrator = mindMap.interactionOrchestrator;
@@ -55,7 +54,7 @@ describe('Image Zoom Readonly Mode', () => {
       expect(orchestrator.isReadOnlyState).toBe(false);
 
       // 4. Click Zoom
-      zoomBtn.click();
+      zoomBtn!.click();
 
       // 5. Verify ReadOnly is true
       expect(orchestrator.isReadOnlyState).toBe(true);
