@@ -5,6 +5,26 @@
 この形式は [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) に基づいており、
 このプロジェクトは [セマンティック バージョニング](https://semver.org/spec/v2.0.0.html) に準拠しています。
 
+## [0.4.2] - 2026-11-19
+
+### 追加
+
+- **JSON データ仕様・スキーマ**: `docs/JSON_DATA_SPEC.md`、`docs/JSON_DATA_SPEC_ja.md`、および JSON Schema Draft 2020-12（`docs/schema/kakidash.schema.json`）を追加し、スキーマ検証テストおよび README へのリンクを追加しました。
+
+### 変更
+
+- **型定義の整合**: `MindMapData` の型定義（`NodeStyle` および `dark` テーマ）を実行時の挙動に合わせ、TypeDoc ドキュメントを再生成しました。
+- **テストの安定化**: 非同期ユニットテストにおける固定の `setTimeout` 待機を `vi.waitFor` に置き換えました。
+
+### 修正
+
+- `importData` 時にルートノードの不変条件を強制するように修正。
+- `loadData` 時にマイグレーションされたレガシー画像を `ImageStore` に登録するように修正。
+
+### その他 (Chore)
+
+- Playwright との互換性のため、`ci.yml` および `release.yml` の GitHub Actions ランナーを `ubuntu-24.04` に固定。
+
 ## [0.4.1] - 2026-07-22
 
 ### 修正

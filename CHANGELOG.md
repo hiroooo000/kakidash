@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.2] - 2026-11-19
+
+### Added
+
+- **JSON Data Specification & Schema**: Added `docs/JSON_DATA_SPEC.md`, `docs/JSON_DATA_SPEC_ja.md`, and JSON Schema Draft 2020-12 (`docs/schema/kakidash.schema.json`) with schema validation tests and README links.
+
+### Changed
+
+- **Type Alignment**: Aligned `MindMapData` types (`NodeStyle` and `dark` theme) with runtime behavior and regenerated TypeDoc documentation.
+- **Test Stability**: Replaced fixed `setTimeout` waits with `vi.waitFor` in async unit tests.
+
+### Fixed
+
+- Enforce root node invariant on `importData`.
+- Register migrated legacy images in `ImageStore` during `loadData`.
+
+### Chore
+
+- Pin GitHub Actions runners in `ci.yml` and `release.yml` to `ubuntu-24.04` for Playwright compatibility.
+
 ## [0.4.1] - 2026-07-22
 
 ### Fixed
