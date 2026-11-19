@@ -1,0 +1,165 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/hiroooo000/kakidash/blob/main/docs/schema/kakidash.schema.json",
+  "title": "Kakidash MindMapData",
+  "description": "JSON data format specification for Kakidash mind maps (getData / loadData).",
+  "type": "object",
+  "required": ["nodeData"],
+  "additionalProperties": false,
+  "properties": {
+    "nodeData": {
+      "$ref": "#/$defs/MindMapNodeData",
+      "description": "Root node of the mind map tree."
+    },
+    "theme": {
+      "$ref": "#/$defs/Theme",
+      "description": "Theme applied to the mind map."
+    },
+    "selectedId": {
+      "type": "string",
+      "description": "Primary selected node ID. Used as a fallback on load when selectedIds is omitted or empty."
+    },
+    "selectedIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of currently selected node IDs (multi-selection). Takes precedence over selectedId on load."
+    },
+    "direction": {
+      "type": "number",
+      "description": "Reserved numeric direction field (set to 1 by XMindImporter; omitted on export and ignored on import)."
+    },
+    "linkData": {
+      "description": "Reserved field for future link or relationship data (currently unused)."
+    }
+  },
+  "$defs": {
+    "Theme": {
+      "type": "string",
+      "enum": ["default", "simple", "colorful", "dark", "custom"],
+      "default": "default",
+      "description": "Visual theme identifier."
+    },
+    "NodeStyle": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Inline CSS-like text and color styling applied to a node.",
+      "properties": {
+        "fontSize": {
+          "type": "string",
+          "description": "CSS font-size value (e.g., '12px', '16px', '24px')."
+        },
+        "color": {
+          "type": "string",
+          "description": "CSS text color value (e.g., '#000000', '#E74C3C')."
+        },
+        "background": {
+          "type": "string",
+          "description": "CSS background color value."
+        },
+        "fontWeight": {
+          "type": "string",
+          "description": "CSS font-weight value (e.g., 'bold', 'normal')."
+        },
+        "fontStyle": {
+          "type": "string",
+          "description": "CSS font-style value (e.g., 'italic', 'normal')."
+        },
+        "textDecoration": {
+          "type": "string",
+          "description": "CSS text-decoration value (e.g., 'line-through', 'none')."
+        }
+      }
+    },
+    "ImageSize": {
+      "type": "object",
+      "required": ["width", "height"],
+      "additionalProperties": false,
+      "description": "Natural or display image dimensions in pixels.",
+      "properties": {
+        "width": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "Image width in pixels."
+        },
+        "height": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "Image height in pixels."
+        }
+      }
+    },
+    "MindMapNodeData": {
+      "type": "object",
+      "required": ["id", "topic"],
+      "additionalProperties": false,
+      "description": "Recursive representation of a single node in the mind map tree.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Unique identifier of the node within the mind map tree."
+        },
+        "topic": {
+          "type": "string",
+          "description": "Display text of the node. Empty string for image-only nodes."
+        },
+        "root": {
+          "type": "boolean",
+          "description": "Indicates whether this node is the root node (emitted as true only for the root node)."
+        },
+        "children": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/MindMapNodeData"
+          },
+          "description": "Child nodes in display order. Omitted on export when empty."
+        },
+        "style": {
+          "$ref": "#/$defs/NodeStyle"
+        },
+        "isFolded": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether child nodes are currently collapsed (folded)."
+        },
+        "parentId": {
+          "type": "string",
+          "description": "Reserved parent node ID. Not emitted on export and ignored on import."
+        },
+        "thumbnail": {
+          "type": "string",
+          "description": "Lightweight Base64 Data URL thumbnail image (hybrid image storage)."
+        },
+        "imageRef": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Reference ID or filename pointing to the original high-resolution image in external storage."
+        },
+        "image": {
+          "type": "string",
+          "deprecated": true,
+          "description": "Deprecated since v0.4.0. Embedded full-resolution Base64 Data URL image; automatically migrated to thumbnail and imageRef on loadData()."
+        },
+        "imageSize": {
+          "$ref": "#/$defs/ImageSize"
+        },
+        "layoutSide": {
+          "type": "string",
+          "enum": ["left", "right"],
+          "description": "Preferred side relative to the root node when layout mode is 'Both'."
+        },
+        "icon": {
+          "type": "string",
+          "description": "Built-in SVG icon ID (e.g., 'check', 'num_1_blue') or fallback emoji/text string."
+        },
+        "customWidth": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "Custom maximum node width in pixels, overriding the global maxNodeWidth option."
+        }
+      }
+    }
+  }
+}

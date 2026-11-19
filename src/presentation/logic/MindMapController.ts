@@ -242,6 +242,9 @@ export class MindMapController {
     try {
       const migrationResult = LegacyDataMigrationHelper.migrateIfNeeded(data);
       if (migrationResult.extractedImages.length > 0) {
+        for (const extracted of migrationResult.extractedImages) {
+          this.imageStore?.addImage(extracted.ref, extracted.base64);
+        }
         console.warn(
           `Migrated ${migrationResult.extractedImages.length} legacy images. Please save to write them to sidecars.`,
         );

@@ -409,6 +409,13 @@ kakidash.loadData(data); // Library handles migration if old format
 // Images should be provided via the getImage callback in constructor
 ```
 
+## Data Format (JSON)
+
+For the complete JSON schema and field specification used by `getData()` and `loadData()`, please refer to:
+
+- [JSON Data Specification](./docs/JSON_DATA_SPEC.md)
+- [JSON Schema (`kakidash.schema.json`)](./docs/schema/kakidash.schema.json)
+
 ## Architecture
 
 For details on the software architecture and internal module dependencies, please refer to:

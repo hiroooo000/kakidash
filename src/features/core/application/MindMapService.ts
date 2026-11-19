@@ -401,7 +401,7 @@ export class MindMapService {
 
   importData(data: MindMapData): void {
     const buildNodeFromData = (data: MindMapNodeData, parentId: string | null = null): Node => {
-      const isRoot = !!data.root;
+      const isRoot = parentId === null;
       const node = new Node(
         data.id,
         data.topic,

@@ -131,19 +131,19 @@ describe('ImageExporter', () => {
     await exporter.exportToPng(container);
 
     // Wait for async operations
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    await vi.waitFor(() => {
+      expect(showSaveFilePickerMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          types: expect.arrayContaining([
+            expect.objectContaining({
+              accept: { 'image/png': ['.png'] },
+            }),
+          ]),
+        }),
+      );
+    });
 
     expect(consoleErrorSpy).not.toHaveBeenCalled();
-
-    expect(showSaveFilePickerMock).toHaveBeenCalledWith(
-      expect.objectContaining({
-        types: expect.arrayContaining([
-          expect.objectContaining({
-            accept: { 'image/png': ['.png'] },
-          }),
-        ]),
-      }),
-    );
 
     global.Image = originalImage;
     window.Image = originalImage;
