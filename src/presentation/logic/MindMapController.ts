@@ -944,17 +944,18 @@ export class MindMapController {
   }
 
   pasteImage(parentId: string, imageData: string, width?: number, height?: number): void {
-    this.saveState();
     this.eventBus.emit('command', { name: 'pasteImage', args: { parentId, width, height } });
 
-    // Generate thumbnail asynchronously, but since this method is void, we handle it internally
+    // Generate thumbnail asynchronously, saving undo state only after generation succeeds
     this.imageProcessingService
       .generateThumbnail(imageData)
       .then((thumbnailResult) => {
-        // We need a unique ref for the original image
-        // We can just use a random ID or crypto ID. Let's use the node ID generator logic,
-        // but we don't have direct access to it here unless we add it to dependencies or just use a random string.
-        const imageRef = `img_${Math.random().toString(36).substr(2, 9)}.png`;
+        this.saveState();
+        const uniqueId =
+          typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+            ? crypto.randomUUID()
+            : Math.random().toString(36).slice(2, 11);
+        const imageRef = `img_${uniqueId}.png`;
         this.imageStore.addImage(imageRef, imageData);
 
         const newNode = this.service.addImageNode(

@@ -20,6 +20,17 @@ describe('MindMapController Images and GC', () => {
   let mindMap: MindMap;
   let imageStore: ImageStore;
   let service: MindMapService;
+  let historyService: HistoryService;
+  let mockRenderer: {
+    container: HTMLElement;
+    renderFromLayout: ReturnType<typeof vi.fn>;
+    measureNode: ReturnType<typeof vi.fn>;
+    updateSelection: ReturnType<typeof vi.fn>;
+    zoomNode: ReturnType<typeof vi.fn>;
+  };
+  let mockImageProcessingService: {
+    generateThumbnail: ReturnType<typeof vi.fn>;
+  };
   let mockStyleEditor: { show: ReturnType<typeof vi.fn>; hide: ReturnType<typeof vi.fn> };
 
   beforeEach(() => {
@@ -28,6 +39,17 @@ describe('MindMapController Images and GC', () => {
     const idGenerator = new MockIdGenerator();
     service = new MindMapService(mindMap, idGenerator);
     imageStore = new ImageStore();
+    historyService = new HistoryService(10);
+    mockRenderer = {
+      container: document.createElement('div'),
+      renderFromLayout: vi.fn(),
+      measureNode: vi.fn().mockReturnValue({ width: 100, height: 50 }),
+      updateSelection: vi.fn(),
+      zoomNode: vi.fn(),
+    };
+    mockImageProcessingService = {
+      generateThumbnail: vi.fn(),
+    };
     mockStyleEditor = {
       show: vi.fn(),
       hide: vi.fn(),
@@ -36,30 +58,24 @@ describe('MindMapController Images and GC', () => {
     controller = new MindMapController({
       mindMap,
       service,
-      renderer: {
-        container: document.createElement('div'),
-        render: vi.fn(),
-        updateNodeTopic: vi.fn(),
-        updateNodeSelection: vi.fn(),
-        updateSelection: vi.fn(),
-        zoomNode: vi.fn(),
-      } as any,
+      renderer: mockRenderer as any,
       styleEditor: mockStyleEditor as any,
       eventBus: { emit: vi.fn(), on: vi.fn(), off: vi.fn() } as any,
-      historyService: new HistoryService(10),
+      historyService,
       clipboardService: {} as any,
       searchService: {} as any,
       viewportService: {
         startAnimationLoop: vi.fn(),
         setInitialPan: vi.fn(),
         applyTransform: vi.fn(),
+        ensureNodeVisible: vi.fn(),
       } as any,
       navigationService: {} as any,
       fileIOService: {} as any,
       themeService: { applyInitialTheme: vi.fn() } as any,
       commandBus: new CommandBus(),
       imageStore,
-      imageProcessingService: {} as any,
+      imageProcessingService: mockImageProcessingService as any,
     });
   });
 
@@ -120,5 +136,33 @@ describe('MindMapController Images and GC', () => {
 
     expect(mockStyleEditor.hide).toHaveBeenCalled();
     expect(mockStyleEditor.show).not.toHaveBeenCalled();
+  });
+
+  it('should not save undo state if pasteImage thumbnail generation fails', async () => {
+    const saveStateSpy = vi.spyOn(historyService, 'saveState');
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    mockImageProcessingService.generateThumbnail.mockRejectedValue(new Error('Invalid image'));
+
+    controller.pasteImage('root', 'data:image/png;base64,bad');
+    await new Promise((resolve) => setTimeout(resolve, 10));
+
+    expect(saveStateSpy).not.toHaveBeenCalled();
+    consoleErrorSpy.mockRestore();
+  });
+
+  it('should save undo state and add image node when pasteImage succeeds', async () => {
+    const saveStateSpy = vi.spyOn(historyService, 'saveState');
+    mockImageProcessingService.generateThumbnail.mockResolvedValue({
+      thumbnailBase64: 'data:image/png;base64,thumb',
+      width: 100,
+      height: 80,
+    });
+
+    controller.pasteImage('root', 'data:image/png;base64,original');
+    await new Promise((resolve) => setTimeout(resolve, 10));
+
+    expect(saveStateSpy).toHaveBeenCalledTimes(1);
+    expect(mindMap.root.children).toHaveLength(1);
+    expect(mindMap.root.children[0].imageRef).toMatch(/^img_[a-zA-Z0-9_-]+\.png$/);
   });
 });
