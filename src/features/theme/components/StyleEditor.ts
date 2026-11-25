@@ -57,7 +57,6 @@ export class StyleEditor {
     el.style.zIndex = '2000';
     el.style.pointerEvents = 'auto'; // Re-enable pointer events
     el.style.fontFamily = 'Arial, sans-serif';
-    el.style.display = 'flex';
     el.style.flexDirection = 'column';
     el.style.gap = '8px';
     el.style.margin = '0';
