@@ -200,4 +200,23 @@ describe('MindMapController', () => {
     // Assert
     expect(addCustomCommandSpy).toHaveBeenCalledWith(customCmd);
   });
+
+  it('should render once and not emit model:load on undo and redo', () => {
+    const renderSpy = vi.spyOn(renderer, 'renderFromLayout');
+    renderSpy.mockClear();
+    mockEmit.mockClear();
+
+    controller.undo();
+    expect(renderSpy).toHaveBeenCalledTimes(1);
+    expect(mockEmit).not.toHaveBeenCalledWith('model:load', expect.anything());
+    expect(mockEmit.mock.calls.filter((c) => c[0] === 'model:change')).toHaveLength(1);
+
+    renderSpy.mockClear();
+    mockEmit.mockClear();
+
+    controller.redo();
+    expect(renderSpy).toHaveBeenCalledTimes(1);
+    expect(mockEmit).not.toHaveBeenCalledWith('model:load', expect.anything());
+    expect(mockEmit.mock.calls.filter((c) => c[0] === 'model:change')).toHaveLength(1);
+  });
 });

@@ -242,22 +242,32 @@ export class MindMapController {
   }
 
   loadData(data: MindMapData): void {
+    this.applySnapshot(data, true);
+  }
+
+  private applySnapshot(data: MindMapData, emitLoad: boolean): void {
     try {
-      const migrationResult = LegacyDataMigrationHelper.migrateIfNeeded(data);
-      if (migrationResult.extractedImages.length > 0) {
-        for (const extracted of migrationResult.extractedImages) {
-          this.imageStore?.addImage(extracted.ref, extracted.base64);
+      let targetData = data;
+      if (emitLoad) {
+        const migrationResult = LegacyDataMigrationHelper.migrateIfNeeded(data);
+        if (migrationResult.extractedImages.length > 0) {
+          for (const extracted of migrationResult.extractedImages) {
+            this.imageStore?.addImage(extracted.ref, extracted.base64);
+          }
+          console.warn(
+            `Migrated ${migrationResult.extractedImages.length} legacy images. Please save to write them to sidecars.`,
+          );
         }
-        console.warn(
-          `Migrated ${migrationResult.extractedImages.length} legacy images. Please save to write them to sidecars.`,
-        );
+        targetData = migrationResult.migratedData;
       }
-      this.service.importData(migrationResult.migratedData);
+      this.service.importData(targetData);
       this.render(); // Full render needed after model change
-      this.restoreSelection(data);
-      this.eventBus.emit('model:load', data);
-      if (data.theme) {
-        this.setTheme(data.theme, { saveState: false, emitChange: false });
+      this.restoreSelection(targetData);
+      if (emitLoad) {
+        this.eventBus.emit('model:load', data);
+      }
+      if (targetData.theme) {
+        this.setTheme(targetData.theme, { saveState: false, emitChange: false });
       }
       this.eventBus.emit('model:change', undefined);
     } catch (e) {
@@ -765,9 +775,7 @@ export class MindMapController {
     const prevState = this.historyService.undo(currentState);
     if (prevState) {
       this.eventBus.emit('command', { name: 'undo' });
-      this.loadData(prevState);
-      this.render(); // Full render needed after model change
-      this.eventBus.emit('model:change', undefined);
+      this.applySnapshot(prevState, false);
     }
   }
 
@@ -776,9 +784,7 @@ export class MindMapController {
     const nextState = this.historyService.redo(currentState);
     if (nextState) {
       this.eventBus.emit('command', { name: 'redo' });
-      this.loadData(nextState);
-      this.render(); // Full render needed after model change
-      this.eventBus.emit('model:change', undefined);
+      this.applySnapshot(nextState, false);
     }
   }
 
