@@ -193,6 +193,9 @@ export class MindMapController {
 
   public destroy() {
     this.viewportService.destroy();
+    if (this.interactionOrchestrator) {
+      this.interactionOrchestrator.destroy();
+    }
   }
 
   // Data Persistence

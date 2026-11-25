@@ -13,6 +13,7 @@ class MockHTMLElement {
     removeProperty: vi.fn(),
   };
   addEventListener = vi.fn();
+  removeEventListener = vi.fn();
   setAttribute = vi.fn();
   appendChild = vi.fn();
   removeChild = vi.fn();
@@ -77,11 +78,13 @@ class MockHTMLElement {
     };
   },
   addEventListener: vi.fn(),
+  removeEventListener: vi.fn(),
   getElementById: vi.fn().mockReturnValue(null),
   head: { appendChild: vi.fn() },
 };
 (global as any).window = {
   addEventListener: vi.fn(),
+  removeEventListener: vi.fn(),
   getComputedStyle: vi
     .fn()
     .mockReturnValue({ font: '', padding: '', border: '', borderRadius: '' }),

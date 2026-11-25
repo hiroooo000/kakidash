@@ -57,4 +57,24 @@ describe('Kakidash', () => {
     const images = board.getImages();
     expect(images[imgNode!.imageRef!]).toBe(legacyImage);
   });
+
+  it('should clean up interactionOrchestrator listeners and injected styles on destroy', () => {
+    document.getElementById('drag-drop-styles')?.remove();
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const board = new Kakidash(container);
+
+    expect(document.getElementById('drag-drop-styles')).not.toBeNull();
+
+    board.selectNode(board.getRootId());
+    board.destroy();
+
+    expect(document.getElementById('drag-drop-styles')).toBeNull();
+
+    const initialChildCount = board.getRoot().children.length;
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', bubbles: true }));
+    expect(board.getRoot().children.length).toBe(initialChildCount);
+
+    container.remove();
+  });
 });

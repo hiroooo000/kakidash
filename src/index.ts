@@ -428,14 +428,6 @@ export class Kakidash extends TypedEventEmitter<KakidashEventMap> {
 
   destroy(): void {
     this.controller.destroy();
-    // Also interactionHandler.destroy() is called by controller if it owns it?
-    // Controller.destroy sets cancelAnimationFrame.
-    // Controller doesn't explicitly destroy interactionHandler?
-    // Old destroy() called interactionHandler.destroy().
-    // I should add that to Controller.destroy.
-    // I will fix Controller later.
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call
-    (this.controller as any).interactionHandler?.destroy();
   }
 
   batch(callback: () => void): void {
