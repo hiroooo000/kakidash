@@ -394,7 +394,9 @@ export class MindMapController {
     nodeId: string,
     updates: { topic?: string; style?: Partial<NodeStyle>; icon?: string },
   ): void {
-    this.saveState();
+    if (!this.pendingNodeCreation) {
+      this.saveState();
+    }
     this.eventBus.emit('command', { name: 'updateNode', args: { nodeId, updates } });
     if (this.interactionOrchestrator && this.interactionOrchestrator.isReadOnlyState) return;
 
@@ -484,6 +486,7 @@ export class MindMapController {
       }
     }
 
+    this.saveState();
     this.pendingNodeCreation = true;
     const node = this.addNode(parentId, 'New topic', side, { emitChange: false });
     if (node) {
@@ -494,6 +497,7 @@ export class MindMapController {
   }
 
   addSiblingNode(nodeId: string, position: 'before' | 'after' = 'after'): void {
+    this.saveState();
     this.pendingNodeCreation = true;
     const newNode = this.addSibling(nodeId, position, 'New topic', { emitChange: false });
     if (newNode) {
@@ -504,6 +508,7 @@ export class MindMapController {
   }
 
   insertParentNode(nodeId: string): void {
+    this.saveState();
     this.pendingNodeCreation = true;
     const newNode = this.insertParent(nodeId, 'New topic', { emitChange: false });
     if (newNode) {

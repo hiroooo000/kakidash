@@ -167,4 +167,35 @@ describe('Kakidash Model Change Event Guard', () => {
     expect(onChangeSpy).toHaveBeenCalledTimes(1);
     expect(board.findNodes((n) => n.topic === 'New topic')).toHaveLength(1);
   });
+
+  it('Should remove newly added node when undo is called after finishing initial edit', () => {
+    const rootId = board.getRootId();
+    board.selectNode(rootId);
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab' }));
+
+    const input = document.body.querySelector('textarea');
+    expect(input).not.toBeNull();
+    input!.value = 'My New Node';
+    input!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+
+    expect(board.getRoot().children).toHaveLength(1);
+
+    board.undo();
+    expect(board.getRoot().children).toHaveLength(0);
+  });
+
+  it('Should remove newly added node when undo is called after cancelling initial edit', () => {
+    const rootId = board.getRootId();
+    board.selectNode(rootId);
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab' }));
+
+    const input = document.body.querySelector('textarea');
+    expect(input).not.toBeNull();
+    input!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+
+    expect(board.getRoot().children).toHaveLength(1);
+
+    board.undo();
+    expect(board.getRoot().children).toHaveLength(0);
+  });
 });
