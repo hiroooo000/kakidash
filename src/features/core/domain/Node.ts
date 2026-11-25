@@ -80,4 +80,11 @@ export class Node {
   updateTopic(topic: string): void {
     this.topic = topic;
   }
+
+  /**
+   * Returns true if this node represents an image node (legacy or hybrid storage).
+   */
+  hasImage(): boolean {
+    return Boolean(this.image || this.thumbnail || this.imageRef);
+  }
 }

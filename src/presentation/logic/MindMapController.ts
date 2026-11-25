@@ -563,7 +563,7 @@ export class MindMapController {
       const node = this.mindMap.findNode(nodeId);
       if (node) {
         if (
-          !node.image &&
+          !node.hasImage() &&
           this.interactionOrchestrator &&
           !this.interactionOrchestrator.isReadOnlyState
         ) {

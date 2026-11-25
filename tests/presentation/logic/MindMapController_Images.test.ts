@@ -20,6 +20,7 @@ describe('MindMapController Images and GC', () => {
   let mindMap: MindMap;
   let imageStore: ImageStore;
   let service: MindMapService;
+  let mockStyleEditor: { show: ReturnType<typeof vi.fn>; hide: ReturnType<typeof vi.fn> };
 
   beforeEach(() => {
     const root = new Node('root', 'Root');
@@ -27,6 +28,10 @@ describe('MindMapController Images and GC', () => {
     const idGenerator = new MockIdGenerator();
     service = new MindMapService(mindMap, idGenerator);
     imageStore = new ImageStore();
+    mockStyleEditor = {
+      show: vi.fn(),
+      hide: vi.fn(),
+    };
 
     controller = new MindMapController({
       mindMap,
@@ -36,14 +41,19 @@ describe('MindMapController Images and GC', () => {
         render: vi.fn(),
         updateNodeTopic: vi.fn(),
         updateNodeSelection: vi.fn(),
+        updateSelection: vi.fn(),
         zoomNode: vi.fn(),
       } as any,
-      styleEditor: {} as any,
+      styleEditor: mockStyleEditor as any,
       eventBus: { emit: vi.fn(), on: vi.fn(), off: vi.fn() } as any,
       historyService: new HistoryService(10),
       clipboardService: {} as any,
       searchService: {} as any,
-      viewportService: { startAnimationLoop: vi.fn(), setInitialPan: vi.fn() } as any,
+      viewportService: {
+        startAnimationLoop: vi.fn(),
+        setInitialPan: vi.fn(),
+        applyTransform: vi.fn(),
+      } as any,
       navigationService: {} as any,
       fileIOService: {} as any,
       themeService: { applyInitialTheme: vi.fn() } as any,
@@ -92,5 +102,23 @@ describe('MindMapController Images and GC', () => {
 
     const images = controller.getImages();
     expect(images['img1.png']).toBe('data1');
+  });
+
+  it('should hide StyleEditor when selecting a hybrid image node (thumbnail/imageRef)', () => {
+    const imgNode = new Node('img-node', '', 'root');
+    imgNode.thumbnail = 'data:image/png;base64,thumb';
+    imgNode.imageRef = 'img1.png';
+    mindMap.root.addChild(imgNode);
+    mindMap.registerNode(imgNode);
+
+    controller.setInteractionOrchestrator({
+      updateSelection: vi.fn(),
+      isReadOnlyState: false,
+    } as unknown as Parameters<MindMapController['setInteractionOrchestrator']>[0]);
+
+    controller.selectNode('img-node');
+
+    expect(mockStyleEditor.hide).toHaveBeenCalled();
+    expect(mockStyleEditor.show).not.toHaveBeenCalled();
   });
 });
