@@ -49,7 +49,7 @@ export interface KakidashOptions {
   shortcuts?: ShortcutConfig;
   /**
    * Maximum width for mind map nodes in pixels.
-   * If not provided, defaults to unlimited (fitting content).
+   * Defaults to `300`. Set to `-1` for unlimited width (no automatic wrapping).
    */
   maxNodeWidth?: number;
   /**
@@ -242,10 +242,8 @@ export class Kakidash extends TypedEventEmitter<KakidashEventMap> {
 
     this.controller.setLayoutSwitcher(layoutSwitcher);
 
-    // Apply constructor options
-    if (options.maxNodeWidth !== undefined) {
-      this.controller.setMaxNodeWidth(options.maxNodeWidth);
-    }
+    // Apply constructor options (default maxNodeWidth to 300px for wrapping)
+    this.controller.setMaxNodeWidth(options.maxNodeWidth ?? 300);
     if (options.customStyles) {
       this.controller.updateGlobalStyles(options.customStyles);
     }

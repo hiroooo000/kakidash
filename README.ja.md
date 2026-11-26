@@ -203,7 +203,7 @@ kakidash.setTheme('custom');
 - **`new Kakidash(container: HTMLElement, options?: KakidashOptions)`**: インスタンスを生成します。
   - `options.locale`: ヘルプモーダルなどの表示言語 ('en' | 'ja')。
   - `options.shortcuts`: キーボードショートカットのカスタマイズ。
-  - `options.maxNodeWidth`: テキストノードの最大幅 (ピクセル)。
+  - `options.maxNodeWidth`: テキストノードの最大幅 (ピクセル、デフォルト: `300`、`-1` で無制限)。
   - `options.customStyles`: 初期のカスタムスタイル。
   - `options.disabledCommandPaletteFeatures`: コマンドパレットの特定の機能を無効化 ('search' | 'icon' | 'import' | 'export')。
 - **`kakidash.addNode(parentId, topic)`**: 指定した親ノードに新しい子ノードを追加します。

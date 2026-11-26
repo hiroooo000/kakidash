@@ -16,6 +16,18 @@ describe('Kakidash Constructor Options', () => {
     document.body.removeChild(container);
   });
 
+  it('should default maxNodeWidth to 300 when not provided', () => {
+    const kakidash = new Kakidash(container);
+    expect(kakidash.getMaxNodeWidth()).toBe(300);
+    kakidash.destroy();
+  });
+
+  it('should allow unlimited maxNodeWidth (-1) via constructor options', () => {
+    const kakidash = new Kakidash(container, { maxNodeWidth: -1 });
+    expect(kakidash.getMaxNodeWidth()).toBe(-1);
+    kakidash.destroy();
+  });
+
   it('should set maxNodeWidth via constructor options', () => {
     const options: KakidashOptions = {
       maxNodeWidth: 300,
