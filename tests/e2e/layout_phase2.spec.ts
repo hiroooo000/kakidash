@@ -85,5 +85,8 @@ test.describe('Layout Regression - Phase 2: Multiline Text Update', () => {
     // content max-width (300px) + horizontal padding (24px) + border (2px) = 326px
     expect(wrappedBox!.width).toBeLessThanOrEqual(330);
     expect(wrappedBox!.height).toBeGreaterThan(initialBox!.height);
+
+    // Snapshot
+    await expect(page).toHaveScreenshot('02-autowrap-update.png');
   });
 });
