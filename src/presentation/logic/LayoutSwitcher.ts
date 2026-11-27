@@ -53,6 +53,7 @@ export class LayoutSwitcher {
     this.createThemeButton('default', this.getThemeDefaultIcon());
     this.createThemeButton('simple', this.getThemeSimpleIcon());
     this.createThemeButton('colorful', this.getThemeColorfulIcon());
+    this.createThemeButton('dark', this.getThemeDarkIcon());
     this.createThemeButton('custom', this.getThemeCustomIcon());
 
     this.addSeparator();
@@ -181,6 +182,7 @@ export class LayoutSwitcher {
           desc: 'シンプルテーマ: 枠線のない、箇条書きのようなシンプルなスタイルです。',
         },
         { id: 'colorful', desc: 'カラフルテーマ: 枝ごとに色分けしたデザインです。' },
+        { id: 'dark', desc: 'ダークテーマ: 暗い背景に適したデザインです。' },
         { id: 'custom', desc: 'カスタムテーマ: カスタムスタイルを適用します。' },
         { id: 'resetZoom', desc: 'ズームリセット: ズームをリセットして中央に移動します。' },
         { id: 'help', desc: 'ヘルプ: このヘルプ画面を表示します。' },
@@ -193,6 +195,7 @@ export class LayoutSwitcher {
       { id: 'default', desc: 'Default Theme: Standard design with borders.' },
       { id: 'simple', desc: 'Simple Theme: Minimal style without borders, like bullet points.' },
       { id: 'colorful', desc: 'Colorful Theme: Color-coded design for each branch.' },
+      { id: 'dark', desc: 'Dark Theme: Design suited for dark backgrounds.' },
       { id: 'custom', desc: 'Custom Theme: Your custom styles are applied.' },
       { id: 'resetZoom', desc: 'Reset Zoom: Resets zoom and centers the view.' },
       { id: 'help', desc: 'Help: Shows this help screen.' },
@@ -253,6 +256,13 @@ export class LayoutSwitcher {
       <circle cx="7.5" cy="8.5" r="1.5" fill="currentColor" stroke="none" />
       <circle cx="12.5" cy="6.5" r="1.5" fill="currentColor" stroke="none" />
       <circle cx="16.5" cy="9.5" r="1.5" fill="currentColor" stroke="none" />
+    </svg>`;
+  }
+
+  public getThemeDarkIcon(): string {
+    // Dark: Moon icon
+    return `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
     </svg>`;
   }
 

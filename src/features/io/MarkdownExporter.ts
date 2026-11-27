@@ -36,7 +36,7 @@ export class MarkdownExporter {
   }
 
   private getNodeText(node: Node): string {
-    if (node.image) {
+    if (node.hasImage()) {
       return '[image node]';
     }
     return node.topic;

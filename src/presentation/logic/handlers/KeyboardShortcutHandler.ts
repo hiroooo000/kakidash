@@ -47,12 +47,9 @@ export class KeyboardShortcutHandler {
 
   private attachEvents(): void {
     const handleKeyDown = (e: Event) => {
-      console.log(`[KeyboardShortcutHandler] RAW KEYDOWN: ${(e as KeyboardEvent).key}`);
       if (this.isReadOnly) return;
       const ke = e as KeyboardEvent;
       const target = ke.target as HTMLElement;
-
-      console.log(`[KeyboardShortcutHandler] Target: ${target ? target.tagName : 'unknown'}`);
 
       // Safety check for input elements
       if (
@@ -63,7 +60,6 @@ export class KeyboardShortcutHandler {
       }
 
       const selectedNodeId = this.getSelectedNodeId();
-      console.log(`[KeyboardShortcutHandler] Selected ID: ${selectedNodeId}`);
 
       // Handle No Selection (Initial Focus)
       if (!selectedNodeId) {

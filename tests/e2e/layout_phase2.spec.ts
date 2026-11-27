@@ -46,4 +46,47 @@ test.describe('Layout Regression - Phase 2: Multiline Text Update', () => {
     // Snapshot
     await expect(page).toHaveScreenshot('02-multiline-update.png');
   });
+
+  test('should automatically wrap long single-line text at default maxNodeWidth (300px)', async ({
+    page,
+  }) => {
+    const node3 = page.locator('.mindmap-node').filter({ hasText: 'NewNode3' }).first();
+    const initialBox = await node3.boundingBox();
+    expect(initialBox).not.toBeNull();
+
+    const nodeId = await node3.getAttribute('data-id');
+    /* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-return */
+    await page.evaluate(
+      (id) => (window as any).kakidash.controller.ensureNodeVisible(id, true, true),
+      nodeId,
+    );
+    /* eslint-enable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-return */
+    await page.waitForTimeout(100);
+
+    await node3.click();
+    await node3.dblclick();
+
+    const editor = page.locator('textarea');
+    await expect(editor).toBeVisible();
+
+    const longSingleLineText = 'a'.repeat(80);
+    await editor.fill(longSingleLineText);
+    await page.keyboard.press('Enter');
+    await expect(editor).not.toBeVisible();
+
+    const updatedNode = page
+      .locator('.mindmap-node')
+      .filter({ hasText: longSingleLineText })
+      .first();
+    await expect(updatedNode).toBeVisible();
+
+    const wrappedBox = await updatedNode.boundingBox();
+    expect(wrappedBox).not.toBeNull();
+    // content max-width (300px) + horizontal padding (24px) + border (2px) = 326px
+    expect(wrappedBox!.width).toBeLessThanOrEqual(330);
+    expect(wrappedBox!.height).toBeGreaterThan(initialBox!.height);
+
+    // Snapshot
+    await expect(page).toHaveScreenshot('02-autowrap-update.png');
+  });
 });

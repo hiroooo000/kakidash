@@ -193,6 +193,9 @@ export class MindMapController {
 
   public destroy() {
     this.viewportService.destroy();
+    if (this.interactionOrchestrator) {
+      this.interactionOrchestrator.destroy();
+    }
   }
 
   // Data Persistence
@@ -239,22 +242,32 @@ export class MindMapController {
   }
 
   loadData(data: MindMapData): void {
+    this.applySnapshot(data, true);
+  }
+
+  private applySnapshot(data: MindMapData, emitLoad: boolean): void {
     try {
-      const migrationResult = LegacyDataMigrationHelper.migrateIfNeeded(data);
-      if (migrationResult.extractedImages.length > 0) {
-        for (const extracted of migrationResult.extractedImages) {
-          this.imageStore?.addImage(extracted.ref, extracted.base64);
+      let targetData = data;
+      if (emitLoad) {
+        const migrationResult = LegacyDataMigrationHelper.migrateIfNeeded(data);
+        if (migrationResult.extractedImages.length > 0) {
+          for (const extracted of migrationResult.extractedImages) {
+            this.imageStore?.addImage(extracted.ref, extracted.base64);
+          }
+          console.warn(
+            `Migrated ${migrationResult.extractedImages.length} legacy images. Please save to write them to sidecars.`,
+          );
         }
-        console.warn(
-          `Migrated ${migrationResult.extractedImages.length} legacy images. Please save to write them to sidecars.`,
-        );
+        targetData = migrationResult.migratedData;
       }
-      this.service.importData(migrationResult.migratedData);
+      this.service.importData(targetData);
       this.render(); // Full render needed after model change
-      this.restoreSelection(data);
-      this.eventBus.emit('model:load', data);
-      if (data.theme) {
-        this.setTheme(data.theme, { saveState: false, emitChange: false });
+      this.restoreSelection(targetData);
+      if (emitLoad) {
+        this.eventBus.emit('model:load', data);
+      }
+      if (targetData.theme) {
+        this.setTheme(targetData.theme, { saveState: false, emitChange: false });
       }
       this.eventBus.emit('model:change', undefined);
     } catch (e) {
@@ -391,7 +404,9 @@ export class MindMapController {
     nodeId: string,
     updates: { topic?: string; style?: Partial<NodeStyle>; icon?: string },
   ): void {
-    this.saveState();
+    if (!this.pendingNodeCreation) {
+      this.saveState();
+    }
     this.eventBus.emit('command', { name: 'updateNode', args: { nodeId, updates } });
     if (this.interactionOrchestrator && this.interactionOrchestrator.isReadOnlyState) return;
 
@@ -481,6 +496,7 @@ export class MindMapController {
       }
     }
 
+    this.saveState();
     this.pendingNodeCreation = true;
     const node = this.addNode(parentId, 'New topic', side, { emitChange: false });
     if (node) {
@@ -491,6 +507,7 @@ export class MindMapController {
   }
 
   addSiblingNode(nodeId: string, position: 'before' | 'after' = 'after'): void {
+    this.saveState();
     this.pendingNodeCreation = true;
     const newNode = this.addSibling(nodeId, position, 'New topic', { emitChange: false });
     if (newNode) {
@@ -501,6 +518,7 @@ export class MindMapController {
   }
 
   insertParentNode(nodeId: string): void {
+    this.saveState();
     this.pendingNodeCreation = true;
     const newNode = this.insertParent(nodeId, 'New topic', { emitChange: false });
     if (newNode) {
@@ -560,7 +578,7 @@ export class MindMapController {
       const node = this.mindMap.findNode(nodeId);
       if (node) {
         if (
-          !node.image &&
+          !node.hasImage() &&
           this.interactionOrchestrator &&
           !this.interactionOrchestrator.isReadOnlyState
         ) {
@@ -757,9 +775,7 @@ export class MindMapController {
     const prevState = this.historyService.undo(currentState);
     if (prevState) {
       this.eventBus.emit('command', { name: 'undo' });
-      this.loadData(prevState);
-      this.render(); // Full render needed after model change
-      this.eventBus.emit('model:change', undefined);
+      this.applySnapshot(prevState, false);
     }
   }
 
@@ -768,9 +784,7 @@ export class MindMapController {
     const nextState = this.historyService.redo(currentState);
     if (nextState) {
       this.eventBus.emit('command', { name: 'redo' });
-      this.loadData(nextState);
-      this.render(); // Full render needed after model change
-      this.eventBus.emit('model:change', undefined);
+      this.applySnapshot(nextState, false);
     }
   }
 
@@ -930,17 +944,18 @@ export class MindMapController {
   }
 
   pasteImage(parentId: string, imageData: string, width?: number, height?: number): void {
-    this.saveState();
     this.eventBus.emit('command', { name: 'pasteImage', args: { parentId, width, height } });
 
-    // Generate thumbnail asynchronously, but since this method is void, we handle it internally
+    // Generate thumbnail asynchronously, saving undo state only after generation succeeds
     this.imageProcessingService
       .generateThumbnail(imageData)
       .then((thumbnailResult) => {
-        // We need a unique ref for the original image
-        // We can just use a random ID or crypto ID. Let's use the node ID generator logic,
-        // but we don't have direct access to it here unless we add it to dependencies or just use a random string.
-        const imageRef = `img_${Math.random().toString(36).substr(2, 9)}.png`;
+        this.saveState();
+        const uniqueId =
+          typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+            ? crypto.randomUUID()
+            : Math.random().toString(36).slice(2, 11);
+        const imageRef = `img_${uniqueId}.png`;
         this.imageStore.addImage(imageRef, imageData);
 
         const newNode = this.service.addImageNode(

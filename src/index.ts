@@ -49,7 +49,7 @@ export interface KakidashOptions {
   shortcuts?: ShortcutConfig;
   /**
    * Maximum width for mind map nodes in pixels.
-   * If not provided, defaults to unlimited (fitting content).
+   * Defaults to `300`. Set to `-1` for unlimited width (no automatic wrapping).
    */
   maxNodeWidth?: number;
   /**
@@ -242,10 +242,8 @@ export class Kakidash extends TypedEventEmitter<KakidashEventMap> {
 
     this.controller.setLayoutSwitcher(layoutSwitcher);
 
-    // Apply constructor options
-    if (options.maxNodeWidth !== undefined) {
-      this.controller.setMaxNodeWidth(options.maxNodeWidth);
-    }
+    // Apply constructor options (default maxNodeWidth to 300px for wrapping)
+    this.controller.setMaxNodeWidth(options.maxNodeWidth ?? 300);
     if (options.customStyles) {
       this.controller.updateGlobalStyles(options.customStyles);
     }
@@ -347,23 +345,7 @@ export class Kakidash extends TypedEventEmitter<KakidashEventMap> {
   }
 
   public getSelectedNodeId(): string | null {
-    // Note: private selectedNodeId removed from Kakidash, access via public accessor implies state?
-    // Controller has the state.
-    // Controller doesn't expose getSelectedNodeId?
-    // We should add it or check internal state.
-    // I'll assume we can't access private 'selectedNodeId' of controller easily unless I exposed getter.
-    // I will add getter to controller via updateNode style logic or just cast.
-    // Actually I missed adding `getSelectedNodeId` to Controller in my previous steps. I should add it or use `(this.controller as any).selectedNodeId`.
-    // Ideally I update Controller. But for now I will fix this in next step or use hack if needed.
-    // Prefer cleaner: I'll add `getSelectedNodeId` to controller.
-    // Since I can't edit Controller here, I will assume it exists or fail.
-    // I'll check if I added it. I didn't explicitly.
-    // I will add it using multi_replace after this write, OR re-write Controller first?
-    // User is waiting.
-    // `getSelectedNodeId` is public API. I must support it.
-    // I will add it to Controller in a separate tool call after this file, OR I can modify the file write here to assume it exists, and then fix controller.
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-return
-    return (this.controller as any).selectedNodeId;
+    return this.controller.getSelectedNodeId();
   }
 
   /* ==========================================================================================
@@ -428,28 +410,10 @@ export class Kakidash extends TypedEventEmitter<KakidashEventMap> {
 
   destroy(): void {
     this.controller.destroy();
-    // Also interactionHandler.destroy() is called by controller if it owns it?
-    // Controller.destroy sets cancelAnimationFrame.
-    // Controller doesn't explicitly destroy interactionHandler?
-    // Old destroy() called interactionHandler.destroy().
-    // I should add that to Controller.destroy.
-    // I will fix Controller later.
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call
-    (this.controller as any).interactionHandler?.destroy();
   }
 
   batch(callback: () => void): void {
-    // Proxy batching? Controller needs batch method.
-    // I missed `batch` in Controller.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
-    (this.controller as any).isBatching = true;
-    try {
-      callback();
-    } finally {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
-      (this.controller as any).isBatching = false;
-      this.controller.render();
-    }
+    this.controller.batch(callback);
   }
 
   /* ==========================================================================================
@@ -537,39 +501,19 @@ export class Kakidash extends TypedEventEmitter<KakidashEventMap> {
   }
 
   getData(): MindMapData {
-    // Logic was:
-    // const data = this.service.exportData();
-    // data.selectedId = this.selectedNodeId || undefined;
-
-    // We need service access or controller access.
-    // Controller has service.
-    // I can expose getData on Controller.
-    // Or access via property if I make it public.
-    // I'll add getData to Controller soon. For now cast or assume method.
-    // return (this.controller as any).getData();
-    // I'll implement explicit helper here if possible?
-    // No, service is private in Controller.
-    // I must add getData to Controller.
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-return
-    return (this.controller as any).getData();
+    return this.controller.getData();
   }
 
   getImages(): Record<string, string> {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-return
-    return (this.controller as any).getImages();
+    return this.controller.getImages();
   }
 
   gcImages(): void {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-explicit-any
-    (this.controller as any).gcImages();
+    this.controller.gcImages();
   }
 
   loadData(data: MindMapData): void {
-    // Logic: service.importData(data), selectNode, emit...
-    // Controller should handle this.
-    // (this.controller as any).loadData(data);
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-explicit-any
-    (this.controller as any).loadData(data);
+    this.controller.loadData(data);
   }
 
   getRootId(): string {

@@ -198,7 +198,7 @@ All values accept standard CSS strings.
 - **`new Kakidash(container: HTMLElement, options?: KakidashOptions)`**: Creates a new instance.
   - `options.locale`: Language for the help modal and other UI elements ('en' | 'ja').
   - `options.shortcuts`: Custom keyboard shortcuts.
-  - `options.maxNodeWidth`: Maximum width for text nodes (pixels).
+  - `options.maxNodeWidth`: Maximum width for text nodes in pixels (Default: `300`, `-1` for unlimited).
   - `options.customStyles`: Initial custom styles.
   - `options.disabledCommandPaletteFeatures`: Features to disable in the command palette ('search' | 'icon' | 'import' | 'export').
 - **`kakidash.addNode(parentId, topic)`**: Adds a new child node to the specified parent node.

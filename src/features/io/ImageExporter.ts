@@ -91,16 +91,6 @@ export class ImageExporter {
     }
   }
 
-  private async showSavePicker(
-    options: SaveFilePickerOptions,
-  ): Promise<FileSystemFileHandle | null> {
-    if (typeof window.showSaveFilePicker !== 'function') {
-      alert('Your browser does not support the File System Access API required for saving files.');
-      return null;
-    }
-    return window.showSaveFilePicker(options);
-  }
-
   private async saveFile(
     blob: Blob,
     filename: string,
@@ -113,14 +103,26 @@ export class ImageExporter {
       return;
     }
 
-    const handle = await this.showSavePicker({
-      suggestedName: filename,
-      types,
-    });
-    if (!handle) return; // Not supported or cancelled (though cancelled usually throws AbortError)
+    if (typeof window.showSaveFilePicker === 'function') {
+      const handle = await window.showSaveFilePicker({
+        suggestedName: filename,
+        types,
+      });
+      if (!handle) return;
 
-    const writable = await handle.createWritable();
-    await writable.write(blob);
-    await writable.close();
+      const writable = await handle.createWritable();
+      await writable.write(blob);
+      await writable.close();
+    } else {
+      // Fallback for browsers not supporting File System Access API
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
   }
 }

@@ -166,6 +166,37 @@ describe('MarkdownExporter', () => {
     expect(exportedContent).toBe(expected);
   });
 
+  it('should replace hybrid image nodes (thumbnail/imageRef) with [image node]', async () => {
+    const root = createNode('root', 'Root', null, true);
+    const thumbNode = createNode('img-thumb', '', 'root');
+    thumbNode.thumbnail = 'data:image/png;base64,thumb';
+    const refNode = createNode('img-ref', '', 'root');
+    refNode.imageRef = 'img_123.png';
+
+    root.addChild(thumbNode);
+    root.addChild(refNode);
+
+    const mindMap = new MindMap(root);
+    const exporter = new MarkdownExporter();
+
+    let exportedContent = '';
+    mockShowSaveFilePicker.mockResolvedValue({
+      createWritable: vi.fn().mockResolvedValue({
+        write: vi.fn().mockImplementation((blob: Blob) => {
+          return blob.text().then((text) => {
+            exportedContent = text;
+          });
+        }),
+        close: vi.fn(),
+      }),
+    });
+
+    await exporter.export(mindMap);
+
+    const expected = ['# Root', '## [image node]', '## [image node]'].join('\n');
+    expect(exportedContent).toBe(expected);
+  });
+
   it('should call showSaveFilePicker with correct options', async () => {
     const root = createNode('root', 'Root Topic', null, true);
     const mindMap = new MindMap(root);

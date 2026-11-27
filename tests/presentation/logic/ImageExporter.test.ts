@@ -170,4 +170,29 @@ describe('ImageExporter', () => {
     expect(consoleSpy).toHaveBeenCalled();
     expect(alertSpy).toHaveBeenCalled();
   });
+
+  it('falls back to anchor download when showSaveFilePicker is not supported', async () => {
+    window.showSaveFilePicker = undefined;
+    const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
+    const originalCreateElement = document.createElement.bind(document);
+    const mockAnchor = originalCreateElement('a');
+    const clickSpy = vi.spyOn(mockAnchor, 'click').mockImplementation(() => {});
+    vi.spyOn(document, 'createElement').mockImplementation((tagName, options) => {
+      if (tagName === 'a') return mockAnchor;
+      return originalCreateElement(tagName, options);
+    });
+    const appendSpy = vi.spyOn(document.body, 'appendChild');
+    const removeSpy = vi.spyOn(document.body, 'removeChild');
+    const revokeSpy = vi.spyOn(global.URL, 'revokeObjectURL');
+
+    await exporter.exportToSvg(container);
+
+    expect(alertSpy).not.toHaveBeenCalled();
+    expect(mockAnchor.href).toBe('blob:mock-url');
+    expect(mockAnchor.download).toBe('mindmap.svg');
+    expect(appendSpy).toHaveBeenCalledWith(mockAnchor);
+    expect(clickSpy).toHaveBeenCalled();
+    expect(removeSpy).toHaveBeenCalledWith(mockAnchor);
+    expect(revokeSpy).toHaveBeenCalledWith('blob:mock-url');
+  });
 });
